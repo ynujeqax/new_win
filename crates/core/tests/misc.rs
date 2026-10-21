@@ -18,8 +18,15 @@ fn longest_labels_shrink_first() {
 
 #[test]
 fn overflow_when_min_widths_do_not_fit() {
-    // all at min 40 + gaps need > 120; reserve 24 for the » button: 40+4+40 = 84 ≤ 120-24-4 → 2 fit
-    assert_eq!(fit_labels(&[90., 90., 90., 90.], 120., 40., 4., 24.), LabelFit { widths: vec![40., 40.], overflow_from: Some(2) });
+    // all at min 40 + gaps need > 120; reserve 24 for the » button: 40+4+40 = 84 ≤ 120-24-4 → 2 fit,
+    // and the 2 visible labels share the whole 92 - 4 = 88 → 44 each
+    assert_eq!(fit_labels(&[90., 90., 90., 90.], 120., 40., 4., 24.), LabelFit { widths: vec![44., 44.], overflow_from: Some(2) });
+}
+
+#[test]
+fn visible_labels_use_spare_space_when_overflowing() {
+    // budget 150-24-4 = 122 → 2 labels at min; 118 left for [200, 50] → 50 stays, the other gets 68
+    assert_eq!(fit_labels(&[200., 50., 200., 200.], 150., 40., 4., 24.), LabelFit { widths: vec![68., 50.], overflow_from: Some(2) });
 }
 
 #[test]

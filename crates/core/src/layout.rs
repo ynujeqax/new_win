@@ -35,7 +35,10 @@ pub fn fit_labels(natural: &[f32], available: f32, min_width: f32, gap: f32, ove
         used = next;
         k = i + 1;
     }
-    LabelFit { widths: shrunk[..k].to_vec(), overflow_from: Some(k) }
+    // The visible labels share whatever the budget leaves, longest shrunk first.
+    let visible = &natural[..k];
+    let cap = water_level(visible, budget - gaps(k)).max(min_width);
+    LabelFit { widths: visible.iter().map(|&w| w.min(cap)).collect(), overflow_from: Some(k) }
 }
 
 /// Largest cap `c` such that `Σ min(w, c) == space`.
