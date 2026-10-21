@@ -1,0 +1,19 @@
+[package]
+name = "newwin-shell"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "NewWin"
+path = "src/main.rs"
+
+[dependencies]
+newwin-core.workspace = true
+newwin-config.workspace = true
+newwin-platform.workspace = true
+newwin-ui.workspace = true
+log.workspace = true
+
+[build-dependencies]
+embed-manifest = "1.5.1"

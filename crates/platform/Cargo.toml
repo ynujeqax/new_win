@@ -1,0 +1,16 @@
+[package]
+name = "newwin-platform"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+newwin-core.workspace = true
+log.workspace = true
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Shell",
+    "Win32_UI_Accessibility",
+    "Win32_System_Threading",
+] }

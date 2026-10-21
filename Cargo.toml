@@ -1,0 +1,31 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/core",
+    "crates/config",
+    "crates/platform",
+    "crates/ui",
+    "apps/shell",
+]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+license = "MIT"
+
+[workspace.dependencies]
+newwin-core = { path = "crates/core" }
+newwin-config = { path = "crates/config" }
+newwin-platform = { path = "crates/platform" }
+newwin-ui = { path = "crates/ui" }
+windows = "0.62.2"
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1.8"
+log = "0.4.34"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
