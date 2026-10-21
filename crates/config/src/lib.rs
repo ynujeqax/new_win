@@ -7,6 +7,20 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+/// Integer fields accept any TOML integer and saturate into the field's type,
+/// so `-5` or `300` in a `u8` field is clamped later instead of rejecting the file.
+mod sat {
+    use serde::{Deserialize, Deserializer};
+
+    pub fn u8<'de, D: Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
+        Ok(i64::deserialize(d)?.clamp(0, i64::from(u8::MAX)) as u8)
+    }
+
+    pub fn u32<'de, D: Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
+        Ok(i64::deserialize(d)?.clamp(0, i64::from(u32::MAX)) as u32)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BarMode {
@@ -18,8 +32,11 @@ pub enum BarMode {
 #[serde(default)]
 pub struct BarConfig {
     pub mode: BarMode,
+    #[serde(deserialize_with = "sat::u32")]
     pub show_delay_ms: u32,
+    #[serde(deserialize_with = "sat::u32")]
     pub hide_delay_ms: u32,
+    #[serde(deserialize_with = "sat::u8")]
     pub trigger_height_px: u8,
     pub ignore_fullscreen: bool,
 }
@@ -33,7 +50,9 @@ impl Default for BarConfig {
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Appearance {
+    #[serde(deserialize_with = "sat::u32")]
     pub height: u32,
+    #[serde(deserialize_with = "sat::u32")]
     pub margin: u32,
     pub corner_radius: f32,
     pub background_opacity: f32,
@@ -74,6 +93,7 @@ impl Default for Items {
 #[serde(default)]
 pub struct SpotlightConfig {
     pub win_key: bool,
+    #[serde(deserialize_with = "sat::u32")]
     pub max_results: u32,
 }
 
@@ -98,6 +118,7 @@ impl Default for SystemConfig {
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Config {
+    #[serde(deserialize_with = "sat::u32")]
     pub version: u32,
     pub bar: BarConfig,
     pub appearance: Appearance,

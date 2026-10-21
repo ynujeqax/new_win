@@ -65,6 +65,15 @@ fn sanitize_clamps() {
 }
 
 #[test]
+fn out_of_type_range_integers_are_clamped_not_rejected() {
+    let c = parse("[bar]\ntrigger_height_px = 300\nshow_delay_ms = -5\n[appearance]\nheight = -1\nmargin = 99999999999\n").unwrap();
+    assert_eq!(c.bar.trigger_height_px, 2);
+    assert_eq!(c.bar.show_delay_ms, 0);
+    assert_eq!(c.appearance.height, 24);
+    assert_eq!(c.appearance.margin, 16);
+}
+
+#[test]
 fn sanitize_fixes_nan_and_negative_floats() {
     let c = parse("[appearance]\nbackground_opacity = nan\ncorner_radius = -5.0\nfont_size = inf\n").unwrap();
     assert_eq!(c.appearance.background_opacity, 0.065);
