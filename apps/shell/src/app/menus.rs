@@ -69,6 +69,11 @@ impl MenuCtx {
     }
 }
 
+/// CLOSED carries the root popup's HWND; only the menu that is still open may be dropped.
+fn closes_current(current: Option<isize>, closed: isize) -> bool {
+    current == Some(closed)
+}
+
 impl App {
     fn popup_style(&self) -> PopupStyle {
         let a = &self.config.appearance;
@@ -165,7 +170,7 @@ impl App {
     pub(super) fn on_popup(&mut self, wp: WPARAM, lp: LPARAM) {
         match lp.0 {
             PICKED => self.on_pick(wp.0 as u32),
-            CLOSED => self.close_popup(),
+            CLOSED if closes_current(self.popup.as_ref().map(|(p, _)| p.hwnd().0 as isize), wp.0 as isize) => self.close_popup(),
             _ => {}
         }
     }
@@ -212,5 +217,18 @@ impl App {
                 _ => {}
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_the_menu_that_closed_is_dropped() {
+        // A late CLOSED from a menu we already replaced must not close the new one.
+        assert!(closes_current(Some(100), 100));
+        assert!(!closes_current(Some(200), 100));
+        assert!(!closes_current(None, 100));
     }
 }

@@ -1,7 +1,8 @@
 //! Glass popup menus: text items, separators, one level of submenu.
 //!
-//! Results are posted to a notify window as `msg` with `wParam` = item id and `lParam` =
-//! [`PICKED`] or [`CLOSED`]. A popup never destroys itself: the owner drops the [`Popup`] on
+//! Results are posted to a notify window as `msg`: `lParam` = [`PICKED`] with `wParam` = item id,
+//! or `lParam` = [`CLOSED`] with `wParam` = the root popup's HWND (so a late close of a replaced
+//! menu can be told apart). A popup never destroys itself: the owner drops the [`Popup`] on
 //! `CLOSED` (which always follows a `PICKED`). Submenus never take activation, so the root
 //! keeps keyboard focus and a click anywhere else deactivates it.
 
@@ -129,6 +130,8 @@ struct State {
     notify: HWND,
     msg: u32,
     is_child: bool,
+    /// The root popup's window; reported with CLOSED.
+    root: HWND,
     closed: bool,
     child: Option<(usize, Popup)>,
     font_family: String,
@@ -144,10 +147,12 @@ pub struct Popup {
 impl Popup {
     /// Shows a menu with its top-left at `anchor` (screen px), kept inside the monitor.
     pub fn show(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32) -> Result<Popup> {
-        Self::create(gfx, items, anchor, style, notify, msg, false)
+        Self::create(gfx, items, anchor, style, notify, msg, None)
     }
 
-    fn create(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32, is_child: bool) -> Result<Popup> {
+    /// `root` is `Some` for a submenu.
+    fn create(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32, root: Option<HWND>) -> Result<Popup> {
+        let is_child = root.is_some();
         let metrics = PopupMetrics::for_dpi(style.dpi);
         let mut cache = TextCache::new(gfx);
         let mut texts = Vec::with_capacity(items.len());
@@ -185,6 +190,7 @@ impl Popup {
             notify,
             msg,
             is_child,
+            root: root.unwrap_or_default(),
             closed: false,
             child: None,
             font_family: style.font_family.clone(),
@@ -204,6 +210,9 @@ impl Popup {
         {
             let mut s = state.borrow_mut();
             s.hwnd = hwnd;
+            if !is_child {
+                s.root = hwnd;
+            }
             s.layer = Some(Layer::new(gfx, hwnd, Backdrop::Tint, w as u32, h as u32)?);
             s.paint();
         }
@@ -282,9 +291,9 @@ impl State {
         }
     }
 
-    fn post(&self, id: u32, what: isize) {
+    fn post(&self, wp: usize, what: isize) {
         unsafe {
-            let _ = PostMessageW(Some(self.notify), self.msg, WPARAM(id as usize), LPARAM(what));
+            let _ = PostMessageW(Some(self.notify), self.msg, WPARAM(wp), LPARAM(what));
         }
     }
 
@@ -295,9 +304,9 @@ impl State {
         }
         self.closed = true;
         if let Some(id) = picked {
-            self.post(id, PICKED);
+            self.post(id as usize, PICKED);
         }
-        self.post(0, CLOSED);
+        self.post(self.root.0 as usize, CLOSED);
         unsafe {
             let _ = ShowWindow(self.hwnd, SW_HIDE);
         }
@@ -326,7 +335,7 @@ impl State {
         }
         let anchor = PointF { x: wr.right as f32 - self.metrics.pad, y: wr.top as f32 + self.rects[i].y - self.metrics.pad };
         let style = PopupStyle { font_family: self.font_family.clone(), font_size_px: self.font_size, dpi: self.dpi };
-        match Popup::create(&self.gfx, sub, anchor, &style, self.notify, self.msg, true) {
+        match Popup::create(&self.gfx, sub, anchor, &style, self.notify, self.msg, Some(self.root)) {
             Ok(p) => self.child = Some((i, p)),
             Err(e) => log::error!("submenu failed: {e}"),
         }
