@@ -60,6 +60,7 @@ impl Layer {
             self.generation = self.gfx.generation();
         }
         if self.parts.is_none() {
+            log::debug!("creating composition visual for {:?}", self.hwnd);
             let dcomp = self.gfx.devices()?.dcomp;
             unsafe {
                 let target = dcomp.CreateTargetForHwnd(self.hwnd, true)?;

@@ -223,6 +223,17 @@ impl App {
                 Some(LRESULT(0))
             }
             WM_MOUSEACTIVATE => Some(LRESULT(MA_NOACTIVATE as isize)),
+            WM_WINDOWPOSCHANGED => {
+                let pos = unsafe { &*(lp.0 as *const WINDOWPOS) };
+                if pos.flags.contains(SWP_SHOWWINDOW) || pos.flags.contains(SWP_HIDEWINDOW) {
+                    log::debug!(
+                        "bar window {} (state {:?})",
+                        if pos.flags.contains(SWP_SHOWWINDOW) { "shown" } else { "hidden" },
+                        self.vis.as_ref().map(|v| v.state())
+                    );
+                }
+                None
+            }
             WM_ENDSESSION if wp.0 != 0 => {
                 self.restore_taskbar();
                 Some(LRESULT(0))

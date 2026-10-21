@@ -71,6 +71,7 @@ impl App {
             VIS_TIMER => self.feed(VisInput::Timer),
             super::clock_view::CLOCK_TIMER => self.tick_clock(),
             HIDE_WINDOW_TIMER => unsafe {
+                log::debug!("hide timer: hiding the bar window");
                 self.hide_started = None;
                 let _ = ShowWindow(self.bar, SW_HIDE);
             },
@@ -87,6 +88,7 @@ impl App {
         let hidden = self.hidden_offset();
         let Some(layer) = self.bar_layer.as_mut() else { return };
         let Ok(visual) = layer.visual() else { return };
+        log::debug!("animate {} (window visible={})", if show { "in" } else { "out" }, unsafe { IsWindowVisible(self.bar) }.as_bool());
         let r = if show {
             // Coming back mid-hide continues from where the hide animation is now, without a jump.
             let travelled = self.hide_started.take().map_or(1.0, |t| ease_out_progress(t.elapsed().as_secs_f32() * 1000.0 / theme::HIDE_MS as f32));
