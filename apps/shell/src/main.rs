@@ -1,4 +1,6 @@
 #![windows_subsystem = "windows"]
+// A misspelled or unimported message constant in a `match` arm silently becomes a catch-all binding.
+#![deny(non_snake_case)]
 
 mod app;
 mod bar;

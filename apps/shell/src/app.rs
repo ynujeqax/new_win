@@ -15,10 +15,19 @@ use windows::Win32::System::Threading::{CreateMutexW, GetCurrentProcess, GetProc
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::{Result, w};
 
+/// Not exported by the `windows` crate.
+const WM_MOUSELEAVE: u32 = 0x02A3;
+
+use newwin_core::visibility::{Catcher, Visibility};
+use newwin_platform::appbar::AppBar;
+
 use crate::bar::{bar_rect, paint_background, text_origin, text_style};
 use crate::watchdog::PING_WINDOW_CLASS;
 
+mod visibility;
+
 const WM_APP_TASKBAR_SHOWN: u32 = WM_APP + 1;
+const WM_APP_APPBAR: u32 = WM_APP + 3;
 
 pub struct App {
     gfx: Rc<Gfx>,
@@ -31,7 +40,16 @@ pub struct App {
     bar: HWND,
     bar_layer: Option<Layer>,
     bar_rect: RECT,
+    monitor: RECT,
     dpi: u32,
+    catcher: HWND,
+    catcher_mode: Catcher,
+    vis: Option<Visibility>,
+    appbar: Option<AppBar>,
+    /// Pointer is inside the bar or the catcher (the hot zone).
+    in_zone: bool,
+    /// `TrackMouseEvent(TME_LEAVE)` armed for [bar, catcher].
+    tracking: [bool; 2],
 }
 
 fn ms_since_process_start() -> u64 {
@@ -48,6 +66,7 @@ fn ms_since_process_start() -> u64 {
 impl App {
     fn reposition(&mut self) {
         let (monitor, dpi) = primary_monitor();
+        self.monitor = monitor;
         self.dpi = dpi;
         self.bar_rect = bar_rect(monitor, dpi, &self.config.appearance);
         let r = self.bar_rect;
@@ -57,6 +76,8 @@ impl App {
         if let Some(layer) = self.bar_layer.as_mut() {
             let _ = layer.resize((r.right - r.left) as u32, (r.bottom - r.top) as u32);
         }
+        self.set_catcher(self.catcher_mode);
+        self.reserve_space();
         self.paint();
     }
 
@@ -122,7 +143,23 @@ impl Handler for App {
                 self.reposition();
                 Some(LRESULT(0))
             }
-            WM_MOUSEACTIVATE if hwnd == self.bar => Some(LRESULT(MA_NOACTIVATE as isize)),
+            WM_MOUSEACTIVATE if hwnd == self.bar || hwnd == self.catcher => Some(LRESULT(MA_NOACTIVATE as isize)),
+            WM_MOUSEMOVE if hwnd == self.bar || hwnd == self.catcher => {
+                self.on_pointer_move(hwnd);
+                Some(LRESULT(0))
+            }
+            WM_MOUSELEAVE if hwnd == self.bar || hwnd == self.catcher => {
+                self.on_pointer_leave(hwnd);
+                Some(LRESULT(0))
+            }
+            WM_TIMER if hwnd == self.bar => {
+                self.on_timer(wp.0);
+                Some(LRESULT(0))
+            }
+            WM_APP_APPBAR => {
+                self.on_appbar(wp, _lp);
+                Some(LRESULT(0))
+            }
             WM_ENDSESSION if wp.0 != 0 => {
                 self.restore_taskbar();
                 Some(LRESULT(0))
@@ -175,7 +212,14 @@ fn start() -> Result<Rc<RefCell<App>>> {
         bar: HWND::default(),
         bar_layer: None,
         bar_rect: RECT::default(),
+        monitor: RECT::default(),
         dpi: 96,
+        catcher: HWND::default(),
+        catcher_mode: Catcher::Off,
+        vis: None,
+        appbar: None,
+        in_zone: false,
+        tracking: [false; 2],
     }));
 
     let ping = create_window(
@@ -192,18 +236,29 @@ fn start() -> Result<Rc<RefCell<App>>> {
         },
         app.clone(),
     )?;
+    // Invisible (alpha 1/255) but hit-testable: reveals the hidden bar on hover.
+    let catcher = create_window(
+        &WindowSpec {
+            class: "NewWin.Catcher",
+            ex_style: WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED,
+            style: WS_POPUP,
+            rect: RECT { left: 0, top: 0, right: 1, bottom: 1 },
+            layered_alpha: Some(1),
+        },
+        app.clone(),
+    )?;
 
     {
         let mut a = app.borrow_mut();
         a.ping = ping;
         a.bar = bar;
+        a.catcher = catcher;
         a.taskbar = Some(NativeTaskbar::hide(&state)?);
         a.show_watch = watch_taskbar_show(ping, WM_APP_TASKBAR_SHOWN).map_err(|e| log::error!("taskbar watch: {e}")).ok();
+        a.appbar = AppBar::register(bar, WM_APP_APPBAR).map_err(|e| log::error!("appbar: {e}")).ok();
         a.bar_layer = Some(Layer::new(&a.gfx, bar, Backdrop::Tint, 1, 1)?);
         a.reposition();
-        unsafe {
-            let _ = ShowWindow(bar, SW_SHOWNOACTIVATE);
-        }
+        a.start_visibility();
     }
     log::info!("first-frame-ms={}", ms_since_process_start());
     Ok(app)
