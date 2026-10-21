@@ -5,7 +5,7 @@ use newwin_core::visibility::{Catcher, Mode, VisCmd, VisConfig, VisInput, Visibi
 use newwin_platform::appbar::{AppBarNotify, parse_appbar_notify};
 use newwin_platform::dpi::scale_px;
 use newwin_platform::fullscreen::foreground_is_fullscreen;
-use newwin_ui::{fade, set_offset_opacity, slide_y, theme};
+use newwin_ui::{ease_out_progress, fade, set_offset_opacity, slide_y, theme};
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use windows::Win32::UI::Input::KeyboardAndMouse::{TME_LEAVE, TRACKMOUSEEVENT, TrackMouseEvent};
 use windows::Win32::UI::WindowsAndMessaging::*;
@@ -69,6 +69,7 @@ impl App {
         match id {
             VIS_TIMER => self.feed(VisInput::Timer),
             HIDE_WINDOW_TIMER => unsafe {
+                self.hide_started = None;
                 let _ = ShowWindow(self.bar, SW_HIDE);
             },
             _ => {}
@@ -85,6 +86,9 @@ impl App {
         let Some(layer) = self.bar_layer.as_mut() else { return };
         let Ok(visual) = layer.visual() else { return };
         let r = if show {
+            // Coming back mid-hide continues from where the hide animation is now, without a jump.
+            let travelled = self.hide_started.take().map_or(1.0, |t| ease_out_progress(t.elapsed().as_secs_f32() * 1000.0 / theme::HIDE_MS as f32));
+            let (from_y, from_opacity) = (hidden * travelled, 1.0 - travelled);
             unsafe {
                 let _ = KillTimer(Some(self.bar), HIDE_WINDOW_TIMER);
                 if !IsWindowVisible(self.bar).as_bool() {
@@ -92,8 +96,10 @@ impl App {
                     let _ = ShowWindow(self.bar, SW_SHOWNOACTIVATE);
                 }
             }
-            slide_y(&self.gfx, &visual, hidden, 0.0, theme::REVEAL_MS).and_then(|_| fade(&self.gfx, &visual, 0.0, 1.0, theme::REVEAL_MS))
+            slide_y(&self.gfx, &visual, from_y, 0.0, theme::REVEAL_MS)
+                .and_then(|_| fade(&self.gfx, &visual, from_opacity, 1.0, theme::REVEAL_MS))
         } else {
+            self.hide_started = Some(std::time::Instant::now());
             unsafe { SetTimer(Some(self.bar), HIDE_WINDOW_TIMER, theme::HIDE_MS + 20, None) };
             slide_y(&self.gfx, &visual, 0.0, hidden, theme::HIDE_MS).and_then(|_| fade(&self.gfx, &visual, 1.0, 0.0, theme::HIDE_MS))
         };

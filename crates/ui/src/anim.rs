@@ -5,6 +5,13 @@ use windows::core::{Interface, Result};
 
 use crate::Gfx;
 
+/// Fraction of the way an ease-out animation has travelled at time fraction `t` (0..=1).
+/// Same curve as the DWM animations below, so callers can tell where a running animation is.
+pub fn ease_out_progress(t: f32) -> f32 {
+    let t = t.clamp(0.0, 1.0);
+    1.0 - (1.0 - t).powi(3)
+}
+
 /// Ease-out cubic from `from` to `to` over `ms`: v(t) = from + Δ·(1 − (1 − t/T)³).
 fn ease_out(gfx: &Gfx, from: f32, to: f32, ms: u32) -> Result<IDCompositionAnimation> {
     let anim = unsafe { gfx.devices()?.dcomp.CreateAnimation()? };
@@ -38,4 +45,18 @@ pub fn set_offset_opacity(gfx: &Gfx, v: &IDCompositionVisual2, y: f32, opacity: 
         v3.SetOpacity2(opacity)?;
     }
     gfx.commit()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ease_out_curve() {
+        assert_eq!(ease_out_progress(0.0), 0.0);
+        assert_eq!(ease_out_progress(1.0), 1.0);
+        assert_eq!(ease_out_progress(0.5), 0.875);
+        assert_eq!(ease_out_progress(-1.0), 0.0);
+        assert_eq!(ease_out_progress(3.0), 1.0);
+    }
 }

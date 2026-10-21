@@ -11,7 +11,7 @@ mod paint;
 mod text;
 pub mod theme;
 
-pub use anim::{fade, set_offset_opacity, slide_y};
+pub use anim::{ease_out_progress, fade, set_offset_opacity, slide_y};
 pub use geom::{Color, PointF, RectF};
 pub use gfx::Gfx;
 pub use layer::{Backdrop, Layer};

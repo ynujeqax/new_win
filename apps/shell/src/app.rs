@@ -50,6 +50,8 @@ pub struct App {
     in_zone: bool,
     /// `TrackMouseEvent(TME_LEAVE)` armed for [bar, catcher].
     tracking: [bool; 2],
+    /// When the running hide animation started (to resume a reveal from its position).
+    hide_started: Option<std::time::Instant>,
 }
 
 fn ms_since_process_start() -> u64 {
@@ -220,6 +222,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         appbar: None,
         in_zone: false,
         tracking: [false; 2],
+        hide_started: None,
     }));
 
     let ping = create_window(
