@@ -48,10 +48,11 @@ pub fn is_taskbar_window(w: &WindowInfo) -> bool {
         && (w.app_window || (!w.has_owner && !w.tool_window && !w.no_activate))
 }
 
-/// A window of Screen Snipping (Win+Shift+S / PrtScn), cloaked or not: its overlay is created
-/// cloaked and the screenshot is taken before it is shown.
+/// A visible window of Screen Snipping (Win+Shift+S / PrtScn), cloaked or not: its overlay is
+/// created cloaked (but `WS_VISIBLE`) and the screenshot is taken before it is uncloaked. A hidden
+/// one left alive after the snip does not count.
 pub fn is_screen_snip(w: &WindowInfo) -> bool {
-    matches!(&w.group_key, GroupKey::AppId(id) if id.ends_with("!ScreenClipping"))
+    w.visible && matches!(&w.group_key, GroupKey::AppId(id) if id.ends_with("!ScreenClipping"))
 }
 
 /// Tracks the windows of a running screen snip; reports when the first appears and the last goes.
@@ -75,6 +76,14 @@ impl SnipTracker {
 
     pub fn active(&self) -> bool {
         !self.windows.is_empty()
+    }
+
+    /// Keeps only the windows `alive` says still exist and show; reports the end of the snip.
+    /// A safety net: no destroy hook means a window can vanish without an event.
+    pub fn retain(&mut self, alive: impl Fn(Hwnd) -> bool) -> Option<bool> {
+        let was = self.active();
+        self.windows.retain(|&h| alive(h));
+        (was && !self.active()).then_some(false)
     }
 }
 

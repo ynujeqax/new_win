@@ -146,3 +146,23 @@ fn snip_tracker_reports_start_and_end_once() {
     assert_eq!(t.update(2, false), Some(false));
     assert!(!t.active());
 }
+
+#[test]
+fn a_hidden_snip_window_does_not_count() {
+    // Review fix: a CoreWindow kept alive but hidden after the snip must not keep the bar shown.
+    let mut w = win(1, SNIP, "Screen Snipping");
+    w.visible = false;
+    assert!(!is_screen_snip(&w));
+}
+
+#[test]
+fn snip_tracker_drops_windows_that_no_longer_exist() {
+    let mut t = SnipTracker::default();
+    t.update(1, true);
+    t.update(2, true);
+    assert_eq!(t.retain(|h| h == 2), None);
+    assert!(t.active());
+    assert_eq!(t.retain(|_| false), Some(false));
+    assert!(!t.active());
+    assert_eq!(t.retain(|_| false), None);
+}

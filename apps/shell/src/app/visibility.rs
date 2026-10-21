@@ -81,6 +81,7 @@ impl App {
         match id {
             VIS_TIMER => self.feed(VisInput::Timer),
             super::clock_view::CLOCK_TIMER => self.tick_clock(),
+            super::glass_regions::SNIP_CHECK_TIMER => self.check_snip(),
             HIDE_WINDOW_TIMER => unsafe {
                 log::debug!("hide timer: hiding the bar window");
                 self.hide_started = None;

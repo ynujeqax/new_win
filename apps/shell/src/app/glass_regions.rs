@@ -6,7 +6,10 @@ use newwin_platform::dpi::scale;
 use newwin_ui::backdrop::{FRAME, Region, UNAVAILABLE, take_frame};
 use newwin_ui::theme;
 use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
-use windows::Win32::UI::WindowsAndMessaging::IsWindowVisible;
+use windows::Win32::UI::WindowsAndMessaging::{IsWindow, IsWindowVisible, SetTimer};
+
+/// Re-checks the windows of an open screen snip.
+pub(super) const SNIP_CHECK_TIMER: usize = 4;
 
 use super::App;
 
@@ -49,13 +52,37 @@ impl App {
     /// covers it), and the glass shows up in the screenshot with its backdrop frozen, so it cannot
     /// blur itself.
     pub(super) fn track_snip(&mut self, h: u64, is_snip: bool) {
-        let Some(active) = self.snips.update(h, is_snip) else { return };
+        if let Some(active) = self.snips.update(h, is_snip) {
+            self.on_snip(active);
+        }
+    }
+
+    /// Safety net while a snip is open: we have no destroy hook, so a snip window can vanish
+    /// without an event; re-check the tracked windows once a second.
+    pub(super) fn check_snip(&mut self) {
+        let ended = self.snips.retain(|h| unsafe {
+            let w = HWND(h as usize as *mut _);
+            IsWindow(Some(w)).as_bool() && IsWindowVisible(w).as_bool()
+        });
+        match ended {
+            Some(_) => self.on_snip(false),
+            None if self.snips.active() => unsafe {
+                SetTimer(Some(self.bar), SNIP_CHECK_TIMER, 1000, None);
+            },
+            None => {}
+        }
+    }
+
+    fn on_snip(&mut self, active: bool) {
         log::info!("screen snip {}", if active { "started" } else { "ended" });
         if let Some(layer) = self.bar_layer.as_ref() {
             layer.set_capturable(active);
         }
         if let Some((p, _)) = &self.popup {
             p.set_capturable(active);
+        }
+        if active {
+            unsafe { SetTimer(Some(self.bar), SNIP_CHECK_TIMER, 1000, None) };
         }
         self.feed(if active { VisInput::OverlayOpened } else { VisInput::OverlayClosed });
     }
