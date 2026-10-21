@@ -126,6 +126,10 @@ fn is_intl_change(lp: LPARAM) -> bool {
 impl App {
     fn reposition(&mut self) {
         let (monitor, dpi) = primary_monitor();
+        // The output's size or position may have changed: the glass capture re-reads it.
+        if let Some(b) = &self.backdrops {
+            b.refresh();
+        }
         self.monitor = monitor;
         self.dpi = dpi;
         self.bar_rect = bar_rect(monitor, dpi, &self.config.appearance);

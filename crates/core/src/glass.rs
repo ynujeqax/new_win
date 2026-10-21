@@ -194,6 +194,24 @@ pub fn glass_image(src: &[u8], pitch: usize, area: PxRect, window: PxRect, radiu
     img
 }
 
+/// Pause before rebuilding a failed capture: 0.25 s doubling up to 5 s (`failures` in a row).
+pub fn retry_delay_ms(failures: u32) -> u64 {
+    match failures {
+        0 => 0,
+        n => (250u64 << (n - 1).min(5)).min(5000),
+    }
+}
+
+/// Whether `area` (in frame coordinates) lies inside a `width` x `height` frame and is non-empty.
+pub fn fits(area: PxRect, width: u32, height: u32) -> bool {
+    area.left >= 0
+        && area.top >= 0
+        && area.width() > 0
+        && area.height() > 0
+        && area.right as i64 <= i64::from(width)
+        && area.bottom as i64 <= i64::from(height)
+}
+
 /// Whether any changed screen rectangle touches `area`.
 pub fn any_hit(changed: &[PxRect], area: &PxRect) -> bool {
     changed.iter().any(|r| r.intersects(area))

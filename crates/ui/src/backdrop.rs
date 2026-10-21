@@ -4,17 +4,17 @@
 //! The hardware D3D11 device exists only while at least one region is registered; with no
 //! regions the thread blocks on its channel and never wakes.
 
-use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, TryRecvError};
 use std::time::{Duration, Instant};
 
-use newwin_core::glass::{ChangeFilter, Image, MIN_INTERVAL_MS, PxRect, any_hit, capture_area, glass_image};
-use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
+use newwin_core::glass::{ChangeFilter, Image, MIN_INTERVAL_MS, PxRect, any_hit, capture_area, fits, glass_image, retry_delay_ms};
+use windows::Win32::Foundation::{E_BOUNDS, HWND, LPARAM, RECT, WPARAM};
 use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_UNKNOWN;
 use windows::Win32::Graphics::Direct3D11::*;
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_SAMPLE_DESC};
 use windows::Win32::Graphics::Dxgi::*;
 use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
-use windows::core::{Interface, Result};
+use windows::core::{Error, Interface, Result};
 
 /// A glass window that wants a backdrop.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -39,10 +39,9 @@ pub const FRAME: usize = 1;
 /// WPARAM of the posted message: the screen cannot be captured; LPARAM is 0.
 pub const UNAVAILABLE: usize = 2;
 
-const RETRY_AFTER_LOST: Duration = Duration::from_millis(250);
-
 enum Cmd {
     Regions(Vec<Region>),
+    Refresh,
     SimulateLost,
 }
 
@@ -56,7 +55,9 @@ impl Backdrops {
         let notify = notify.0 as isize;
         std::thread::Builder::new()
             .name("newwin-glass".into())
-            .spawn(move || Thread { rx, notify, msg, slots: Vec::new(), capture: None, unavailable: false }.run())
+            .spawn(move || {
+                Thread { rx, notify, msg, slots: Vec::new(), capture: None, failures: 0, retry_at: None, unavailable_posted: false }.run()
+            })
             .expect("cannot spawn the glass thread");
         Backdrops { tx }
     }
@@ -66,7 +67,12 @@ impl Backdrops {
         let _ = self.tx.send(Cmd::Regions(regions));
     }
 
-    /// Test hook: drops the duplication exactly as `DXGI_ERROR_ACCESS_LOST` does.
+    /// The display changed (resolution, monitors, DPI): rebuild the capture with fresh bounds.
+    pub fn refresh(&self) {
+        let _ = self.tx.send(Cmd::Refresh);
+    }
+
+    /// Test hook: behaves exactly as a `DXGI_ERROR_ACCESS_LOST` from the duplication.
     #[doc(hidden)]
     pub fn simulate_access_lost(&self) {
         let _ = self.tx.send(Cmd::SimulateLost);
@@ -94,11 +100,9 @@ struct Slot {
 struct Capture {
     device: ID3D11Device,
     ctx: ID3D11DeviceContext,
-    output: IDXGIOutput1,
-    /// The output's desktop rectangle.
+    /// The output's desktop rectangle, read when the capture was built.
     bounds: PxRect,
-    dup: Option<IDXGIOutputDuplication>,
-    lost_at: Option<Instant>,
+    dup: IDXGIOutputDuplication,
 }
 
 struct Thread {
@@ -107,18 +111,27 @@ struct Thread {
     msg: u32,
     slots: Vec<Slot>,
     capture: Option<Capture>,
-    /// Creating the device failed for the current region set; wait for the next one.
-    unavailable: bool,
+    /// Failed (re)builds or lost captures in a row; reset by a healthy step.
+    failures: u32,
+    /// When the next rebuild may be tried.
+    retry_at: Option<Instant>,
+    /// UNAVAILABLE was posted for the current failure streak.
+    unavailable_posted: bool,
 }
 
 impl Thread {
     fn run(mut self) {
         loop {
-            let idle = self.slots.is_empty() || self.unavailable;
-            let first = if idle {
+            let first = if self.slots.is_empty() {
                 match self.rx.recv() {
                     Ok(c) => Some(c),
                     Err(_) => return,
+                }
+            } else if let Some(wait) = self.retry_wait() {
+                match self.rx.recv_timeout(wait) {
+                    Ok(c) => Some(c),
+                    Err(RecvTimeoutError::Timeout) => None,
+                    Err(RecvTimeoutError::Disconnected) => return,
                 }
             } else {
                 None
@@ -133,19 +146,37 @@ impl Thread {
                     Err(TryRecvError::Disconnected) => return,
                 }
             }
-            if self.slots.is_empty() || self.unavailable {
+            if self.slots.is_empty() || self.retry_wait().is_some() {
                 continue;
             }
             if let Err(e) = self.step() {
-                log::warn!("glass capture: {e}");
+                self.lose(e);
             }
+        }
+    }
+
+    /// Time left before a rebuild may be tried, if a rebuild is pending.
+    fn retry_wait(&self) -> Option<Duration> {
+        let t = self.retry_at?;
+        let left = t.saturating_duration_since(Instant::now());
+        (self.capture.is_none() && !left.is_zero()).then_some(left)
+    }
+
+    /// Any failure drops the whole capture (device, duplication and the output bounds read with
+    /// them) and rebuilds it after a growing pause: the display may have changed, the driver may
+    /// have been reset, or a secure desktop may be up. Only the first failure of a streak is logged.
+    fn lose(&mut self, e: Error) {
+        self.capture = None;
+        self.failures = self.failures.saturating_add(1);
+        self.retry_at = Some(Instant::now() + Duration::from_millis(retry_delay_ms(self.failures)));
+        if self.failures == 1 {
+            log::warn!("glass capture lost, rebuilding: {e}");
         }
     }
 
     fn handle(&mut self, c: Cmd) {
         match c {
             Cmd::Regions(regions) => {
-                self.unavailable = false;
                 let mut old = std::mem::take(&mut self.slots);
                 for region in regions {
                     // Keep a region's filter so re-sending the same set posts nothing new.
@@ -165,15 +196,23 @@ impl Thread {
                 }
                 if self.slots.is_empty() {
                     self.capture = None;
+                    self.retry_at = None;
                 } else if let Some(c) = &self.capture {
                     let bounds = c.bounds;
                     self.place(bounds);
+                } else {
+                    // A new set (the bar is about to show) retries a failed capture right away.
+                    self.retry_at = None;
                 }
             }
+            Cmd::Refresh => {
+                self.capture = None;
+                self.retry_at = None;
+                self.failures = 0;
+            }
             Cmd::SimulateLost => {
-                if let Some(c) = self.capture.as_mut() {
-                    c.dup = None;
-                    c.lost_at = Some(Instant::now());
+                if self.capture.is_some() {
+                    self.lose(Error::from(DXGI_ERROR_ACCESS_LOST));
                 }
             }
         }
@@ -198,44 +237,29 @@ impl Thread {
     fn step(&mut self) -> Result<()> {
         if self.capture.is_none() {
             let center = self.slots[0].region.window;
-            match Capture::new((center.left + center.right) / 2, (center.top + center.bottom) / 2) {
-                Ok(c) => {
-                    let bounds = c.bounds;
-                    self.capture = Some(c);
-                    self.place(bounds);
-                }
+            let c = match Capture::new((center.left + center.right) / 2, (center.top + center.bottom) / 2) {
+                Ok(c) => c,
                 Err(e) => {
-                    log::warn!("glass capture unavailable: {e}");
-                    self.unavailable = true;
-                    self.post(UNAVAILABLE, 0);
-                    return Ok(());
-                }
-            }
-        }
-        let cap = self.capture.as_mut().expect("capture just created");
-        if cap.dup.is_none() {
-            if cap.lost_at.is_some_and(|t| t.elapsed() < RETRY_AFTER_LOST) {
-                std::thread::sleep(RETRY_AFTER_LOST.saturating_sub(cap.lost_at.unwrap().elapsed()));
-                return Ok(());
-            }
-            match unsafe { cap.output.DuplicateOutput(&cap.device) } {
-                Ok(d) => {
-                    cap.dup = Some(d);
-                    cap.lost_at = None;
-                    for s in &mut self.slots {
-                        s.fresh = true;
+                    if !self.unavailable_posted {
+                        self.unavailable_posted = true;
+                        self.post(UNAVAILABLE, 0);
                     }
-                }
-                Err(e) => {
-                    cap.lost_at = Some(Instant::now());
                     return Err(e);
                 }
+            };
+            let bounds = c.bounds;
+            self.capture = Some(c);
+            // Staging textures belong to the old device.
+            for s in &mut self.slots {
+                s.fresh = true;
+                s.staging = None;
             }
+            self.place(bounds);
         }
 
         let timeout = self.next_wake_ms();
-        let cap = self.capture.as_mut().expect("capture exists");
-        let dup = cap.dup.clone().expect("duplication exists");
+        let cap = self.capture.as_ref().expect("capture exists");
+        let dup = cap.dup.clone();
         let mut info = DXGI_OUTDUPL_FRAME_INFO::default();
         let mut res = None;
         match unsafe { dup.AcquireNextFrame(timeout, &mut info, &mut res) } {
@@ -244,24 +268,15 @@ impl Thread {
                 unsafe {
                     let _ = dup.ReleaseFrame();
                 }
-                if let Err(e) = r {
-                    if e.code() == DXGI_ERROR_ACCESS_LOST {
-                        cap.dup = None;
-                        cap.lost_at = Some(Instant::now());
-                    }
-                    return Err(e);
-                }
+                r?;
             }
             Err(e) if e.code() == DXGI_ERROR_WAIT_TIMEOUT => {}
-            Err(e) => {
-                cap.dup = None;
-                cap.lost_at = Some(Instant::now());
-                if e.code() != DXGI_ERROR_ACCESS_LOST {
-                    return Err(e);
-                }
-            }
+            Err(e) => return Err(e),
         }
-        self.recompute_due()
+        self.recompute_due()?;
+        self.failures = 0;
+        self.unavailable_posted = false;
+        Ok(())
     }
 
     /// How long to wait for the next screen change: until the earliest rate-limited slot is due.
@@ -315,7 +330,9 @@ fn copy_changed(cap: &Capture, dup: &IDXGIOutputDuplication, res: Option<&IDXGIR
     let ox = cap.bounds.left;
     let oy = cap.bounds.top;
     let changed = changed_rects(dup)?;
-    let tex: ID3D11Texture2D = res.expect("frame without a resource").cast()?;
+    let tex: ID3D11Texture2D = res.ok_or_else(|| Error::from(DXGI_ERROR_INVALID_CALL))?.cast()?;
+    let mut desc = D3D11_TEXTURE2D_DESC::default();
+    unsafe { tex.GetDesc(&mut desc) };
     for s in slots.iter_mut() {
         if s.area.width() <= 0 || s.area.height() <= 0 {
             continue;
@@ -323,6 +340,10 @@ fn copy_changed(cap: &Capture, dup: &IDXGIOutputDuplication, res: Option<&IDXGIR
         let local = PxRect { left: s.area.left - ox, top: s.area.top - oy, right: s.area.right - ox, bottom: s.area.bottom - oy };
         if !s.fresh && !any_hit(&changed, &local) {
             continue;
+        }
+        // Bounds read before a resolution change: rebuild instead of copying out of range.
+        if !fits(local, desc.Width, desc.Height) {
+            return Err(Error::new(E_BOUNDS, "the screen is smaller than the capture area"));
         }
         if s.staging.is_none() {
             s.staging = Some(staging_texture(&cap.device, local.width() as u32, local.height() as u32)?);
@@ -414,7 +435,8 @@ impl Capture {
             let device = device.expect("D3D11CreateDevice returned no device");
             let output: IDXGIOutput1 = output.cast()?;
             let dup = output.DuplicateOutput(&device)?;
-            Ok(Capture { device, ctx: ctx.expect("no immediate context"), output, bounds, dup: Some(dup), lost_at: None })
+            let ctx = ctx.ok_or_else(|| Error::from(DXGI_ERROR_INVALID_CALL))?;
+            Ok(Capture { device, ctx, bounds, dup })
         }
     }
 }

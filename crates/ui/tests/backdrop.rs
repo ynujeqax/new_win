@@ -173,3 +173,16 @@ fn capture_survives_access_lost() {
     let frames = s.pump(Duration::from_secs(2));
     assert!(frames.iter().any(|f| near(center(f), [0, 255, 0])), "no green frame after access lost");
 }
+
+#[test]
+fn refresh_rebuilds_the_capture_on_display_changes() {
+    // WM_DISPLAYCHANGE: the output bounds may have changed, so the capture is rebuilt from scratch.
+    let s = Scene::new();
+    let b = Backdrops::spawn(s.notify, MSG_GLASS);
+    b.set_regions(vec![Scene::region()]);
+    assert!(s.first_frame(Duration::from_secs(2)).is_some());
+    b.refresh();
+    s.repaint(GREEN);
+    let frames = s.pump(Duration::from_secs(2));
+    assert!(frames.iter().any(|f| near(center(f), [0, 255, 0])), "no green frame after refresh");
+}

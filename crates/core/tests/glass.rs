@@ -129,3 +129,21 @@ fn edges_bend_in_what_is_outside_and_the_middle_stays_clear() {
     // Outside the shape nothing changes (it is clipped away anyway).
     assert_eq!(px_at(&lens, 2, 2), px_at(&orig, 2, 2));
 }
+
+#[test]
+fn retries_back_off_up_to_five_seconds() {
+    let delays: Vec<u64> = (1..=8).map(retry_delay_ms).collect();
+    assert_eq!(delays, [250, 500, 1000, 2000, 4000, 5000, 5000, 5000]);
+    assert_eq!(retry_delay_ms(0), 0);
+    assert_eq!(retry_delay_ms(u32::MAX), 5000);
+}
+
+#[test]
+fn an_area_must_fit_the_frame_it_is_copied_from() {
+    // After a resolution change the frame can be smaller than the area placed on the old bounds.
+    let area = PxRect { left: 0, top: 0, right: 2560, bottom: 66 };
+    assert!(fits(area, 2560, 1440));
+    assert!(!fits(area, 1920, 1080));
+    assert!(!fits(PxRect { left: -1, top: 0, right: 10, bottom: 10 }, 100, 100));
+    assert!(!fits(PxRect { left: 5, top: 5, right: 5, bottom: 10 }, 100, 100));
+}
