@@ -44,9 +44,24 @@ fn unregistered_app_id_falls_back_to_the_exe() {
     // Chromium browsers tag windows with a per-profile id that no Start menu entry has.
     let key = GroupKey::AppId("Helium.ABC.UserData.Profile1".into());
     let exe = Some(r"C:\Helium\chrome.exe");
-    assert_eq!(new_instance_target(&key, exe, |_| false).as_deref(), Some(r"C:\Helium\chrome.exe"));
-    assert_eq!(new_instance_target(&key, exe, |_| true).as_deref(), Some(r"shell:AppsFolder\Helium.ABC.UserData.Profile1"));
-    assert_eq!(new_instance_target(&key, None, |_| false), None);
+    let target = |key, exe, reg: bool| new_instance_target(key, exe, None, |_| reg);
+    assert_eq!(target(&key, exe, false), Some((r"C:\Helium\chrome.exe".into(), String::new())));
+    assert_eq!(target(&key, exe, true), Some((r"shell:AppsFolder\Helium.ABC.UserData.Profile1".into(), String::new())));
+    assert_eq!(target(&key, None, false), None);
     let key = GroupKey::ExePath(r"c:\a\b.exe".into());
-    assert_eq!(new_instance_target(&key, None, |_| false).as_deref(), Some(r"c:\a\b.exe"));
+    assert_eq!(target(&key, None, false), Some((r"c:\a\b.exe".into(), String::new())));
+}
+
+#[test]
+fn unregistered_app_id_prefers_the_windows_relaunch_command() {
+    // Steam windows belong to steamwebhelper.exe; the window says to relaunch Steam.exe.
+    let key = GroupKey::AppId("Valve.Steam.Client".into());
+    let helper = Some(r"C:\Steam\bin\cef\steamwebhelper.exe");
+    let target = |relaunch, reg: bool| new_instance_target(&key, helper, relaunch, |_| reg);
+    let pair = |f: &str, a: &str| Some((f.to_string(), a.to_string()));
+    assert_eq!(target(Some(r"C:\Programs\Steam\Steam.exe"), false), pair(r"C:\Programs\Steam\Steam.exe", ""));
+    assert_eq!(target(Some(r#""C:\Program Files\X\x.exe" --new-window"#), false), pair(r"C:\Program Files\X\x.exe", "--new-window"));
+    assert_eq!(target(Some(r"C:\x.exe -a b"), false), pair(r"C:\x.exe", "-a b"));
+    assert_eq!(target(Some("   "), false), pair(r"C:\Steam\bin\cef\steamwebhelper.exe", ""));
+    assert_eq!(target(Some(r"C:\Programs\Steam\Steam.exe"), true), pair(r"shell:AppsFolder\Valve.Steam.Client", ""));
 }

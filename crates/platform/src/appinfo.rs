@@ -4,7 +4,10 @@ use std::path::Path;
 
 use newwin_core::apps::GroupKey;
 use windows::Win32::Foundation::{CloseHandle, HWND};
-use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
+use windows::Win32::Foundation::PROPERTYKEY;
+use windows::Win32::Storage::EnhancedStorage::{
+    PKEY_AppUserModel_ID, PKEY_AppUserModel_RelaunchCommand, PKEY_AppUserModel_RelaunchDisplayNameResource,
+};
 use windows::Win32::Storage::FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW};
 use windows::Win32::Storage::Packaging::Appx::GetApplicationUserModelId;
 use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoTaskMemFree, CoUninitialize};
@@ -12,7 +15,7 @@ use windows::Win32::System::Threading::{OpenProcess, PROCESS_NAME_WIN32, PROCESS
 use windows::Win32::UI::Shell::PropertiesSystem::{IPropertyStore, SHGetPropertyStoreForWindow};
 use windows::Win32::UI::Shell::{
     FOLDERID_AppsFolder, FOLDERID_ProgramFilesX64, FOLDERID_ProgramFilesX86, FOLDERID_System, FOLDERID_Windows, IShellItem,
-    KF_FLAG_DEFAULT, SHCreateItemInKnownFolder, SHGetKnownFolderPath, SIGDN_NORMALDISPLAY,
+    KF_FLAG_DEFAULT, SHCreateItemInKnownFolder, SHGetKnownFolderPath, SHLoadIndirectString, SIGDN_NORMALDISPLAY,
 };
 use windows::core::{GUID, HSTRING, PCWSTR, PWSTR};
 
@@ -61,14 +64,44 @@ pub fn process_app_id(pid: u32) -> Option<String> {
     }
 }
 
-/// Explicit AppUserModelID set on the window (Chrome, Explorer, …).
-pub fn window_app_id(hwnd: HWND) -> Option<String> {
+fn window_property(hwnd: HWND, key: &PROPERTYKEY) -> Option<String> {
     unsafe {
         let store: IPropertyStore = SHGetPropertyStoreForWindow(hwnd).ok()?;
-        let v = store.GetValue(&PKEY_AppUserModel_ID).ok()?;
+        let v = store.GetValue(key).ok()?;
         let s = v.to_string();
-        (!s.is_empty()).then_some(s)
+        (!s.trim().is_empty()).then_some(s)
     }
+}
+
+/// Explicit AppUserModelID set on the window (Chrome, Explorer, …).
+pub fn window_app_id(hwnd: HWND) -> Option<String> {
+    window_property(hwnd, &PKEY_AppUserModel_ID)
+}
+
+/// Name the window asks the taskbar to show when its app id has no Start menu entry (Steam
+/// windows come from steamwebhelper.exe and say "Steam"). May be an `@dll,-id` resource.
+pub fn window_relaunch_name(hwnd: HWND) -> Option<String> {
+    window_property(hwnd, &PKEY_AppUserModel_RelaunchDisplayNameResource)
+}
+
+/// Command line the window asks the taskbar to run to start the app again.
+pub fn window_relaunch_command(hwnd: HWND) -> Option<String> {
+    window_property(hwnd, &PKEY_AppUserModel_RelaunchCommand)
+}
+
+/// A relaunch name as text: `@file,-id` resources are loaded, blanks are `None`.
+fn relaunch_display_name(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    let s = if raw.starts_with('@') {
+        let mut buf = [0u16; 512];
+        unsafe {
+            SHLoadIndirectString(&HSTRING::from(raw), &mut buf, None).ok()?;
+            PCWSTR(buf.as_ptr()).to_string().ok()?.trim().to_string()
+        }
+    } else {
+        raw.to_string()
+    };
+    (!s.is_empty()).then_some(s)
 }
 
 /// `FileDescription` from the exe's version resource (first translation).
@@ -158,15 +191,19 @@ pub fn placeholder_name(key: &GroupKey, exe: Option<&str>) -> String {
     }
 }
 
-/// Display name for a group: Start menu name, then the exe's FileDescription, then the placeholder.
-pub fn resolve_name(key: &GroupKey, exe: Option<&str>) -> String {
+/// Display name for a group: Start menu name, then (app ids only) the window's relaunch name,
+/// then the exe's FileDescription, then the placeholder.
+pub fn resolve_name(key: &GroupKey, exe: Option<&str>, relaunch_name: Option<&str>) -> String {
     let from_shell = match key {
         GroupKey::AppId(id) => appsfolder_display_name(id),
         GroupKey::ExePath(p) => known_folder_relative(p).and_then(|rel| appsfolder_display_name(&rel)),
     };
-    let exe_path = match key {
-        GroupKey::ExePath(p) => Some(p.as_str()),
-        GroupKey::AppId(_) => exe,
+    let (exe_path, relaunch_name) = match key {
+        GroupKey::ExePath(p) => (Some(p.as_str()), None),
+        GroupKey::AppId(_) => (exe, relaunch_name),
     };
-    from_shell.or_else(|| exe_path.and_then(file_description)).unwrap_or_else(|| placeholder_name(key, exe))
+    from_shell
+        .or_else(|| relaunch_name.and_then(relaunch_display_name))
+        .or_else(|| exe_path.and_then(file_description))
+        .unwrap_or_else(|| placeholder_name(key, exe))
 }

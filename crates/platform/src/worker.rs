@@ -11,6 +11,7 @@ use crate::appinfo::{ComGuard, resolve_name};
 pub struct NameJob {
     pub key: GroupKey,
     pub exe: Option<String>,
+    pub relaunch_name: Option<String>,
 }
 
 pub struct ResolvedName {
@@ -33,7 +34,7 @@ impl Worker {
             .spawn(move || {
                 let _com = ComGuard::init();
                 for job in rx {
-                    let name = resolve_name(&job.key, job.exe.as_deref());
+                    let name = resolve_name(&job.key, job.exe.as_deref(), job.relaunch_name.as_deref());
                     let boxed = Box::into_raw(Box::new(ResolvedName { key: job.key, name }));
                     let posted = unsafe { PostMessageW(Some(HWND(notify as *mut _)), msg, WPARAM(0), LPARAM(boxed as isize)) };
                     if posted.is_err() {

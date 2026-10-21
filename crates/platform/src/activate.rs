@@ -5,7 +5,7 @@ use newwin_core::apps::{GroupKey, Hwnd};
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::*;
 
-use crate::appinfo::{appsfolder_display_name, process_image_path};
+use crate::appinfo::{appsfolder_display_name, process_image_path, window_relaunch_command};
 use crate::launch::shell_execute;
 
 fn hwnd(h: Hwnd) -> HWND {
@@ -49,14 +49,39 @@ pub fn close(h: Hwnd) {
     }
 }
 
-/// What to open for "New window". An app id opens through the Start menu only when an entry
-/// has it: Chromium browsers tag windows with a per-profile id that no entry has, and opening
-/// that does nothing, so the window's own exe is started instead.
-pub fn new_instance_target(key: &GroupKey, exe: Option<&str>, registered: impl Fn(&str) -> bool) -> Option<String> {
+/// `"C:\Program Files\x.exe" -a` → (`C:\Program Files\x.exe`, `-a`). Unquoted, the whole line is
+/// the file when it exists, else it splits at the first space.
+fn split_command_line(cmd: &str) -> Option<(String, String)> {
+    let cmd = cmd.trim();
+    if cmd.is_empty() {
+        return None;
+    }
+    if let Some(rest) = cmd.strip_prefix('"') {
+        let (file, args) = rest.split_once('"').unwrap_or((rest, ""));
+        return Some((file.to_string(), args.trim().to_string()));
+    }
+    if std::path::Path::new(cmd).is_file() {
+        return Some((cmd.to_string(), String::new()));
+    }
+    let (file, args) = cmd.split_once(' ').unwrap_or((cmd, ""));
+    Some((file.to_string(), args.trim().to_string()))
+}
+
+/// What to open for "New window", as (file, arguments). An app id opens through the Start menu
+/// only when an entry has it: Chromium browsers tag windows with a per-profile id that no entry
+/// has, and opening that does nothing. Then the window's relaunch command is used (Steam windows
+/// belong to steamwebhelper.exe but relaunch Steam.exe), else the window's own exe.
+pub fn new_instance_target(
+    key: &GroupKey,
+    exe: Option<&str>,
+    relaunch_command: Option<&str>,
+    registered: impl Fn(&str) -> bool,
+) -> Option<(String, String)> {
+    let file = |f: &str| (f.to_string(), String::new());
     match key {
-        GroupKey::AppId(id) if registered(id) => Some(format!(r"shell:AppsFolder\{id}")),
-        GroupKey::AppId(_) => exe.map(str::to_string),
-        GroupKey::ExePath(p) => Some(exe.unwrap_or(p).to_string()),
+        GroupKey::AppId(id) if registered(id) => Some(file(&format!(r"shell:AppsFolder\{id}"))),
+        GroupKey::AppId(_) => relaunch_command.and_then(split_command_line).or_else(|| exe.map(file)),
+        GroupKey::ExePath(p) => Some(file(exe.unwrap_or(p))),
     }
 }
 
@@ -68,12 +93,14 @@ pub fn launch_new_instance(key: &GroupKey, window: Option<Hwnd>) {
         unsafe { GetWindowThreadProcessId(hwnd(h), Some(&mut pid)) };
         process_image_path(pid)
     });
-    let Some(target) = new_instance_target(key, exe.as_deref(), |id| appsfolder_display_name(id).is_some()) else {
+    let relaunch = window.and_then(|h| window_relaunch_command(hwnd(h)));
+    let registered = |id: &str| appsfolder_display_name(id).is_some();
+    let Some((file, args)) = new_instance_target(key, exe.as_deref(), relaunch.as_deref(), registered) else {
         log::error!("cannot start a new instance of {key:?}: no app entry and no exe");
         return;
     };
-    log::debug!("new instance of {key:?}: {target}");
-    if let Err(e) = shell_execute("open", &target, "") {
+    log::debug!("new instance of {key:?}: {file} {args}");
+    if let Err(e) = shell_execute("open", &file, &args) {
         log::error!("cannot start a new instance of {key:?}: {e}");
     }
 }

@@ -39,10 +39,24 @@ fn placeholder_names() {
 #[test]
 fn resolve_name_prefers_shell_then_file_description_then_stem() {
     let _com = ComGuard::init();
-    assert_eq!(resolve_name(&GroupKey::AppId("Microsoft.Windows.Explorer".into()), None), "File Explorer");
-    assert_eq!(resolve_name(&GroupKey::exe(r"C:\Windows\System32\notepad.exe"), None), "Notepad");
-    assert_eq!(resolve_name(&GroupKey::AppId("Unknown!X".into()), Some(r"C:\Windows\System32\notepad.exe")), "Notepad");
-    assert_eq!(resolve_name(&GroupKey::exe(r"C:\nowhere\tool.exe"), None), "tool");
+    assert_eq!(resolve_name(&GroupKey::AppId("Microsoft.Windows.Explorer".into()), None, None), "File Explorer");
+    assert_eq!(resolve_name(&GroupKey::exe(r"C:\Windows\System32\notepad.exe"), None, None), "Notepad");
+    assert_eq!(resolve_name(&GroupKey::AppId("Unknown!X".into()), Some(r"C:\Windows\System32\notepad.exe"), None), "Notepad");
+    assert_eq!(resolve_name(&GroupKey::exe(r"C:\nowhere\tool.exe"), None, None), "tool");
+}
+
+#[test]
+fn unregistered_app_id_takes_the_windows_relaunch_name() {
+    // Steam tags its windows "Valve.Steam.Client" (no Start menu entry) from steamwebhelper.exe,
+    // whose FileDescription is "Steam Client WebHelper"; the window's relaunch name says "Steam".
+    let _com = ComGuard::init();
+    let helper = Some(r"C:\Windows\System32\notepad.exe");
+    let steam = GroupKey::AppId("Valve.Steam.Client".into());
+    assert_eq!(resolve_name(&steam, helper, Some("Steam")), "Steam");
+    // The Start menu name still wins; an unreadable resource or a blank name falls through.
+    assert_eq!(resolve_name(&GroupKey::AppId("Microsoft.Windows.Explorer".into()), None, Some("Other")), "File Explorer");
+    assert_eq!(resolve_name(&steam, helper, Some(r"@C:\nowhere\missing.dll,-1")), "Notepad");
+    assert_eq!(resolve_name(&steam, helper, Some("  ")), "Notepad");
 }
 
 #[test]

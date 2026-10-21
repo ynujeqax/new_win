@@ -10,7 +10,9 @@ use windows::Win32::UI::Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWi
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::{BOOL, Result, w};
 
-use crate::appinfo::{implicit_app_id, placeholder_name, process_app_id, process_image_path, window_app_id};
+use crate::appinfo::{
+    implicit_app_id, placeholder_name, process_app_id, process_image_path, window_app_id, window_relaunch_name,
+};
 use crate::worker::{NameJob, ResolvedName, Worker};
 
 fn hwnd(h: Hwnd) -> HWND {
@@ -35,15 +37,21 @@ impl AppNames {
         Self { names: HashMap::new(), pending: HashSet::new(), exe_by_pid: HashMap::new(), worker: None }
     }
 
-    /// The resolved name, or a placeholder while the worker resolves it.
-    pub fn name_or_placeholder(&mut self, key: &GroupKey, exe: Option<&str>) -> String {
+    /// The resolved name, or a placeholder while the worker resolves it. `relaunch_name` is read
+    /// only when a lookup is submitted.
+    pub fn name_or_placeholder(
+        &mut self,
+        key: &GroupKey,
+        exe: Option<&str>,
+        relaunch_name: impl FnOnce() -> Option<String>,
+    ) -> String {
         if let Some(n) = self.names.get(key) {
             return n.clone();
         }
         if let Some(w) = &self.worker
             && self.pending.insert(key.clone())
         {
-            w.submit(NameJob { key: key.clone(), exe: exe.map(str::to_string) });
+            w.submit(NameJob { key: key.clone(), exe: exe.map(str::to_string), relaunch_name: relaunch_name() });
         }
         placeholder_name(key, exe)
     }
@@ -102,7 +110,7 @@ pub fn describe(h: Hwnd, names: &mut AppNames) -> Option<WindowInfo> {
         };
         // Original-case exe path (the key is lowercased) for placeholders and FileDescription.
         let app_exe = if is_frame_host { None } else { exe.as_deref() };
-        let app_name = names.name_or_placeholder(&group_key, app_exe);
+        let app_name = names.name_or_placeholder(&group_key, app_exe, || window_relaunch_name(w));
 
         let mut cloaked = 0u32;
         let _ = DwmGetWindowAttribute(w, DWMWA_CLOAKED, &mut cloaked as *mut _ as _, 4);
