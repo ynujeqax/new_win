@@ -184,7 +184,7 @@ impl App {
                 }
             }
             MenuCtx::AppMenu { key, windows, .. } => match id {
-                NEW_WINDOW => activate::launch_new_instance(key, None),
+                NEW_WINDOW => activate::launch_new_instance(key, windows.first().copied()),
                 CLOSE_GROUP => windows.iter().for_each(|&h| activate::close(h)),
                 _ => {}
             },
