@@ -4,7 +4,7 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use windows::Win32::Graphics::Direct2D::*;
-use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_HARDWARE;
+use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_WARP;
 use windows::Win32::Graphics::Direct3D11::{D3D11_CREATE_DEVICE_BGRA_SUPPORT, D3D11_SDK_VERSION, D3D11CreateDevice};
 use windows::Win32::Graphics::DirectComposition::{DCompositionCreateDevice2, IDCompositionDesktopDevice};
 use windows::Win32::Graphics::DirectWrite::{DWRITE_FACTORY_TYPE_SHARED, DWriteCreateFactory, IDWriteFactory};
@@ -41,10 +41,13 @@ impl Gfx {
 
     fn create_devices(&self) -> Result<Devices> {
         unsafe {
+            // WARP (software) instead of the GPU driver: our surfaces are tiny and redrawn only on
+            // change, while the vendor driver would add ~50 threads, a 60 Hz wakeup and tens of MB.
+            // Composition itself still runs on the GPU inside DWM.
             let mut d3d = None;
             D3D11CreateDevice(
                 None,
-                D3D_DRIVER_TYPE_HARDWARE,
+                D3D_DRIVER_TYPE_WARP,
                 Default::default(),
                 D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                 None,
