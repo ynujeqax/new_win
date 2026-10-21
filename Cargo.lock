@@ -67,6 +67,7 @@ dependencies = [
  "newwin-core",
  "newwin-platform",
  "newwin-ui",
+ "windows",
 ]
 
 [[package]]
