@@ -73,6 +73,19 @@ fn minute_alignment() {
 }
 
 #[test]
+fn system_menu_strings() {
+    let en = strings_for("en-US");
+    assert_eq!(en.task_manager, "Task Manager");
+    assert_eq!(en.powershell_admin, "Windows PowerShell (Admin)");
+    assert_eq!(en.shut_down_or_sign_out, "Shut down or sign out");
+    assert_eq!(en.newwin_settings, "NewWin settings…");
+    assert_eq!(en.restart_newwin, "Restart NewWin");
+    let uk = strings_for("uk-UA");
+    assert_eq!(uk.task_manager, "Диспетчер завдань");
+    assert_eq!(uk.desktop, "Робочий стіл");
+}
+
+#[test]
 fn strings_fallback() {
     assert_eq!(strings_for("uk-UA").quit, "Вийти з NewWin");
     assert_eq!(strings_for("en-US").quit, "Quit NewWin");

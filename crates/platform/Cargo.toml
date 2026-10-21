@@ -26,4 +26,9 @@ windows = { workspace = true, features = [
     "Win32_System_Variant",
     "Win32_UI_Shell_Common",
     "Win32_UI_Shell_PropertiesSystem",
+    "Win32_Globalization",
+    "Win32_System_Power",
+    "Win32_System_Shutdown",
+    "Win32_System_Ole",
+    "Win32_UI_Input_KeyboardAndMouse",
 ] }
