@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use newwin_core::apps::GroupKey;
-use windows::Win32::Foundation::{CloseHandle, HWND};
+use windows::Win32::Foundation::{CloseHandle, FILETIME, HWND};
 use windows::Win32::Foundation::PROPERTYKEY;
 use windows::Win32::Storage::EnhancedStorage::{
     PKEY_AppUserModel_ID, PKEY_AppUserModel_RelaunchCommand, PKEY_AppUserModel_RelaunchDisplayNameResource,
@@ -11,7 +11,9 @@ use windows::Win32::Storage::EnhancedStorage::{
 use windows::Win32::Storage::FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW};
 use windows::Win32::Storage::Packaging::Appx::GetApplicationUserModelId;
 use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoTaskMemFree, CoUninitialize};
-use windows::Win32::System::Threading::{OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW};
+use windows::Win32::System::Threading::{
+    GetProcessTimes, OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
+};
 use windows::Win32::UI::Shell::PropertiesSystem::{IPropertyStore, SHGetPropertyStoreForWindow};
 use windows::Win32::UI::Shell::{
     FOLDERID_AppsFolder, FOLDERID_ProgramFilesX64, FOLDERID_ProgramFilesX86, FOLDERID_System, FOLDERID_Windows, IShellItem,
@@ -46,6 +48,19 @@ pub fn process_image_path(pid: u32) -> Option<String> {
         let _ = CloseHandle(h);
         r.ok()?;
         Some(String::from_utf16_lossy(&buf[..len as usize]))
+    }
+}
+
+/// When the process was created (FILETIME ticks); with the pid it identifies one process.
+pub fn process_creation_time(pid: u32) -> Option<u64> {
+    unsafe {
+        let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let (mut created, mut exit, mut kernel, mut user) = Default::default();
+        let r = GetProcessTimes(h, &mut created, &mut exit, &mut kernel, &mut user);
+        let _ = CloseHandle(h);
+        r.ok()?;
+        let FILETIME { dwLowDateTime: lo, dwHighDateTime: hi } = created;
+        Some((u64::from(hi) << 32) | u64::from(lo))
     }
 }
 

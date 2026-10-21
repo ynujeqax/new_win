@@ -11,6 +11,7 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::{BOOL, Result, w};
 
 use crate::appinfo::{
+    process_creation_time,
     implicit_app_id, placeholder_name, process_app_id, process_image_path, window_app_id, window_relaunch_name,
 };
 use crate::worker::{NameJob, ResolvedName, Worker};
@@ -23,18 +24,18 @@ fn hwnd(h: Hwnd) -> HWND {
 pub struct AppNames {
     names: HashMap<GroupKey, String>,
     pending: HashSet<GroupKey>,
-    exe_by_pid: HashMap<u32, Option<String>>,
+    exe_by_pid: ExeCache,
     worker: Option<Worker>,
 }
 
 impl AppNames {
     pub fn new(worker: Worker) -> Self {
-        Self { names: HashMap::new(), pending: HashSet::new(), exe_by_pid: HashMap::new(), worker: Some(worker) }
+        Self { names: HashMap::new(), pending: HashSet::new(), exe_by_pid: ExeCache::default(), worker: Some(worker) }
     }
 
     /// Placeholders only; for tests and tools.
     pub fn without_worker() -> Self {
-        Self { names: HashMap::new(), pending: HashSet::new(), exe_by_pid: HashMap::new(), worker: None }
+        Self { names: HashMap::new(), pending: HashSet::new(), exe_by_pid: ExeCache::default(), worker: None }
     }
 
     /// The resolved name, or a placeholder while the worker resolves it. `relaunch_name` is read
@@ -62,7 +63,30 @@ impl AppNames {
     }
 
     fn exe_for_pid(&mut self, pid: u32) -> Option<String> {
-        self.exe_by_pid.entry(pid).or_insert_with(|| process_image_path(pid)).clone()
+        self.exe_by_pid.get(pid, process_creation_time(pid), || process_image_path(pid))
+    }
+}
+
+/// Exe path per process. Windows reuses process ids, so an entry is valid only for the process
+/// that had the pid at that creation time.
+#[derive(Default)]
+pub struct ExeCache {
+    by_pid: HashMap<u32, (u64, Option<String>)>,
+}
+
+impl ExeCache {
+    /// `created`: the process creation time, `None` if the process cannot be opened (then
+    /// nothing is cached).
+    pub fn get(&mut self, pid: u32, created: Option<u64>, resolve: impl FnOnce() -> Option<String>) -> Option<String> {
+        let Some(created) = created else { return resolve() };
+        match self.by_pid.get(&pid) {
+            Some((t, exe)) if *t == created => exe.clone(),
+            _ => {
+                let exe = resolve();
+                self.by_pid.insert(pid, (created, exe.clone()));
+                exe
+            }
+        }
     }
 }
 
