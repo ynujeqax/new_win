@@ -111,6 +111,21 @@ pub fn create_window(spec: &WindowSpec, handler: SharedHandler) -> Result<HWND> 
     Ok(hwnd)
 }
 
+struct NoopHandler;
+
+impl Handler for NoopHandler {
+    fn on_message(&mut self, _: HWND, _: u32, _: WPARAM, _: LPARAM) -> Option<LRESULT> {
+        None
+    }
+}
+
+/// A plain window with default behavior; for tests and tools.
+pub fn create_test_window(ex_style: WINDOW_EX_STYLE, style: WINDOW_STYLE, rect: RECT, title: &str) -> Result<HWND> {
+    let hwnd = create_window(&WindowSpec { class: "NewWin.Test", ex_style, style, rect, layered_alpha: None }, Rc::new(RefCell::new(NoopHandler)))?;
+    unsafe { SetWindowTextW(hwnd, &HSTRING::from(title))? };
+    Ok(hwnd)
+}
+
 /// Runs until `WM_QUIT`; returns its exit code.
 pub fn run_message_loop() -> i32 {
     let mut msg = MSG::default();

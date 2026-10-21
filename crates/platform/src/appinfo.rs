@@ -1,0 +1,172 @@
+//! Who a window belongs to: process image, AppUserModelID, display name.
+
+use std::path::Path;
+
+use newwin_core::apps::GroupKey;
+use windows::Win32::Foundation::{CloseHandle, HWND};
+use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
+use windows::Win32::Storage::FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW};
+use windows::Win32::Storage::Packaging::Appx::GetApplicationUserModelId;
+use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoTaskMemFree, CoUninitialize};
+use windows::Win32::System::Threading::{OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW};
+use windows::Win32::UI::Shell::PropertiesSystem::{IPropertyStore, SHGetPropertyStoreForWindow};
+use windows::Win32::UI::Shell::{
+    FOLDERID_AppsFolder, FOLDERID_ProgramFilesX64, FOLDERID_ProgramFilesX86, FOLDERID_System, FOLDERID_Windows, IShellItem,
+    KF_FLAG_DEFAULT, SHCreateItemInKnownFolder, SHGetKnownFolderPath, SIGDN_NORMALDISPLAY,
+};
+use windows::core::{GUID, HSTRING, PCWSTR, PWSTR};
+
+/// Initializes COM (STA) for the current thread for its lifetime.
+pub struct ComGuard(bool);
+
+impl ComGuard {
+    pub fn init() -> Self {
+        ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) }.is_ok())
+    }
+}
+
+impl Drop for ComGuard {
+    fn drop(&mut self) {
+        if self.0 {
+            unsafe { CoUninitialize() };
+        }
+    }
+}
+
+/// Full path of a process image; works for elevated processes too.
+pub fn process_image_path(pid: u32) -> Option<String> {
+    unsafe {
+        let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let mut buf = [0u16; 1024];
+        let mut len = buf.len() as u32;
+        let r = QueryFullProcessImageNameW(h, PROCESS_NAME_WIN32, PWSTR(buf.as_mut_ptr()), &mut len);
+        let _ = CloseHandle(h);
+        r.ok()?;
+        Some(String::from_utf16_lossy(&buf[..len as usize]))
+    }
+}
+
+/// AppUserModelID of a packaged (UWP/MSIX) process.
+pub fn process_app_id(pid: u32) -> Option<String> {
+    unsafe {
+        let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let mut buf = [0u16; 512];
+        let mut len = buf.len() as u32;
+        let r = GetApplicationUserModelId(h, &mut len, Some(PWSTR(buf.as_mut_ptr())));
+        let _ = CloseHandle(h);
+        if r.is_err() || len == 0 {
+            return None;
+        }
+        Some(String::from_utf16_lossy(&buf[..len as usize - 1]))
+    }
+}
+
+/// Explicit AppUserModelID set on the window (Chrome, Explorer, …).
+pub fn window_app_id(hwnd: HWND) -> Option<String> {
+    unsafe {
+        let store: IPropertyStore = SHGetPropertyStoreForWindow(hwnd).ok()?;
+        let v = store.GetValue(&PKEY_AppUserModel_ID).ok()?;
+        let s = v.to_string();
+        (!s.is_empty()).then_some(s)
+    }
+}
+
+/// `FileDescription` from the exe's version resource (first translation).
+pub fn file_description(path: &str) -> Option<String> {
+    unsafe {
+        let wide = HSTRING::from(path);
+        let size = GetFileVersionInfoSizeW(&wide, None);
+        if size == 0 {
+            return None;
+        }
+        let mut data = vec![0u8; size as usize];
+        GetFileVersionInfoW(&wide, None, size, data.as_mut_ptr() as _).ok()?;
+        let mut ptr = std::ptr::null_mut();
+        let mut len = 0u32;
+        if !VerQueryValueW(data.as_ptr() as _, &HSTRING::from(r"\VarFileInfo\Translation"), &mut ptr, &mut len).as_bool() || len < 4 {
+            return None;
+        }
+        let lang = *(ptr as *const u16);
+        let cp = *(ptr as *const u16).add(1);
+        let key = HSTRING::from(format!(r"\StringFileInfo\{lang:04x}{cp:04x}\FileDescription"));
+        if !VerQueryValueW(data.as_ptr() as _, &key, &mut ptr, &mut len).as_bool() || len == 0 {
+            return None;
+        }
+        let s = PCWSTR(ptr as *const u16).to_string().ok()?;
+        let s = s.trim().to_string();
+        (!s.is_empty()).then_some(s)
+    }
+}
+
+/// Name the Start menu shows for an AUMID. Needs COM on the calling thread.
+pub fn appsfolder_display_name(aumid: &str) -> Option<String> {
+    unsafe {
+        let item: IShellItem = SHCreateItemInKnownFolder(&FOLDERID_AppsFolder, KF_FLAG_DEFAULT, &HSTRING::from(aumid)).ok()?;
+        let p = item.GetDisplayName(SIGDN_NORMALDISPLAY).ok()?;
+        let s = p.to_string().ok();
+        CoTaskMemFree(Some(p.0 as _));
+        s.filter(|s| !s.is_empty())
+    }
+}
+
+/// Explorer windows carry no AUMID, but Windows groups them as this app.
+pub fn implicit_app_id(exe: &str) -> Option<&'static str> {
+    let windir = std::env::var("WINDIR").unwrap_or_else(|_| r"C:\Windows".into());
+    let expected = format!(r"{windir}\explorer.exe");
+    exe.eq_ignore_ascii_case(&expected).then_some("Microsoft.Windows.Explorer")
+}
+
+fn guid_string(g: &GUID) -> String {
+    let d4 = g.data4;
+    format!(
+        "{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
+        g.data1, g.data2, g.data3, d4[0], d4[1], d4[2], d4[3], d4[4], d4[5], d4[6], d4[7]
+    )
+}
+
+/// `C:\Windows\System32\notepad.exe` → `{System32 GUID}\notepad.exe`, the form AppsFolder uses
+/// for desktop apps pinned in the Start menu.
+pub fn known_folder_relative(path: &str) -> Option<String> {
+    let folders = [FOLDERID_System, FOLDERID_ProgramFilesX64, FOLDERID_ProgramFilesX86, FOLDERID_Windows];
+    let lower = path.to_lowercase();
+    for id in folders {
+        let base = unsafe {
+            let Ok(p) = SHGetKnownFolderPath(&id, KF_FLAG_DEFAULT, None) else { continue };
+            let s = p.to_string().ok();
+            CoTaskMemFree(Some(p.0 as _));
+            s
+        };
+        let Some(base) = base else { continue };
+        let prefix = format!("{}\\", base.to_lowercase());
+        if lower.starts_with(&prefix) {
+            return Some(format!(r"{}\{}", guid_string(&id), &path[prefix.len()..]));
+        }
+    }
+    None
+}
+
+fn file_stem(path: &str) -> Option<String> {
+    Path::new(path).file_stem().map(|s| s.to_string_lossy().into_owned())
+}
+
+/// Shown until the real name is resolved: exe file stem, else the AUMID's last segment.
+pub fn placeholder_name(key: &GroupKey, exe: Option<&str>) -> String {
+    match (key, exe.and_then(file_stem)) {
+        (_, Some(stem)) => stem,
+        (GroupKey::ExePath(p), None) => file_stem(p).unwrap_or_else(|| p.clone()),
+        (GroupKey::AppId(id), None) => id.rsplit(['!', '.', '\\']).next().unwrap_or(id).to_string(),
+    }
+}
+
+/// Display name for a group: Start menu name, then the exe's FileDescription, then the placeholder.
+pub fn resolve_name(key: &GroupKey, exe: Option<&str>) -> String {
+    let from_shell = match key {
+        GroupKey::AppId(id) => appsfolder_display_name(id),
+        GroupKey::ExePath(p) => known_folder_relative(p).and_then(|rel| appsfolder_display_name(&rel)),
+    };
+    let exe_path = match key {
+        GroupKey::ExePath(p) => Some(p.as_str()),
+        GroupKey::AppId(_) => exe,
+    };
+    from_shell.or_else(|| exe_path.and_then(file_description)).unwrap_or_else(|| placeholder_name(key, exe))
+}
