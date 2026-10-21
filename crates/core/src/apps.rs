@@ -26,6 +26,11 @@ pub struct WindowInfo {
     pub cloaked: bool,
     pub tool_window: bool,
     pub app_window: bool,
+    /// `WS_EX_NOACTIVATE`: helper windows that never take focus (explorer's PopupHost, OSDs).
+    pub no_activate: bool,
+    /// Bare top-level `Windows.UI.Core.CoreWindow`: system UI such as Screen Snipping or Search.
+    /// Real UWP apps are hosted in an `ApplicationFrameWindow` instead.
+    pub shell_ui: bool,
     pub own_process: bool,
     pub minimized: bool,
     pub title: String,
@@ -33,9 +38,14 @@ pub struct WindowInfo {
     pub app_name: String,
 }
 
-/// Alt+Tab rules: an explicit `WS_EX_APPWINDOW` wins, otherwise unowned non-tool windows.
+/// Native taskbar rules: an explicit `WS_EX_APPWINDOW` wins, otherwise unowned windows that are
+/// neither tool windows nor never-activated helpers; system UI windows are never apps.
 pub fn is_taskbar_window(w: &WindowInfo) -> bool {
-    w.visible && !w.cloaked && !w.own_process && (w.app_window || (!w.has_owner && !w.tool_window))
+    w.visible
+        && !w.cloaked
+        && !w.own_process
+        && !w.shell_ui
+        && (w.app_window || (!w.has_owner && !w.tool_window && !w.no_activate))
 }
 
 #[derive(Clone, Debug, PartialEq)]

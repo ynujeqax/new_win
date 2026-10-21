@@ -109,6 +109,14 @@ pub fn describe(h: Hwnd, names: &mut AppNames) -> Option<WindowInfo> {
         let ex = WINDOW_EX_STYLE(GetWindowLongPtrW(w, GWL_EXSTYLE) as u32);
         let mut buf = [0u16; 512];
         let n = GetWindowTextW(w, &mut buf);
+        let mut class_buf = [0u16; 128];
+        let cn = GetClassNameW(w, &mut class_buf);
+        let class = String::from_utf16_lossy(&class_buf[..cn.max(0) as usize]);
+        log::debug!(
+            "describe {h:#x} class={class} title={:?} ex={:#x} cloaked={cloaked} key={group_key:?}",
+            String::from_utf16_lossy(&buf[..n.max(0) as usize]),
+            ex.0
+        );
         Some(WindowInfo {
             hwnd: h,
             has_owner: GetWindow(w, GW_OWNER).is_ok_and(|o| !o.is_invalid()),
@@ -116,6 +124,8 @@ pub fn describe(h: Hwnd, names: &mut AppNames) -> Option<WindowInfo> {
             cloaked: cloaked != 0,
             tool_window: ex.contains(WS_EX_TOOLWINDOW),
             app_window: ex.contains(WS_EX_APPWINDOW),
+            no_activate: ex.contains(WS_EX_NOACTIVATE),
+            shell_ui: class == "Windows.UI.Core.CoreWindow",
             own_process: pid == std::process::id(),
             minimized: IsIconic(w).as_bool(),
             title: String::from_utf16_lossy(&buf[..n.max(0) as usize]),

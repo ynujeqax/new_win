@@ -33,7 +33,7 @@ impl FileLogger {
 
 impl ::log::Log for FileLogger {
     fn enabled(&self, metadata: &::log::Metadata) -> bool {
-        metadata.level() <= ::log::Level::Info
+        metadata.level() <= ::log::max_level()
     }
 
     fn log(&self, record: &::log::Record) {
@@ -79,6 +79,8 @@ impl ::log::Log for FileLogger {
 pub fn init_logging() -> std::io::Result<()> {
     let logger = FileLogger { dir: crate::paths::log_dir(), file: Mutex::new(None) };
     ::log::set_boxed_logger(Box::new(logger)).map_err(std::io::Error::other)?;
-    ::log::set_max_level(::log::LevelFilter::Info);
+    // NEWWIN_DEBUG=1 adds a detailed event trace for diagnosing problems.
+    let debug = std::env::var_os("NEWWIN_DEBUG").is_some_and(|v| v == "1");
+    ::log::set_max_level(if debug { ::log::LevelFilter::Debug } else { ::log::LevelFilter::Info });
     Ok(())
 }

@@ -47,6 +47,7 @@ impl App {
     }
 
     pub(super) fn on_window_event(&mut self, ev: WindowEvent) {
+        log::debug!("window event {ev:?}");
         match ev {
             WindowEvent::Changed(h) => {
                 self.refresh_window(h);
@@ -81,6 +82,7 @@ impl App {
     fn refresh_if_changed(&mut self) {
         let sig = self.signature();
         if sig != self.last_signature {
+            log::debug!("bar items {sig:?}");
             self.last_signature = sig;
             self.refresh();
         }
@@ -200,6 +202,12 @@ impl App {
 
     pub(super) fn on_click(&mut self, button: Button, p: PointF) {
         let target = self.hit(p).map(|it| (it.target, it.rect));
+        log::debug!(
+            "click {button:?} at {p:?} target={:?} foreground={:?} popup_open={}",
+            target.map(|t| t.0),
+            unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() },
+            self.popup.is_some()
+        );
         // A click on the item whose menu is open just closes it (toggle).
         let toggled = self.popup.as_ref().is_some_and(|(_, ctx)| target.map(|t| t.0) == ctx.anchor_target() && button != Button::Middle);
         self.close_popup();

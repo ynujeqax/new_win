@@ -17,7 +17,9 @@ pub fn activate(h: Hwnd) {
         if IsIconic(w).as_bool() {
             let _ = ShowWindow(w, SW_RESTORE);
         }
-        if !SetForegroundWindow(w).as_bool() {
+        let ok = SetForegroundWindow(w).as_bool();
+        log::debug!("activate {h:#x}: SetForegroundWindow={ok}");
+        if !ok {
             // Foreground lock refused us; this is what the native taskbar falls back to.
             SwitchToThisWindow(w, true);
         }

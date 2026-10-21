@@ -12,6 +12,8 @@ fn win(hwnd: Hwnd, k: &str, name: &str) -> WindowInfo {
         cloaked: false,
         tool_window: false,
         app_window: false,
+        no_activate: false,
+        shell_ui: false,
         own_process: false,
         minimized: false,
         title: format!("window {hwnd}"),
@@ -30,6 +32,15 @@ fn filter_rules() {
     assert!(!is_taskbar_window(&WindowInfo { has_owner: true, ..win(1, "a", "A") }));
     assert!(is_taskbar_window(&WindowInfo { has_owner: true, app_window: true, ..win(1, "a", "A") }));
     assert!(is_taskbar_window(&WindowInfo { tool_window: true, app_window: true, ..win(1, "a", "A") }));
+}
+
+#[test]
+fn system_ui_windows_are_not_apps() {
+    // Screen Snipping, Search, notification center: bare top-level CoreWindows.
+    assert!(!is_taskbar_window(&WindowInfo { shell_ui: true, ..win(1, "a", "A") }));
+    // Explorer's PopupHost and other never-activated helper windows.
+    assert!(!is_taskbar_window(&WindowInfo { no_activate: true, ..win(1, "a", "A") }));
+    assert!(is_taskbar_window(&WindowInfo { no_activate: true, app_window: true, ..win(1, "a", "A") }));
 }
 
 #[test]

@@ -43,6 +43,7 @@ impl App {
     pub(super) fn feed(&mut self, input: VisInput) {
         let Some(vis) = self.vis.as_mut() else { return };
         let cmds = vis.handle(input);
+        log::debug!("visibility {input:?} -> {:?} {cmds:?}", vis.state());
         self.exec(cmds);
     }
 
@@ -178,6 +179,7 @@ impl App {
 
     pub(super) fn on_pointer_leave(&mut self, hwnd: HWND) {
         self.tracking[usize::from(hwnd == self.catcher)] = false;
+        log::debug!("mouse leave from {} in_zone={} still_inside={}", if hwnd == self.catcher { "catcher" } else { "bar" }, self.in_zone, self.pointer_in_zone());
         if self.in_zone && !self.pointer_in_zone() {
             self.in_zone = false;
             self.feed(VisInput::ZoneLeave);

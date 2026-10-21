@@ -221,7 +221,8 @@ impl Popup {
                 let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
             } else {
                 let _ = ShowWindow(hwnd, SW_SHOW);
-                let _ = SetForegroundWindow(hwnd);
+                let ok = SetForegroundWindow(hwnd).as_bool();
+                log::debug!("popup {hwnd:?} shown, SetForegroundWindow={ok} foreground={:?}", GetForegroundWindow());
             }
         }
         Ok(Popup { state, hwnd })
@@ -416,6 +417,7 @@ impl Handler for State {
                 Some(LRESULT(0))
             }
             WM_ACTIVATE if !self.is_child && (wp.0 & 0xFFFF) as u32 == WA_INACTIVE => {
+                log::debug!("popup {:?} deactivated, new active={lp:?}", self.hwnd);
                 self.finish(None);
                 Some(LRESULT(0))
             }

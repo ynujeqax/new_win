@@ -1,11 +1,15 @@
 //! Win32 windows driven by a Rust handler.
 //!
-//! The handler is shared (`Rc<RefCell<…>>`) so one app object can own several windows. Messages that
-//! arrive re-entrantly while the handler is already borrowed (e.g. `WM_WINDOWPOSCHANGING` sent by our
-//! own `SetWindowPos`) go to `DefWindowProcW`.
+//! The handler is shared (`Rc<RefCell<…>>`) so one app object can own several windows.
+//!
+//! A message can arrive while the handler is still running: our own `SetWindowPos` sends
+//! `WM_WINDOWPOSCHANGING`, and calls such as `ShellExecute` or COM run a nested message loop that
+//! dispatches whatever was posted meanwhile. Sent messages that need an answer go to
+//! `DefWindowProcW`; posted messages and the notifications we act on are queued and delivered as
+//! soon as the handler is free, so nothing is lost.
 
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::rc::Rc;
 
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
@@ -28,8 +32,45 @@ pub struct WindowSpec {
     pub layered_alpha: Option<u8>,
 }
 
+type Deferred = (HWND, u32, WPARAM, LPARAM);
+
 thread_local! {
     static REGISTERED: RefCell<HashSet<&'static str>> = RefCell::new(HashSet::new());
+    static DEFERRED: RefCell<VecDeque<Deferred>> = const { RefCell::new(VecDeque::new()) };
+}
+
+/// Broadcast notifications we act on; they arrive sent, but their result does not matter.
+const DEFERRABLE_SENT: [u32; 6] = [WM_DISPLAYCHANGE, WM_DPICHANGED, WM_SETTINGCHANGE, WM_TIMECHANGE, WM_POWERBROADCAST, WM_ENDSESSION];
+
+fn can_defer(msg: u32) -> bool {
+    if msg == WM_PAINT {
+        return false;
+    }
+    let sent = unsafe { InSendMessage() }.as_bool();
+    !sent || DEFERRABLE_SENT.contains(&msg)
+}
+
+fn handler_of(hwnd: HWND) -> Option<&'static SharedHandler> {
+    let ptr = unsafe { GetWindowLongPtrW(hwnd, GWLP_USERDATA) } as *const SharedHandler;
+    // Valid until WM_NCDESTROY clears the slot; only used for the duration of one call.
+    unsafe { ptr.as_ref() }
+}
+
+/// Delivers queued messages whose handler is free again, in arrival order.
+fn drain_deferred() {
+    loop {
+        let Some((hwnd, msg, wp, lp)) = DEFERRED.with(|q| q.borrow_mut().pop_front()) else { return };
+        if !unsafe { IsWindow(Some(hwnd)) }.as_bool() {
+            continue;
+        }
+        let Some(handler) = handler_of(hwnd) else { continue };
+        let Ok(mut h) = handler.try_borrow_mut() else {
+            // Still busy further up the stack: retry when that call returns.
+            DEFERRED.with(|q| q.borrow_mut().push_front((hwnd, msg, wp, lp)));
+            return;
+        };
+        h.on_message(hwnd, msg, wp, lp);
+    }
 }
 
 unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRESULT {
@@ -38,19 +79,30 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
             let cs = &*(lp.0 as *const CREATESTRUCTW);
             SetWindowLongPtrW(hwnd, GWLP_USERDATA, cs.lpCreateParams as isize);
         }
-        let ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *const SharedHandler;
         if msg == WM_NCDESTROY {
+            let ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut SharedHandler;
             if !ptr.is_null() {
                 SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
-                drop(Box::from_raw(ptr as *mut SharedHandler));
+                drop(Box::from_raw(ptr));
             }
             return DefWindowProcW(hwnd, msg, wp, lp);
         }
-        if let Some(handler) = ptr.as_ref()
-            && let Ok(mut h) = handler.try_borrow_mut()
-            && let Some(r) = h.on_message(hwnd, msg, wp, lp)
-        {
-            return r;
+        if let Some(handler) = handler_of(hwnd) {
+            match handler.try_borrow_mut() {
+                Ok(mut h) => {
+                    let r = h.on_message(hwnd, msg, wp, lp);
+                    drop(h);
+                    drain_deferred();
+                    if let Some(r) = r {
+                        return r;
+                    }
+                }
+                Err(_) if can_defer(msg) => {
+                    DEFERRED.with(|q| q.borrow_mut().push_back((hwnd, msg, wp, lp)));
+                    return LRESULT(0);
+                }
+                Err(_) => {}
+            }
         }
         DefWindowProcW(hwnd, msg, wp, lp)
     }
