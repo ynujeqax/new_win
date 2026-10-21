@@ -26,6 +26,7 @@ pub fn parse_appbar_notify(wp: WPARAM, lp: LPARAM) -> AppBarNotify {
 
 pub struct AppBar {
     hwnd: HWND,
+    callback_msg: u32,
 }
 
 impl AppBar {
@@ -35,13 +36,27 @@ impl AppBar {
 
     /// Registers without reserving space; notifications arrive as `callback_msg`.
     pub fn register(hwnd: HWND, callback_msg: u32) -> Result<Self> {
-        let bar = AppBar { hwnd };
-        let mut abd = bar.data();
-        abd.uCallbackMessage = callback_msg;
+        let bar = AppBar { hwnd, callback_msg };
+        bar.add()?;
+        Ok(bar)
+    }
+
+    fn add(&self) -> Result<()> {
+        let mut abd = self.data();
+        abd.uCallbackMessage = self.callback_msg;
         if unsafe { SHAppBarMessage(ABM_NEW, &mut abd) } == 0 {
             return Err(windows::core::Error::new(windows::core::HRESULT(-1), "ABM_NEW refused"));
         }
-        Ok(bar)
+        Ok(())
+    }
+
+    /// Registers again after explorer restarted (`TaskbarCreated`): registrations live in explorer
+    /// and die with it. Removing first makes it work whether or not explorer still knows us.
+    /// Reserve the space again with [`Self::set_top`] afterwards.
+    pub fn reregister(&mut self) -> Result<()> {
+        let mut abd = self.data();
+        unsafe { SHAppBarMessage(ABM_REMOVE, &mut abd) };
+        self.add()
     }
 
     /// Reserves a band of `thickness_px` along the top of `monitor`; returns the granted band.

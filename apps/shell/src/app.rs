@@ -6,7 +6,7 @@ use std::rc::Rc;
 use newwin_config::Config;
 use newwin_core::apps::{AppModel, SnipTracker};
 use newwin_core::strings::{Strings, strings_for};
-use newwin_core::visibility::{Catcher, Visibility};
+use newwin_core::visibility::{Catcher, VisInput, Visibility};
 use newwin_core::watchdog::EXIT_RESTART;
 use newwin_platform::appbar::AppBar;
 use newwin_platform::appinfo::ComGuard;
@@ -160,6 +160,23 @@ impl App {
         }
     }
 
+    /// AppBar registrations live in explorer and die with it: register again and reserve the
+    /// space again (pinned mode), and forget a full-screen state whose end will never be reported.
+    fn on_explorer_restarted(&mut self) {
+        let r = match self.appbar.as_mut() {
+            Some(ab) => ab.reregister(),
+            None => AppBar::register(self.bar, WM_APP_APPBAR).map(|ab| self.appbar = Some(ab)),
+        };
+        if let Err(e) = r {
+            log::error!("appbar after explorer restart: {e}");
+        }
+        self.reserve_space();
+        if self.fullscreen {
+            self.fullscreen = false;
+            self.feed(VisInput::Fullscreen(false));
+        }
+    }
+
     fn restore_taskbar(&mut self) {
         self.show_watch = None;
         if let Some(tb) = self.taskbar.take()
@@ -173,6 +190,7 @@ impl App {
         if msg == self.taskbar_created {
             log::info!("explorer restarted, hiding the taskbar again");
             self.reapply_taskbar(true);
+            self.on_explorer_restarted();
             return Some(LRESULT(0));
         }
         if msg == WM_APP_GLASS {
