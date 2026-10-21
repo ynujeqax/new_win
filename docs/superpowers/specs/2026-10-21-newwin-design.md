@@ -166,6 +166,14 @@ installer/       — скрипт Inno Setup → NewWin-Setup.exe
 - `SetForegroundWindow` викликаємо синхронно в обробнику кліку, поки процес має право на передачу фокусу.
 - Для згорнутих вікон спершу `ShowWindow(SW_RESTORE)`.
 
+**Правий клік по порожньому місцю бару** (додано 2026-10-21 на прохання користувача): текстове меню в стилі бару з тими самими пунктами, що меню Win+X і контекстне меню рідного таскбару, у тому ж порядку:
+- *Installed apps* · *Power Options* · *Event Viewer* · *System* · *Device Manager* · *Network Connections* · *Disk Management* · *Computer Management* · *Windows PowerShell* · *Windows PowerShell (Admin)*
+- роздільник · *Task Manager* · *Settings* · *File Explorer* · *Search* (відкриває Spotlight) · *Run*
+- роздільник · *Shut down or sign out ›* (підменю: *Sign out* · *Sleep* · *Shut down* · *Restart*) · *Desktop* (згорнути всі вікна / повернути)
+- роздільник · *NewWin settings…* (замість «Taskbar settings») · *Restart NewWin* · *Quit NewWin*
+
+Пункти відкривають ті самі системні цілі, що й Windows: `ms-settings:appsfeatures`, `ms-settings:powersleep`, `eventvwr.msc`, `ms-settings:about`, `devmgmt.msc`, `ncpa.cpl`, `diskmgmt.msc`, `compmgmt.msc`, `powershell.exe` (і з `runas`), `taskmgr.exe`, `ms-settings:`, `explorer.exe`, діалог Run оболонки, `IShellDispatch4::ToggleDesktop`. *Shut down* і *Restart* виконуються одразу, як і в Windows.
+
 **Переповнення:** якщо назви не вміщаються, найдовші скорочуються з «…». Якщо й цього мало, останні групи збираються в пункт `»` з поповером.
 
 ## 7. Права частина бару

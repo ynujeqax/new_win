@@ -1,5 +1,7 @@
 #![windows_subsystem = "windows"]
 
+mod app;
+mod bar;
 mod roles;
 mod watchdog;
 
@@ -37,13 +39,15 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let code = match role_from_args(&args) {
         Role::Watchdog => watchdog::run_watchdog(),
-        Role::Shell => run_shell(),
+        Role::Shell => app::run_shell(),
+        Role::RestoreTaskbar => match restore_from_state_file(&taskbar_state_file()) {
+            Ok(_) => 0,
+            Err(e) => {
+                log::error!("restore failed: {e}");
+                1
+            }
+        },
     };
     log::logger().flush();
     std::process::exit(code);
-}
-
-/// Placeholder until the bar exists (Task 9).
-fn run_shell() -> i32 {
-    0
 }

@@ -1,1 +1,19 @@
 //! Minimal Direct2D / DirectWrite / DirectComposition toolkit for NewWin.
+//!
+//! Retained, on-demand rendering: callers redraw a `Layer` only when something changed;
+//! animations are DirectComposition property animations run by DWM.
+
+mod anim;
+mod geom;
+mod gfx;
+mod layer;
+mod paint;
+mod text;
+pub mod theme;
+
+pub use anim::{fade, set_offset_opacity, slide_y};
+pub use geom::{Color, PointF, RectF};
+pub use gfx::Gfx;
+pub use layer::{Backdrop, Layer};
+pub use paint::Painter;
+pub use text::{TextCache, TextLayout, TextStyle};

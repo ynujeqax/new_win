@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 windows-numerics = "0.3.1"
+log.workspace = true
 windows = { workspace = true, features = [
     "Win32_Foundation",
     "Win32_Graphics_Direct2D",
