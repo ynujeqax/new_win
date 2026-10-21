@@ -159,6 +159,9 @@ impl Drop for WinEventHookGuard {
 }
 
 /// Posts `msg` to `notify` whenever explorer shows a taskbar window again.
+///
+/// The hook is bound to the current explorer process (so it is not woken by every window shown
+/// system-wide); after `TaskbarCreated` the caller must drop the guard and call this again.
 pub fn watch_taskbar_show(notify: HWND, msg: u32) -> Result<WinEventHookGuard> {
     unsafe extern "system" fn on_show(_: HWINEVENTHOOK, _: u32, hwnd: HWND, id_object: i32, _: i32, _: u32, _: u32) {
         if id_object != OBJID_WINDOW.0 {

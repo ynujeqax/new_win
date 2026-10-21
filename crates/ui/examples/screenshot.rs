@@ -77,7 +77,7 @@ fn main() -> Result<()> {
         for row in (0..sh).rev() {
             let src = base.add(((sy + row) * mapped.RowPitch) as usize + (sx * 4) as usize);
             let px = std::slice::from_raw_parts(src, (sw * 4) as usize);
-            for p in px.chunks_exact(4) {
+            for p in px.as_chunks::<4>().0 {
                 bmp.extend_from_slice(&p[..3]);
             }
             bmp.extend(std::iter::repeat_n(0, (row_bytes - sw * 3) as usize));
