@@ -75,6 +75,7 @@ name = "newwin-ui"
 version = "0.1.0"
 dependencies = [
  "windows",
+ "windows-numerics",
 ]
 
 [[package]]
