@@ -4,34 +4,53 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use newwin_config::Config;
-use newwin_platform::dpi::{primary_monitor, scale};
+use newwin_core::apps::AppModel;
+use newwin_core::strings::{Strings, strings_for};
+use newwin_core::visibility::{Catcher, Visibility};
+use newwin_core::watchdog::EXIT_RESTART;
+use newwin_platform::appbar::AppBar;
+use newwin_platform::appinfo::ComGuard;
+use newwin_platform::clock::ui_language_tag;
+use newwin_platform::dpi::primary_monitor;
 use newwin_platform::paths::taskbar_state_file;
 use newwin_platform::taskbar::{NativeTaskbar, WinEventHookGuard, restore_from_state_file, taskbar_created_message, watch_taskbar_show};
 use newwin_platform::window::{Handler, WindowSpec, create_window, run_message_loop};
-use newwin_ui::{Backdrop, Gfx, Layer, TextCache, theme};
+use newwin_platform::windows_watch::{AppNames, WindowWatcher, enumerate_top_level};
+use newwin_platform::worker::{Worker, take_resolved};
+use newwin_ui::popup::Popup;
+use newwin_ui::{Backdrop, Gfx, Layer, PointF, TextCache, TextLayout};
 use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, FILETIME, GetLastError, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::System::SystemInformation::GetSystemTimePreciseAsFileTime;
 use windows::Win32::System::Threading::{CreateMutexW, GetCurrentProcess, GetProcessTimes};
 use windows::Win32::UI::WindowsAndMessaging::*;
-use windows::core::{Result, w};
+use windows::core::{PCWSTR, Result, w};
+
+use crate::bar::bar_rect;
+use crate::watchdog::PING_WINDOW_CLASS;
+
+mod apps_view;
+mod clock_view;
+mod menus;
+mod visibility;
+
+use apps_view::{BarItem, Button, Target};
+use menus::{MenuCtx, WM_APP_POPUP};
 
 /// Not exported by the `windows` crate.
 const WM_MOUSELEAVE: u32 = 0x02A3;
-
-use newwin_core::visibility::{Catcher, Visibility};
-use newwin_platform::appbar::AppBar;
-
-use crate::bar::{bar_rect, paint_background, text_origin, text_style};
-use crate::watchdog::PING_WINDOW_CLASS;
-
-mod visibility;
+const PBT_APMRESUMEAUTOMATIC: usize = 0x12;
 
 const WM_APP_TASKBAR_SHOWN: u32 = WM_APP + 1;
 const WM_APP_APPBAR: u32 = WM_APP + 3;
+const WM_APP_NAME: u32 = WM_APP + 4;
+
+/// `PostQuitMessage` code that makes the watchdog start a fresh shell.
+pub const APPS_EXIT_RESTART: i32 = EXIT_RESTART as i32;
 
 pub struct App {
     gfx: Rc<Gfx>,
     config: Config,
+    strings: &'static Strings,
     text: TextCache,
     taskbar: Option<NativeTaskbar>,
     show_watch: Option<WinEventHookGuard>,
@@ -42,6 +61,7 @@ pub struct App {
     bar_rect: RECT,
     monitor: RECT,
     dpi: u32,
+    // Visibility
     catcher: HWND,
     catcher_mode: Catcher,
     vis: Option<Visibility>,
@@ -52,6 +72,22 @@ pub struct App {
     tracking: [bool; 2],
     /// When the running hide animation started (to resume a reveal from its position).
     hide_started: Option<std::time::Instant>,
+    // Running apps
+    model: AppModel,
+    names: Option<AppNames>,
+    watcher: Option<WindowWatcher>,
+    last_signature: Vec<(String, bool)>,
+    items: Vec<BarItem>,
+    overflow_from: Option<usize>,
+    hover: Option<Target>,
+    popup: Option<(Popup, MenuCtx)>,
+    // Clock
+    date_text: String,
+    time_text: String,
+    date_layout: Option<TextLayout>,
+    time_layout: Option<TextLayout>,
+    date_x: f32,
+    time_x: f32,
 }
 
 fn ms_since_process_start() -> u64 {
@@ -63,6 +99,15 @@ fn ms_since_process_start() -> u64 {
         }
         (filetime(GetSystemTimePreciseAsFileTime()).saturating_sub(filetime(created))) / 10_000
     }
+}
+
+fn client_point(lp: LPARAM) -> PointF {
+    PointF { x: (lp.0 & 0xFFFF) as i16 as f32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as f32 }
+}
+
+/// `WM_SETTINGCHANGE` with lParam "intl": regional format changed.
+fn is_intl_change(lp: LPARAM) -> bool {
+    lp.0 != 0 && unsafe { PCWSTR(lp.0 as *const u16).to_string() }.is_ok_and(|s| s == "intl")
 }
 
 impl App {
@@ -80,30 +125,7 @@ impl App {
         }
         self.set_catcher(self.catcher_mode);
         self.reserve_space();
-        self.paint();
-    }
-
-    fn paint(&mut self) {
-        let Some(layer) = self.bar_layer.as_mut() else { return };
-        let (w, h) = layer.size();
-        let (w, h) = (w as f32, h as f32);
-        let a = &self.config.appearance;
-        let pad = scale(14.0, self.dpi);
-        let regular = text_style(a, self.dpi, theme::WEIGHT_REGULAR);
-        let strong = text_style(a, self.dpi, theme::WEIGHT_SEMIBOLD);
-        let (Ok(left), Ok(right)) = (self.text.layout("NewWin", &strong, w / 2.0), self.text.layout("Milestone 1", &regular, w / 2.0))
-        else {
-            return;
-        };
-        let dpi = self.dpi;
-        let r = layer.draw(None, |p| {
-            paint_background(p, w, h, dpi, a);
-            p.text(&left, text_origin(pad, h, &left), theme::TEXT_STRONG);
-            p.text(&right, text_origin(w - pad - right.width(), h, &right), theme::TEXT);
-        });
-        if let Err(e) = r.and_then(|_| self.gfx.commit()) {
-            log::error!("bar paint failed: {e}");
-        }
+        self.refresh();
     }
 
     fn reapply_taskbar(&mut self, reinstall_watch: bool) {
@@ -127,41 +149,80 @@ impl App {
             log::error!("restoring native taskbar failed: {e}");
         }
     }
-}
 
-impl Handler for App {
-    fn on_message(&mut self, hwnd: HWND, msg: u32, wp: WPARAM, _lp: LPARAM) -> Option<LRESULT> {
-        if msg == self.taskbar_created && hwnd == self.ping {
+    fn on_ping_message(&mut self, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
+        if msg == self.taskbar_created {
             log::info!("explorer restarted, hiding the taskbar again");
             self.reapply_taskbar(true);
             return Some(LRESULT(0));
         }
+        if msg == WM_APP_NAME {
+            let r = unsafe { take_resolved(lp) };
+            self.on_name_resolved(&r);
+            return Some(LRESULT(0));
+        }
+        if let Some(ev) = self.watcher.as_ref().and_then(|w| w.translate(msg, wp, lp)) {
+            self.on_window_event(ev);
+            return Some(LRESULT(0));
+        }
+        if msg == WM_APP_TASKBAR_SHOWN {
+            self.reapply_taskbar(false);
+            return Some(LRESULT(0));
+        }
+        None
+    }
+
+    fn on_bar_message(&mut self, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
         match msg {
-            WM_APP_TASKBAR_SHOWN => {
-                self.reapply_taskbar(false);
+            WM_MOUSEMOVE => {
+                self.on_pointer_move(self.bar);
+                self.update_hover(Some(client_point(lp)));
                 Some(LRESULT(0))
             }
-            WM_DISPLAYCHANGE | WM_DPICHANGED if hwnd == self.bar => {
-                self.reposition();
+            WM_MOUSELEAVE => {
+                self.on_pointer_leave(self.bar);
+                self.update_hover(None);
                 Some(LRESULT(0))
             }
-            WM_MOUSEACTIVATE if hwnd == self.bar || hwnd == self.catcher => Some(LRESULT(MA_NOACTIVATE as isize)),
-            WM_MOUSEMOVE if hwnd == self.bar || hwnd == self.catcher => {
-                self.on_pointer_move(hwnd);
+            WM_LBUTTONUP | WM_MBUTTONUP | WM_RBUTTONUP => {
+                let button = match msg {
+                    WM_LBUTTONUP => Button::Left,
+                    WM_MBUTTONUP => Button::Middle,
+                    _ => Button::Right,
+                };
+                self.on_click(button, client_point(lp));
                 Some(LRESULT(0))
             }
-            WM_MOUSELEAVE if hwnd == self.bar || hwnd == self.catcher => {
-                self.on_pointer_leave(hwnd);
-                Some(LRESULT(0))
-            }
-            WM_TIMER if hwnd == self.bar => {
+            WM_TIMER => {
                 self.on_timer(wp.0);
                 Some(LRESULT(0))
             }
-            WM_APP_APPBAR => {
-                self.on_appbar(wp, _lp);
+            WM_APP_POPUP => {
+                self.on_popup(wp, lp);
                 Some(LRESULT(0))
             }
+            WM_APP_APPBAR => {
+                self.on_appbar(wp, lp);
+                Some(LRESULT(0))
+            }
+            WM_DISPLAYCHANGE | WM_DPICHANGED => {
+                self.reposition();
+                Some(LRESULT(0))
+            }
+            // Clock: time zone/clock change, wake from sleep, regional format change.
+            WM_TIMECHANGE => {
+                self.tick_clock();
+                Some(LRESULT(0))
+            }
+            WM_POWERBROADCAST if wp.0 == PBT_APMRESUMEAUTOMATIC => {
+                self.tick_clock();
+                Some(LRESULT(1))
+            }
+            WM_SETTINGCHANGE if is_intl_change(lp) => {
+                self.tick_clock();
+                Some(LRESULT(0))
+            }
+            WM_MOUSEACTIVATE => Some(LRESULT(MA_NOACTIVATE as isize)),
             WM_ENDSESSION if wp.0 != 0 => {
                 self.restore_taskbar();
                 Some(LRESULT(0))
@@ -171,16 +232,46 @@ impl Handler for App {
     }
 }
 
+impl Handler for App {
+    fn on_message(&mut self, hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
+        if hwnd == self.ping {
+            return self.on_ping_message(msg, wp, lp);
+        }
+        if hwnd == self.bar {
+            return self.on_bar_message(msg, wp, lp);
+        }
+        if hwnd == self.catcher {
+            return match msg {
+                WM_MOUSEACTIVATE => Some(LRESULT(MA_NOACTIVATE as isize)),
+                WM_MOUSEMOVE => {
+                    self.on_pointer_move(hwnd);
+                    Some(LRESULT(0))
+                }
+                WM_MOUSELEAVE => {
+                    self.on_pointer_leave(hwnd);
+                    Some(LRESULT(0))
+                }
+                _ => None,
+            };
+        }
+        None
+    }
+}
+
 pub fn run_shell() -> i32 {
     let _mutex = unsafe { CreateMutexW(None, true, w!("Local\\NewWin.Shell")) };
     if unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
         log::info!("shell already running, exiting");
         return 0;
     }
+    // Shell APIs (window AppUserModelIDs, Run dialog, show desktop) need COM on the UI thread.
+    let _com = ComGuard::init();
     match start() {
         Ok(app) => {
             let code = run_message_loop();
-            app.borrow_mut().restore_taskbar();
+            let mut a = app.borrow_mut();
+            a.close_popup();
+            a.restore_taskbar();
             code
         }
         Err(e) => {
@@ -207,6 +298,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         text: TextCache::new(&gfx),
         gfx,
         config,
+        strings: strings_for(&ui_language_tag()),
         taskbar: None,
         show_watch: None,
         taskbar_created: taskbar_created_message(),
@@ -223,6 +315,20 @@ fn start() -> Result<Rc<RefCell<App>>> {
         in_zone: false,
         tracking: [false; 2],
         hide_started: None,
+        model: AppModel::default(),
+        names: None,
+        watcher: None,
+        last_signature: Vec::new(),
+        items: Vec::new(),
+        overflow_from: None,
+        hover: None,
+        popup: None,
+        date_text: String::new(),
+        time_text: String::new(),
+        date_layout: None,
+        time_layout: None,
+        date_x: 0.0,
+        time_x: 0.0,
     }));
 
     let ping = create_window(
@@ -260,6 +366,11 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.show_watch = watch_taskbar_show(ping, WM_APP_TASKBAR_SHOWN).map_err(|e| log::error!("taskbar watch: {e}")).ok();
         a.appbar = AppBar::register(bar, WM_APP_APPBAR).map_err(|e| log::error!("appbar: {e}")).ok();
         a.bar_layer = Some(Layer::new(&a.gfx, bar, Backdrop::Tint, 1, 1)?);
+        a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME)));
+        a.watcher = Some(WindowWatcher::start(ping)?);
+        let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
+        a.load_windows(enumerate_top_level(), foreground);
+        a.tick_clock();
         a.reposition();
         a.start_visibility();
     }

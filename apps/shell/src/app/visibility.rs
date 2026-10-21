@@ -40,7 +40,7 @@ impl App {
         self.exec(cmds);
     }
 
-    fn feed(&mut self, input: VisInput) {
+    pub(super) fn feed(&mut self, input: VisInput) {
         let Some(vis) = self.vis.as_mut() else { return };
         let cmds = vis.handle(input);
         self.exec(cmds);
@@ -68,6 +68,7 @@ impl App {
         }
         match id {
             VIS_TIMER => self.feed(VisInput::Timer),
+            super::clock_view::CLOCK_TIMER => self.tick_clock(),
             HIDE_WINDOW_TIMER => unsafe {
                 self.hide_started = None;
                 let _ = ShowWindow(self.bar, SW_HIDE);

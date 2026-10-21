@@ -8,6 +8,7 @@ mod geom;
 mod gfx;
 mod layer;
 mod paint;
+pub mod popup;
 mod text;
 pub mod theme;
 

@@ -7,6 +7,7 @@ license.workspace = true
 [dependencies]
 windows-numerics = "0.3.1"
 log.workspace = true
+newwin-platform.workspace = true
 windows = { workspace = true, features = [
     "Win32_Foundation",
     "Win32_Graphics_Direct2D",
@@ -24,5 +25,6 @@ windows = { workspace = true, features = [
     "Win32_System_Threading",
     "Win32_UI_Controls",
     "Win32_UI_HiDpi",
+    "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",
 ] }
