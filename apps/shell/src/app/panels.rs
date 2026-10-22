@@ -1,11 +1,13 @@
 //! Glass panels hanging from the bar (spec: M2 §3); at most one is open, never with a menu.
 
+use newwin_core::items::RightItem;
 use newwin_core::visibility::VisInput;
 use newwin_platform::clock::now_ms;
 use newwin_ui::GlassWindow;
 use newwin_ui::panel::Panel;
 use newwin_ui::popup::{CLOSED, PICKED};
 use newwin_ui::tray_list::TrayList;
+use newwin_ui::volume_panel::VolumePanel;
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::WM_APP;
 
@@ -17,18 +19,21 @@ pub(super) const WM_APP_PANEL: u32 = WM_APP + 11;
 /// The open panel.
 pub(super) enum ShellPanel {
     Tray(Panel<TrayList>),
+    Volume(Panel<VolumePanel>),
 }
 
 impl ShellPanel {
     pub(super) fn glass(&self) -> &dyn GlassWindow {
         match self {
             ShellPanel::Tray(p) => p,
+            ShellPanel::Volume(p) => p,
         }
     }
 
     pub(super) fn hwnd(&self) -> HWND {
         match self {
             ShellPanel::Tray(p) => p.hwnd(),
+            ShellPanel::Volume(p) => p.hwnd(),
         }
     }
 
@@ -36,12 +41,14 @@ impl ShellPanel {
     pub(super) fn anchor(&self) -> Target {
         match self {
             ShellPanel::Tray(_) => Target::Tray,
+            ShellPanel::Volume(_) => Target::Right(RightItem::Volume),
         }
     }
 
     fn close(&self) {
         match self {
             ShellPanel::Tray(p) => p.close(),
+            ShellPanel::Volume(p) => p.close(),
         }
     }
 }
@@ -83,11 +90,11 @@ impl App {
 
     pub(super) fn on_panel(&mut self, wp: WPARAM, lp: LPARAM) {
         match lp.0 {
-            PICKED => {
-                if let Some(Target::Tray) = self.panel.as_ref().map(ShellPanel::anchor) {
-                    self.on_tray_action(wp.0 as u32);
-                }
-            }
+            PICKED => match self.panel.as_ref().map(ShellPanel::anchor) {
+                Some(Target::Tray) => self.on_tray_action(wp.0 as u32),
+                Some(Target::Right(RightItem::Volume)) => self.on_volume_action(wp.0 as u32),
+                _ => {}
+            },
             CLOSED if self.panel.as_ref().map(|p| p.hwnd().0 as usize) == Some(wp.0) => self.close_panel(),
             _ => {}
         }

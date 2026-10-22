@@ -40,6 +40,15 @@ pub(super) struct RightView {
     pill_o: Tween,
     pub date: Option<TextLayout>,
     pub time: Option<TextLayout>,
+    /// `None` until the audio service runs.
+    pub speaker: Option<SpeakerView>,
+}
+
+/// The speaker icon's animated state.
+pub(super) struct SpeakerView {
+    pub available: bool,
+    pub waves: Tween,
+    pub mute: Tween,
 }
 
 impl RightView {
@@ -56,6 +65,7 @@ impl RightView {
             pill_o: Tween::at_rest(0.0),
             date: None,
             time: None,
+            speaker: None,
         }
     }
 
@@ -90,7 +100,8 @@ impl RightView {
     }
 
     pub(super) fn animating(&self, now: u64) -> bool {
-        [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
+        let speaker = self.speaker.as_ref().is_some_and(|s| s.waves.running(now) || s.mute.running(now));
+        speaker || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
     }
 
     /// Draws the tray button, the separators, the hover pill and the right items.
@@ -132,7 +143,18 @@ impl RightView {
                         text(p, t, theme::TEXT_STRONG);
                     }
                 }
-                RightItem::Layout | RightItem::Network | RightItem::Volume => {}
+                RightItem::Volume => {
+                    if let Some(sp) = &self.speaker {
+                        let c = PointF { x: r.x + r.w / 2.0, y: h / 2.0 };
+                        let color = lit(Target::Right(RightItem::Volume));
+                        if sp.available {
+                            icons::speaker(p, c, s(18.0), sp.waves.value(now), sp.mute.value(now), color, stroke);
+                        } else {
+                            icons::speaker(p, c, s(18.0), 0.0, 1.0, color.with_alpha(color.a * 0.6), stroke);
+                        }
+                    }
+                }
+                RightItem::Layout | RightItem::Network => {}
             }
         }
     }
@@ -144,7 +166,8 @@ impl App {
         match item {
             RightItem::Date => self.right.date.as_ref().map(|t| t.width() + 2.0 * pad),
             RightItem::Time => self.right.time.as_ref().map(|t| t.width() + 2.0 * pad),
-            RightItem::Layout | RightItem::Network | RightItem::Volume => None,
+            RightItem::Volume => self.right.speaker.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
+            RightItem::Layout | RightItem::Network => None,
         }
     }
 
@@ -165,6 +188,7 @@ impl App {
         let (xs, sep) = place_right(&widths, w - edge, s(theme::ITEM_GAP), s(13.0));
         self.right.slots = xs.iter().zip(&widths).map(|(&(item, x), &(_, w))| RightSlot { item, rect: RectF::new(x, y, w, pill_h) }).collect();
         self.right.sep_x = sep;
+        log::debug!("right slots {:?}", self.right.slots.iter().map(|s| (s.item, s.rect.x, s.rect.w)).collect::<Vec<_>>());
         let right_start = self.right.slots.first().map_or(w - edge, |s| s.rect.x);
         (self.right.left_sep_x + s(7.0), right_start - s(16.0))
     }
@@ -176,10 +200,11 @@ impl App {
         }
     }
 
-    fn tooltip_text(&self, item: RightItem) -> Option<String> {
+    pub(super) fn tooltip_text(&self, item: RightItem) -> Option<String> {
         match item {
             RightItem::Date => Some(format_long_date()),
-            RightItem::Time | RightItem::Layout | RightItem::Network | RightItem::Volume => None,
+            RightItem::Volume => self.volume_tooltip(),
+            RightItem::Time | RightItem::Layout | RightItem::Network => None,
         }
     }
 
@@ -226,8 +251,11 @@ impl App {
 
     pub(super) fn on_right_click(&mut self, item: RightItem, button: Button) {
         self.hide_tooltip();
-        if let (RightItem::Date, Button::Left) = (item, button) {
-            launch::open_notification_center();
+        match (item, button) {
+            (RightItem::Date, Button::Left) => launch::open_notification_center(),
+            (RightItem::Volume, Button::Left) => self.toggle_volume_panel(),
+            (RightItem::Volume, Button::Middle) => self.toggle_mute(),
+            _ => {}
         }
     }
 }

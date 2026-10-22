@@ -38,6 +38,7 @@ mod menus;
 mod panels;
 mod right_view;
 mod tray_view;
+mod volume_view;
 mod visibility;
 
 use apps_view::{BarItem, Button, Target};
@@ -82,6 +83,13 @@ pub struct App {
     tray_keys: Vec<newwin_core::tray::IconKey>,
     /// Fallback row names by process id.
     tray_names: std::collections::HashMap<u32, String>,
+    // Volume (M2)
+    audio: Option<newwin_platform::audio::AudioService>,
+    /// (level, muted) of the default output device.
+    volume: Option<(u8, bool)>,
+    volume_device: String,
+    volume_wheel: newwin_core::audio::Wheel,
+    audio_switch_warned: bool,
     ping: HWND,
     bar: HWND,
     bar_layer: Option<Layer>,
@@ -245,6 +253,10 @@ impl App {
             self.on_explorer_restarted();
             return Some(LRESULT(0));
         }
+        if msg == volume_view::WM_APP_AUDIO {
+            self.on_audio(wp, lp);
+            return Some(LRESULT(0));
+        }
         if msg == WM_APP_TRAY {
             self.on_tray_changed(wp.0);
             return Some(LRESULT(0));
@@ -302,6 +314,13 @@ impl App {
             }
             WM_APP_POPUP => {
                 self.on_popup(wp, lp);
+                Some(LRESULT(0))
+            }
+            WM_MOUSEWHEEL => {
+                let delta = ((wp.0 >> 16) & 0xFFFF) as i16;
+                let screen = client_point(lp);
+                let p = PointF { x: screen.x - self.bar_rect.left as f32, y: screen.y - self.bar_rect.top as f32 };
+                self.on_wheel(delta, p);
                 Some(LRESULT(0))
             }
             WM_APP_PANEL => {
@@ -426,6 +445,11 @@ fn start() -> Result<Rc<RefCell<App>>> {
         last_announce: None,
         tray_keys: Vec::new(),
         tray_names: std::collections::HashMap::new(),
+        audio: None,
+        volume: None,
+        volume_device: String::new(),
+        volume_wheel: newwin_core::audio::Wheel::default(),
+        audio_switch_warned: false,
         ping: HWND::default(),
         bar: HWND::default(),
         bar_layer: None,
@@ -502,6 +526,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.watcher = Some(WindowWatcher::start(ping)?);
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
         a.load_windows(enumerate_top_level(), foreground);
+        a.start_audio();
         a.tick_clock();
         a.reposition();
         a.start_visibility();
