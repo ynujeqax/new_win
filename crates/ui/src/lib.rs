@@ -14,6 +14,7 @@ mod paint;
 pub mod panel;
 pub mod popup;
 pub mod slider;
+pub mod spotlight;
 mod text;
 pub mod tooltip;
 pub mod tray_list;
