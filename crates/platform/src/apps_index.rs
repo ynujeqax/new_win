@@ -90,7 +90,7 @@ pub struct AppsWatch {
 fn start_menu_dirs() -> Vec<std::path::PathBuf> {
     ["APPDATA", "ProgramData"]
         .into_iter()
-        .filter_map(|v| std::env::var_os(v))
+        .filter_map(std::env::var_os)
         .map(|base| Path::new(&base).join(r"Microsoft\Windows\Start Menu\Programs"))
         .filter(|p| p.is_dir())
         .collect()
