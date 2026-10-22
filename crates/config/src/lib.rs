@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+pub mod usage;
+
 /// Integer fields accept any TOML integer and saturate into the field's type,
 /// so `-5` or `300` in a `u8` field is clamped later instead of rejecting the file.
 mod sat {
@@ -192,6 +194,11 @@ pub fn load(path: &Path) -> Result<Config, ConfigError> {
 pub fn default_path() -> PathBuf {
     let base = std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
     base.join("NewWin").join("config.toml")
+}
+
+/// `%APPDATA%\NewWin\usage.toml`
+pub fn usage_path() -> PathBuf {
+    default_path().with_file_name("usage.toml")
 }
 
 /// Writes the default settings to `path` unless a file is already there (to open it for
