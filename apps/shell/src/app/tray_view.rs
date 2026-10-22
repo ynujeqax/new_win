@@ -11,7 +11,7 @@ use newwin_ui::popup::PopupStyle;
 use newwin_ui::tray_list::{TrayList, TrayOp, TrayRow, decode_action};
 use newwin_ui::{PointF, theme};
 use windows::Win32::Foundation::{HWND, POINT, RECT};
-use windows::Win32::UI::WindowsAndMessaging::{GWL_STYLE, GetCursorPos, GetWindowLongW, GetWindowThreadProcessId, IsWindowVisible, WM_APP, WS_CAPTION};
+use windows::Win32::UI::WindowsAndMessaging::{GWL_EXSTYLE, GWL_STYLE, GetCursorPos, GetWindowLongW, GetWindowThreadProcessId, IsWindowVisible, WM_APP, WS_CAPTION, WS_EX_TOOLWINDOW};
 
 use super::App;
 use super::panels::{ShellPanel, WM_APP_PANEL};
@@ -141,6 +141,7 @@ impl App {
                 visible: IsWindowVisible(hwnd).as_bool(),
                 same_app: pid == self.held_pid,
                 captioned: (GetWindowLongW(hwnd, GWL_STYLE) as u32 & WS_CAPTION.0) == WS_CAPTION.0,
+                tool: (GetWindowLongW(hwnd, GWL_EXSTYLE) as u32 & WS_EX_TOOLWINDOW.0) != 0,
             }
         };
         log::debug!("held tray: foreground {hwnd:?} {change:?}");
@@ -174,12 +175,15 @@ pub(super) struct ForegroundChange {
     /// Same process as the icon whose menu is open.
     pub same_app: bool,
     pub captioned: bool,
+    /// `WS_EX_TOOLWINDOW`: menus and popups are, app windows are not.
+    pub tool: bool,
 }
 
-/// The app's invisible helper window and its popup menu keep the tray open; anything else with
+/// The app's invisible helper window and its popup menu (or any menu: tool windows, even from a
+/// helper process) keep the tray open; anything else with
 /// a visible window (the app's main window, the desktop, another app) closes it.
 pub(super) fn held_tray_closes(c: ForegroundChange) -> bool {
-    !c.is_panel && c.visible && !(c.same_app && !c.captioned)
+    !c.is_panel && c.visible && !c.tool && !(c.same_app && !c.captioned)
 }
 
 #[cfg(test)]
@@ -189,11 +193,15 @@ mod tests {
     /// After a right click the tray stays open under the app's own menu.
     #[test]
     fn a_held_tray_closes_only_when_focus_really_moves_on() {
-        let fg = |is_panel, visible, same_app, captioned| ForegroundChange { is_panel, visible, same_app, captioned };
+        let fg = |is_panel, visible, same_app, captioned| ForegroundChange { is_panel, visible, same_app, captioned, tool: false };
         assert!(!held_tray_closes(fg(false, false, true, false)), "the app's hidden helper window takes focus for its menu");
         assert!(!held_tray_closes(fg(false, true, true, false)), "the app's popup menu itself");
         assert!(!held_tray_closes(fg(true, true, false, true)), "back to the tray");
         assert!(held_tray_closes(fg(false, true, true, true)), "a menu item opened the app's window");
         assert!(held_tray_closes(fg(false, true, false, true)), "a click on another app or the desktop");
+        // Steam draws its tray menu in steamwebhelper.exe: another process, a caption style, but a
+        // tool window (topmost popup), as menus are.
+        let steam_menu = ForegroundChange { is_panel: false, visible: true, same_app: false, captioned: true, tool: true };
+        assert!(!held_tray_closes(steam_menu), "a helper process's menu");
     }
 }
