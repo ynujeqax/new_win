@@ -68,7 +68,7 @@ impl Default for Appearance {
         Self {
             height: 30,
             margin: 6,
-            corner_radius: 11.0,
+            corner_radius: 15.0,
             glass: true,
             font_family: "Segoe UI Variable Text".into(),
             font_size: 13.0,

@@ -107,6 +107,93 @@ fn box_pass(px: &mut [[f32; 3]], w: usize, h: usize, r: usize, horizontal: bool)
     }
 }
 
+/// Colors under the glass get more vivid, as in macOS Liquid Glass.
+pub const SATURATION: f32 = 1.7;
+/// Width of the lens band inside the glass edge, desktop px.
+pub const LENS_BAND: f32 = 12.0;
+/// How far from outside the very edge of the glass samples, desktop px.
+pub const LENS_MAX: f32 = 8.0;
+
+/// Scales each pixel's distance from its own luminance by `s` (1 = unchanged).
+pub fn saturate(img: &mut Image, s: f32) {
+    for p in img.bgra.chunks_mut(4) {
+        let (b, g, r) = (f32::from(p[0]), f32::from(p[1]), f32::from(p[2]));
+        let l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        for c in &mut p[..3] {
+            *c = (l + (f32::from(*c) - l) * s).round().clamp(0.0, 255.0) as u8;
+        }
+    }
+}
+
+/// Signed distance from (`x`, `y`) to a rounded rectangle (negative inside), desktop px.
+fn rounded_rect_distance(x: f32, y: f32, r: PxRect, radius: f32) -> f32 {
+    let (cx, cy) = ((r.left + r.right) as f32 / 2.0, (r.top + r.bottom) as f32 / 2.0);
+    let radius = radius.min(r.width() as f32 / 2.0).min(r.height() as f32 / 2.0);
+    let qx = (x - cx).abs() - (r.width() as f32 / 2.0 - radius);
+    let qy = (y - cy).abs() - (r.height() as f32 / 2.0 - radius);
+    let outside = qx.max(0.0).hypot(qy.max(0.0));
+    outside + qx.max(qy).min(0.0) - radius
+}
+
+/// Bilinear sample of `img` at small-pixel coordinates (centers at .5), clamped to the edges.
+fn sample(img: &Image, x: f32, y: f32) -> [f32; 3] {
+    let x = (x - 0.5).clamp(0.0, (img.width - 1) as f32);
+    let y = (y - 0.5).clamp(0.0, (img.height - 1) as f32);
+    let (x0, y0) = (x.floor() as usize, y.floor() as usize);
+    let (x1, y1) = ((x0 + 1).min(img.width - 1), (y0 + 1).min(img.height - 1));
+    let (fx, fy) = (x - x0 as f32, y - y0 as f32);
+    let at = |x: usize, y: usize, c: usize| f32::from(img.bgra[(y * img.width + x) * 4 + c]);
+    std::array::from_fn(|c| {
+        let top = at(x0, y0, c) * (1.0 - fx) + at(x1, y0, c) * fx;
+        let bottom = at(x0, y1, c) * (1.0 - fx) + at(x1, y1, c) * fx;
+        top * (1.0 - fy) + bottom * fy
+    })
+}
+
+/// The lens of Liquid Glass: inside a [`LENS_BAND`]-wide band along the edge of `window` (a
+/// rounded rectangle with `radius`), each pixel shows the image from up to [`LENS_MAX`] px further
+/// out, fading quadratically to nothing at the inner side of the band. `img` covers `area`.
+pub fn refract(img: &mut Image, area: PxRect, window: PxRect, radius: f32) {
+    if img.width == 0 || img.height == 0 {
+        return;
+    }
+    let src = img.clone();
+    let s = SCALE as f32;
+    for y in 0..img.height {
+        for x in 0..img.width {
+            let (dx, dy) = (area.left as f32 + (x as f32 + 0.5) * s, area.top as f32 + (y as f32 + 0.5) * s);
+            let d = rounded_rect_distance(dx, dy, window, radius);
+            if d >= 0.0 || -d >= LENS_BAND {
+                continue;
+            }
+            let t = 1.0 - (-d) / LENS_BAND;
+            let push = LENS_MAX * t * t;
+            // Outward normal from the distance field's gradient.
+            let e = 0.5;
+            let nx = rounded_rect_distance(dx + e, dy, window, radius) - rounded_rect_distance(dx - e, dy, window, radius);
+            let ny = rounded_rect_distance(dx, dy + e, window, radius) - rounded_rect_distance(dx, dy - e, window, radius);
+            let len = nx.hypot(ny);
+            if len == 0.0 {
+                continue;
+            }
+            let (sx, sy) = (dx + nx / len * push, dy + ny / len * push);
+            let v = sample(&src, (sx - area.left as f32) / s, (sy - area.top as f32) / s);
+            let o = (y * img.width + x) * 4;
+            for (dst, c) in img.bgra[o..o + 3].iter_mut().zip(v) {
+                *dst = c.round().clamp(0.0, 255.0) as u8;
+            }
+        }
+    }
+}
+
+/// Everything the glass shows from a captured strip: blur, saturation, lens.
+pub fn glass_image(src: &[u8], pitch: usize, area: PxRect, window: PxRect, radius: f32) -> Image {
+    let mut img = blur_strip(src, pitch, area.width() as usize, area.height() as usize);
+    saturate(&mut img, SATURATION);
+    refract(&mut img, area, window, radius);
+    img
+}
+
 /// Whether any changed screen rectangle touches `area`.
 pub fn any_hit(changed: &[PxRect], area: &PxRect) -> bool {
     changed.iter().any(|r| r.intersects(area))

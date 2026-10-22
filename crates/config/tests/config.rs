@@ -26,7 +26,7 @@ fn missing_file_gives_defaults() {
     assert!(c.bar.ignore_fullscreen);
     assert_eq!(c.appearance.height, 30);
     assert_eq!(c.appearance.margin, 6);
-    assert_eq!(c.appearance.corner_radius, 11.0);
+    assert_eq!(c.appearance.corner_radius, 15.0);
     assert_eq!(c.appearance.font_family, "Segoe UI Variable Text");
     assert_eq!(c.appearance.font_size, 13.0);
     assert_eq!(c.appearance.date_format, "system");

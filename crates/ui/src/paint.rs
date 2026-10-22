@@ -49,26 +49,20 @@ impl<'a> Painter<'a> {
         unsafe { self.dc.DrawRoundedRectangle(&rr, &b, width, None) };
     }
 
-    /// Vertical linear gradient from `r.y` (position 0) to `r.bottom()` (position 1).
-    fn v_gradient(&self, r: RectF, stops: &[(f32, Color)]) -> Option<ID2D1LinearGradientBrush> {
+    /// Horizontal linear gradient from `r.x` (position 0) to `r.right()` (position 1).
+    fn h_gradient(&self, r: RectF, stops: &[(f32, Color)]) -> Option<ID2D1LinearGradientBrush> {
         let stops: Vec<D2D1_GRADIENT_STOP> = stops.iter().map(|(p, c)| D2D1_GRADIENT_STOP { position: *p, color: c.d2d() }).collect();
         unsafe {
             let rt: ID2D1RenderTarget = self.dc.cast().ok()?;
             let coll = rt.CreateGradientStopCollection(&stops, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP).ok()?;
-            let props = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES { startPoint: Vector2 { X: 0.0, Y: r.y }, endPoint: Vector2 { X: 0.0, Y: r.bottom() } };
+            let props = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES { startPoint: Vector2 { X: r.x, Y: 0.0 }, endPoint: Vector2 { X: r.right(), Y: 0.0 } };
             self.dc.CreateLinearGradientBrush(&props, None, &coll).ok()
         }
     }
 
-    pub fn fill_round_rect_v(&mut self, r: RectF, radius: f32, stops: &[(f32, Color)]) {
-        let Some(b) = self.v_gradient(r, stops) else { return };
-        let rr = D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: radius, radiusY: radius };
-        unsafe { self.dc.FillRoundedRectangle(&rr, &b) };
-    }
-
-    /// Like [`Self::stroke_round_rect`], with a vertical gradient.
-    pub fn stroke_round_rect_v(&mut self, r: RectF, radius: f32, stops: &[(f32, Color)], width: f32) {
-        let Some(b) = self.v_gradient(r, stops) else { return };
+    /// Like [`Self::stroke_round_rect`], with a horizontal gradient.
+    pub fn stroke_round_rect_h(&mut self, r: RectF, radius: f32, stops: &[(f32, Color)], width: f32) {
+        let Some(b) = self.h_gradient(r, stops) else { return };
         let inner = r.inset(width / 2.0);
         let rr = D2D1_ROUNDED_RECT { rect: inner.d2d(), radiusX: (radius - width / 2.0).max(0.0), radiusY: (radius - width / 2.0).max(0.0) };
         unsafe { self.dc.DrawRoundedRectangle(&rr, &b, width, None) };

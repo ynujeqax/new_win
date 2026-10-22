@@ -67,7 +67,7 @@ impl Scene {
     }
 
     fn region() -> Region {
-        Region { id: 7, window: PxRect { left: 320, top: 320, right: 680, bottom: 380 } }
+        Region { id: 7, window: PxRect { left: 320, top: 320, right: 680, bottom: 380 }, radius: 12.0 }
     }
 
     fn repaint(&self, color: u32) {

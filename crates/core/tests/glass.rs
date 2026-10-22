@@ -72,3 +72,60 @@ fn change_filter_passes_first_and_changed_images_only() {
     assert!(f.changed(&Image { width: 1, height: 1, bgra: vec![1, 2, 4, 255] }));
     assert!(f.changed(&Image { width: 2, height: 1, bgra: vec![1, 2, 4, 255, 1, 2, 4, 255] }));
 }
+
+fn img(w: usize, h: usize, f: impl Fn(usize, usize) -> [u8; 3]) -> Image {
+    let mut bgra = Vec::with_capacity(w * h * 4);
+    for y in 0..h {
+        for x in 0..w {
+            let p = f(x, y);
+            bgra.extend_from_slice(&[p[0], p[1], p[2], 255]);
+        }
+    }
+    Image { width: w, height: h, bgra }
+}
+
+fn px_at(i: &Image, x: usize, y: usize) -> [u8; 3] {
+    let o = (y * i.width + x) * 4;
+    [i.bgra[o], i.bgra[o + 1], i.bgra[o + 2]]
+}
+
+#[test]
+fn saturate_spreads_colors_and_keeps_grays() {
+    let mut gray = img(2, 1, |_, _| [90, 90, 90]);
+    saturate(&mut gray, SATURATION);
+    assert_eq!(px_at(&gray, 0, 0), [90, 90, 90]);
+    let mut c = img(1, 1, |_, _| [200, 150, 100]);
+    saturate(&mut c, 1.0);
+    assert_eq!(px_at(&c, 0, 0), [200, 150, 100]);
+    saturate(&mut c, SATURATION);
+    let [b, g, r] = px_at(&c, 0, 0);
+    assert!(b > 200 && r < 100, "{b} {g} {r}");
+    let mut hot = img(1, 1, |_, _| [255, 10, 10]);
+    saturate(&mut hot, SATURATION);
+    assert_eq!(px_at(&hot, 0, 0)[0], 255);
+}
+
+// A 400x80 capture area (100x20 small pixels) around a 352x32 capsule.
+const AREA: PxRect = PxRect { left: 0, top: 0, right: 400, bottom: 80 };
+const WIN: PxRect = PxRect { left: 24, top: 24, right: 376, bottom: 56 };
+
+#[test]
+fn refraction_leaves_flat_images_alone() {
+    let mut flat = img(100, 20, |_, _| [70, 80, 90]);
+    refract(&mut flat, AREA, WIN, 16.0);
+    assert!(flat.bgra.chunks(4).all(|p| p == [70, 80, 90, 255]));
+}
+
+#[test]
+fn edges_bend_in_what_is_outside_and_the_middle_stays_clear() {
+    // Blue grows to the right: sampling further out shows up as darker on the left edge and
+    // brighter on the right edge.
+    let orig = img(100, 20, |x, _| [(x * 2) as u8, 0, 0]);
+    let mut lens = orig.clone();
+    refract(&mut lens, AREA, WIN, 16.0);
+    assert_eq!(px_at(&lens, 50, 10), px_at(&orig, 50, 10));
+    assert!(px_at(&lens, 7, 10)[0] < px_at(&orig, 7, 10)[0]);
+    assert!(px_at(&lens, 92, 10)[0] > px_at(&orig, 92, 10)[0]);
+    // Outside the shape nothing changes (it is clipped away anyway).
+    assert_eq!(px_at(&lens, 2, 2), px_at(&orig, 2, 2));
+}

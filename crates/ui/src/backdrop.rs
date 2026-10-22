@@ -7,7 +7,7 @@
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 use std::time::{Duration, Instant};
 
-use newwin_core::glass::{ChangeFilter, Image, MIN_INTERVAL_MS, PxRect, any_hit, blur_strip, capture_area};
+use newwin_core::glass::{ChangeFilter, Image, MIN_INTERVAL_MS, PxRect, any_hit, capture_area, glass_image};
 use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
 use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_UNKNOWN;
 use windows::Win32::Graphics::Direct3D11::*;
@@ -17,12 +17,14 @@ use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
 use windows::core::{Interface, Result};
 
 /// A glass window that wants a backdrop.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Region {
     /// The window's HWND as an integer; frames carry it back.
     pub id: u64,
     /// The window's rectangle in physical desktop pixels.
     pub window: PxRect,
+    /// Corner radius of the glass shape, physical px (for the lens along its edge).
+    pub radius: f32,
 }
 
 /// A blurred image of `area` (desktop pixels), downsampled by `newwin_core::glass::SCALE`.
@@ -290,7 +292,7 @@ impl Thread {
                 cap.ctx.Map(&staging, 0, D3D11_MAP_READ, 0, Some(&mut m))?;
                 let (w, h) = (s.area.width() as usize, s.area.height() as usize);
                 let bytes = std::slice::from_raw_parts(m.pData as *const u8, m.RowPitch as usize * (h - 1) + w * 4);
-                let img = blur_strip(bytes, m.RowPitch as usize, w, h);
+                let img = glass_image(bytes, m.RowPitch as usize, s.area, s.region.window, s.region.radius);
                 cap.ctx.Unmap(&staging, 0);
                 img
             };

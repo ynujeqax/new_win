@@ -1,7 +1,9 @@
 //! Which glass windows want a backdrop right now (spec: liquid glass §3, "when capture is on").
 
 use newwin_core::glass::PxRect;
+use newwin_platform::dpi::scale;
 use newwin_ui::backdrop::{FRAME, Region, UNAVAILABLE, take_frame};
+use newwin_ui::theme;
 use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::IsWindowVisible;
 
@@ -21,9 +23,14 @@ impl App {
         let Some(backdrops) = &self.backdrops else { return };
         // Under a full-screen app the bar is covered: no point reading the screen for it.
         let bar_visible = unsafe { IsWindowVisible(self.bar) }.as_bool() && !self.fullscreen;
-        let popups: Vec<(u64, PxRect)> =
-            self.popup.as_ref().map(|(p, _)| p.windows().into_iter().map(|(h, r)| (id(h), px(r))).collect()).unwrap_or_default();
-        let wanted = wanted_regions(Some((id(self.bar), px(self.bar_rect))), bar_visible, self.in_zone, &popups);
+        let popup_radius = (theme::POPUP_RADIUS * self.dpi as f32 / 96.0).round();
+        let popups: Vec<(u64, PxRect, f32)> = self
+            .popup
+            .as_ref()
+            .map(|(p, _)| p.windows().into_iter().map(|(h, r)| (id(h), px(r), popup_radius)).collect())
+            .unwrap_or_default();
+        let bar_radius = scale(self.config.appearance.corner_radius, self.dpi);
+        let wanted = wanted_regions(Some((id(self.bar), px(self.bar_rect), bar_radius)), bar_visible, self.in_zone, &popups);
         if wanted != self.glass_sent {
             log::debug!("glass regions {wanted:?}");
             backdrops.set_regions(wanted.clone());
@@ -69,9 +76,9 @@ impl App {
 
 /// The bar wants a backdrop while it is shown or the pointer is in its hot zone (capture setup
 /// takes ~110 ms, the reveal waits 150 ms); every open popup window always does.
-pub(super) fn wanted_regions(bar: Option<(u64, PxRect)>, bar_visible: bool, in_zone: bool, popups: &[(u64, PxRect)]) -> Vec<Region> {
+pub(super) fn wanted_regions(bar: Option<(u64, PxRect, f32)>, bar_visible: bool, in_zone: bool, popups: &[(u64, PxRect, f32)]) -> Vec<Region> {
     let bar = bar.filter(|_| bar_visible || in_zone);
-    bar.into_iter().chain(popups.iter().copied()).map(|(id, window)| Region { id, window }).collect()
+    bar.into_iter().chain(popups.iter().copied()).map(|(id, window, radius)| Region { id, window, radius }).collect()
 }
 
 /// A frame is applied only while its window is still registered; frames in flight for a hidden
@@ -90,23 +97,26 @@ mod tests {
 
     #[test]
     fn bar_region_follows_visibility_or_zone() {
-        assert!(wanted_regions(Some((1, BAR)), false, false, &[]).is_empty());
-        assert_eq!(wanted_regions(Some((1, BAR)), false, true, &[]), vec![Region { id: 1, window: BAR }]);
-        assert_eq!(wanted_regions(Some((1, BAR)), true, false, &[]), vec![Region { id: 1, window: BAR }]);
+        assert!(wanted_regions(Some((1, BAR, 15.0)), false, false, &[]).is_empty());
+        assert_eq!(wanted_regions(Some((1, BAR, 15.0)), false, true, &[]), vec![Region { id: 1, window: BAR, radius: 15.0 }]);
+        assert_eq!(wanted_regions(Some((1, BAR, 15.0)), true, false, &[]), vec![Region { id: 1, window: BAR, radius: 15.0 }]);
         assert!(wanted_regions(None, true, true, &[]).is_empty());
     }
 
     #[test]
     fn popups_are_always_included() {
-        let popups = [(2, MENU), (3, SUB)];
-        assert_eq!(wanted_regions(Some((1, BAR)), false, false, &popups), vec![Region { id: 2, window: MENU }, Region { id: 3, window: SUB }]);
-        assert_eq!(wanted_regions(Some((1, BAR)), true, false, &popups).len(), 3);
+        let popups = [(2, MENU, 12.0), (3, SUB, 12.0)];
+        assert_eq!(
+            wanted_regions(Some((1, BAR, 15.0)), false, false, &popups),
+            vec![Region { id: 2, window: MENU, radius: 12.0 }, Region { id: 3, window: SUB, radius: 12.0 }]
+        );
+        assert_eq!(wanted_regions(Some((1, BAR, 15.0)), true, false, &popups).len(), 3);
     }
 
     #[test]
     fn stale_frames_are_dropped() {
         assert!(!frame_target(9, &[]));
-        assert!(frame_target(9, &[Region { id: 9, window: MENU }]));
-        assert!(!frame_target(9, &[Region { id: 1, window: BAR }]));
+        assert!(frame_target(9, &[Region { id: 9, window: MENU, radius: 12.0 }]));
+        assert!(!frame_target(9, &[Region { id: 1, window: BAR, radius: 15.0 }]));
     }
 }
