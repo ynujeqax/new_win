@@ -1,6 +1,8 @@
 //! Drawing primitives in physical pixels.
 
+use windows::Win32::Graphics::Direct2D::Common::D2D1_GRADIENT_STOP;
 use windows::Win32::Graphics::Direct2D::*;
+use windows::core::Interface;
 use windows_numerics::Vector2;
 
 use crate::{Color, PointF, RectF, TextLayout};
@@ -42,6 +44,31 @@ impl<'a> Painter<'a> {
     /// Stroke centered inside `r`, so a 1 px border stays crisp on pixel edges.
     pub fn stroke_round_rect(&mut self, r: RectF, radius: f32, c: Color, width: f32) {
         let Some(b) = self.brush(c) else { return };
+        let inner = r.inset(width / 2.0);
+        let rr = D2D1_ROUNDED_RECT { rect: inner.d2d(), radiusX: (radius - width / 2.0).max(0.0), radiusY: (radius - width / 2.0).max(0.0) };
+        unsafe { self.dc.DrawRoundedRectangle(&rr, &b, width, None) };
+    }
+
+    /// Vertical linear gradient from `r.y` (position 0) to `r.bottom()` (position 1).
+    fn v_gradient(&self, r: RectF, stops: &[(f32, Color)]) -> Option<ID2D1LinearGradientBrush> {
+        let stops: Vec<D2D1_GRADIENT_STOP> = stops.iter().map(|(p, c)| D2D1_GRADIENT_STOP { position: *p, color: c.d2d() }).collect();
+        unsafe {
+            let rt: ID2D1RenderTarget = self.dc.cast().ok()?;
+            let coll = rt.CreateGradientStopCollection(&stops, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP).ok()?;
+            let props = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES { startPoint: Vector2 { X: 0.0, Y: r.y }, endPoint: Vector2 { X: 0.0, Y: r.bottom() } };
+            self.dc.CreateLinearGradientBrush(&props, None, &coll).ok()
+        }
+    }
+
+    pub fn fill_round_rect_v(&mut self, r: RectF, radius: f32, stops: &[(f32, Color)]) {
+        let Some(b) = self.v_gradient(r, stops) else { return };
+        let rr = D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: radius, radiusY: radius };
+        unsafe { self.dc.FillRoundedRectangle(&rr, &b) };
+    }
+
+    /// Like [`Self::stroke_round_rect`], with a vertical gradient.
+    pub fn stroke_round_rect_v(&mut self, r: RectF, radius: f32, stops: &[(f32, Color)], width: f32) {
+        let Some(b) = self.v_gradient(r, stops) else { return };
         let inner = r.inset(width / 2.0);
         let rr = D2D1_ROUNDED_RECT { rect: inner.d2d(), radiusX: (radius - width / 2.0).max(0.0), radiusY: (radius - width / 2.0).max(0.0) };
         unsafe { self.dc.DrawRoundedRectangle(&rr, &b, width, None) };

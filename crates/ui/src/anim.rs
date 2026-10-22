@@ -30,6 +30,16 @@ pub fn slide_y(gfx: &Gfx, v: &IDCompositionVisual2, from: f32, to: f32, ms: u32)
     gfx.commit()
 }
 
+/// Slides `outer` from `from` to `to` and `inner` the opposite way on the same curve, so
+/// `inner`'s content stays put on screen while `outer` moves (the glass backdrop). One commit.
+pub fn slide_y_both(gfx: &Gfx, outer: &IDCompositionVisual2, inner: Option<&IDCompositionVisual2>, from: f32, to: f32, ms: u32) -> Result<()> {
+    unsafe { outer.SetOffsetY(&ease_out(gfx, from, to, ms)?)? };
+    if let Some(inner) = inner {
+        unsafe { inner.SetOffsetY(&ease_out(gfx, -from, -to, ms)?)? };
+    }
+    gfx.commit()
+}
+
 pub fn fade(gfx: &Gfx, v: &IDCompositionVisual2, from: f32, to: f32, ms: u32) -> Result<()> {
     let anim = ease_out(gfx, from, to, ms)?;
     let v3: IDCompositionVisual3 = v.cast()?;
@@ -37,12 +47,16 @@ pub fn fade(gfx: &Gfx, v: &IDCompositionVisual2, from: f32, to: f32, ms: u32) ->
     gfx.commit()
 }
 
-/// Jumps to a resting position/opacity without animating.
-pub fn set_offset_opacity(gfx: &Gfx, v: &IDCompositionVisual2, y: f32, opacity: f32) -> Result<()> {
+/// Jumps to a resting position/opacity without animating; `inner` (the glass backdrop) gets
+/// the opposite offset so it stays put on screen.
+pub fn set_offset_opacity(gfx: &Gfx, v: &IDCompositionVisual2, inner: Option<&IDCompositionVisual2>, y: f32, opacity: f32) -> Result<()> {
     let v3: IDCompositionVisual3 = v.cast()?;
     unsafe {
         v.SetOffsetY2(y)?;
         v3.SetOpacity2(opacity)?;
+        if let Some(inner) = inner {
+            inner.SetOffsetY2(-y)?;
+        }
     }
     gfx.commit()
 }

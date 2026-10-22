@@ -96,7 +96,7 @@ impl App {
             unsafe {
                 let _ = KillTimer(Some(self.bar), HIDE_WINDOW_TIMER);
                 if !IsWindowVisible(self.bar).as_bool() {
-                    let _ = set_offset_opacity(&self.gfx, &visual, hidden, 0.0);
+                    let _ = set_offset_opacity(&self.gfx, &visual, None, hidden, 0.0);
                     let _ = ShowWindow(self.bar, SW_SHOWNOACTIVATE);
                 }
             }

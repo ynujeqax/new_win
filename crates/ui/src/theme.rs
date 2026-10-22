@@ -31,3 +31,13 @@ pub const WEIGHT_SEMIBOLD: u16 = 600;
 
 pub const REVEAL_MS: u32 = 150;
 pub const HIDE_MS: u32 = 120;
+
+/// Liquid glass (spec: liquid glass §2): tint over the blurred backdrop, and without one.
+pub const GLASS_TINT: Color = Color::rgba(8, 8, 10, 0.55);
+pub const GLASS_TINT_SOLID: Color = Color::rgba(8, 8, 10, 0.88);
+/// Vertical white sheen over the whole glass.
+pub const GLASS_SHEEN: [(f32, Color); 3] =
+    [(0.0, Color::rgba(255, 255, 255, 0.16)), (0.55, Color::rgba(255, 255, 255, 0.02)), (1.0, Color::rgba(255, 255, 255, 0.05))];
+/// 1 px rim, brightest on the top edge.
+pub const GLASS_RIM: [(f32, Color); 3] =
+    [(0.0, Color::rgba(255, 255, 255, 0.50)), (0.35, Color::rgba(255, 255, 255, 0.10)), (1.0, Color::rgba(255, 255, 255, 0.14))];
