@@ -50,6 +50,8 @@ pub enum IconKey {
 pub struct NotifyData {
     pub command: TrayCommand,
     pub hwnd: u32,
+    /// `uID`, sent even with a GUID key (Electron finds its icon by it).
+    pub id: u32,
     pub key: IconKey,
     pub flags: u32,
     pub callback_message: u32,
@@ -113,6 +115,7 @@ pub fn parse_notify(bytes: &[u8]) -> Result<NotifyData, ParseError> {
     Ok(NotifyData {
         command,
         hwnd,
+        id,
         key: guid.map_or(IconKey::Id { hwnd, id }, IconKey::Guid),
         flags,
         callback_message: u32_at(b, OFF_CALLBACK).unwrap_or(0),
@@ -127,6 +130,8 @@ pub fn parse_notify(bytes: &[u8]) -> Result<NotifyData, ParseError> {
 pub struct TrayIcon {
     pub key: IconKey,
     pub hwnd: u32,
+    /// `uID`: the app may need it back in clicks even for a GUID icon.
+    pub uid: u32,
     pub pid: u32,
     pub callback_message: u32,
     pub tip: String,
@@ -157,6 +162,7 @@ pub struct TrayModel {
 impl TrayIcon {
     fn update(&mut self, d: &NotifyData) {
         self.hwnd = d.hwnd;
+        self.uid = d.id;
         if d.flags & NIF_MESSAGE != 0 {
             self.callback_message = d.callback_message;
         }
@@ -184,6 +190,7 @@ impl TrayModel {
                 let mut icon = TrayIcon {
                     key: d.key,
                     hwnd: d.hwnd,
+                    uid: d.id,
                     pid,
                     callback_message: 0,
                     tip: String::new(),

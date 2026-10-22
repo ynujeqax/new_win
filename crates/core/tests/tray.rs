@@ -176,3 +176,12 @@ fn icons_taken_from_an_update_are_marked_adopted() {
     add(&mut m, 2, 1, "B");
     assert_eq!(m.icons().iter().map(|i| i.adopted).collect::<Vec<_>>(), [true, false]);
 }
+
+/// Electron (Discord) finds its icon by uID in wParam even when it registered with a GUID.
+#[test]
+fn guid_icons_keep_their_uid() {
+    let mut m = TrayModel::default();
+    let g = 0x1234u128;
+    m.apply(&parse_notify(&nid(0, FULL, 9, 3, NIF_GUID | NIF_MESSAGE, 0x8001, "", (0, 0), 0, Some(g))).unwrap(), 1);
+    assert_eq!((m.icons()[0].key, m.icons()[0].uid), (IconKey::Guid(g), 3));
+}

@@ -358,10 +358,7 @@ pub fn click_messages(version: u32, adopted: bool, click: TrayClick, id: u32, at
 /// Tells the app its icon was clicked (`at` = screen px); the app opens its window or menu.
 pub fn send_click(icon: &TrayIcon, click: TrayClick, at: POINT) {
     let hwnd = HWND(icon.hwnd as usize as *mut _);
-    let id = match icon.key {
-        IconKey::Id { id, .. } => id,
-        IconKey::Guid(_) => 0,
-    };
+    let id = icon.uid;
     let cb = icon.callback_message;
     if cb == 0 {
         return;
