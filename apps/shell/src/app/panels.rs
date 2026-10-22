@@ -56,6 +56,7 @@ impl ShellPanel {
 impl App {
     /// Drops the panel at once (another menu or panel replaces it).
     pub(super) fn close_panel(&mut self) {
+        self.foreground_watch = None;
         if let Some(p) = self.panel.take() {
             self.panel_gone(p.anchor());
         }

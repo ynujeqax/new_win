@@ -374,6 +374,27 @@ pub fn send_click(icon: &TrayIcon, click: TrayClick, at: POINT) {
     }
 }
 
+static FOREGROUND_NOTIFY: AtomicIsize = AtomicIsize::new(0);
+static FOREGROUND_MSG: AtomicU32 = AtomicU32::new(0);
+
+/// Posts `msg` to `notify` with the new foreground window in `wParam` on every foreground change,
+/// system-wide. Meant to live only briefly (while an app's tray menu is open); drop the guard.
+pub fn watch_foreground(notify: HWND, msg: u32) -> Result<WinEventHookGuard> {
+    unsafe extern "system" fn on_foreground(_: HWINEVENTHOOK, _: u32, hwnd: HWND, _: i32, _: i32, _: u32, _: u32) {
+        let notify = HWND(FOREGROUND_NOTIFY.load(Ordering::Relaxed) as *mut _);
+        unsafe {
+            let _ = PostMessageW(Some(notify), FOREGROUND_MSG.load(Ordering::Relaxed), WPARAM(hwnd.0 as usize), LPARAM(0));
+        }
+    }
+    FOREGROUND_NOTIFY.store(notify.0 as isize, Ordering::Relaxed);
+    FOREGROUND_MSG.store(msg, Ordering::Relaxed);
+    let hook = unsafe { SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, None, Some(on_foreground), 0, 0, WINEVENT_OUTOFCONTEXT) };
+    if hook.is_invalid() {
+        return Err(windows::core::Error::from_thread());
+    }
+    Ok(WinEventHookGuard(hook))
+}
+
 static REORDER_NOTIFY: AtomicIsize = AtomicIsize::new(0);
 static REORDER_MSG: AtomicU32 = AtomicU32::new(0);
 

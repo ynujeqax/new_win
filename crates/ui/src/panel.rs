@@ -94,6 +94,8 @@ struct State<C> {
     closed: bool,
     glass: bool,
     animating: bool,
+    /// Stays open while it loses focus once (an app's own menu opened from it).
+    held: bool,
 }
 
 pub struct Panel<C: PanelContent + 'static> {
@@ -123,6 +125,7 @@ impl<C: PanelContent + 'static> Panel<C> {
             closed: false,
             glass: false,
             animating: false,
+            held: false,
         }));
         let hwnd = create_window(
             &WindowSpec {
@@ -166,6 +169,13 @@ impl<C: PanelContent + 'static> Panel<C> {
     pub fn close(&self) {
         if let Ok(mut s) = self.state.try_borrow_mut() {
             s.begin_close();
+        }
+    }
+
+    /// Keeps the panel open when it loses focus, until it is activated again or closed.
+    pub fn hold(&self) {
+        if let Ok(mut s) = self.state.try_borrow_mut() {
+            s.held = true;
         }
     }
 
@@ -407,7 +417,12 @@ impl<C: PanelContent> Handler for State<C> {
                     self.post(self.hwnd.0 as usize, CLOSED);
                 }
             }
-            WM_ACTIVATE if (wp.0 & 0xFFFF) as u32 == WA_INACTIVE => self.begin_close(),
+            WM_ACTIVATE if (wp.0 & 0xFFFF) as u32 == WA_INACTIVE => {
+                if !self.held {
+                    self.begin_close();
+                }
+            }
+            WM_ACTIVATE => self.held = false,
             _ => return None,
         }
         Some(LRESULT(0))

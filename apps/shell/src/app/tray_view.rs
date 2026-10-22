@@ -5,16 +5,18 @@ use newwin_platform::appinfo::process_display_name;
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
 use newwin_platform::launch::shell_execute;
-use newwin_platform::tray_host::{TrayClick, send_click};
+use newwin_platform::tray_host::{TrayClick, send_click, watch_foreground};
 use newwin_ui::panel::Panel;
 use newwin_ui::popup::PopupStyle;
 use newwin_ui::tray_list::{TrayList, TrayOp, TrayRow, decode_action};
 use newwin_ui::{PointF, theme};
-use windows::Win32::Foundation::{POINT, RECT};
-use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
+use windows::Win32::Foundation::{HWND, POINT, RECT};
+use windows::Win32::UI::WindowsAndMessaging::{GWL_STYLE, GetCursorPos, GetWindowLongW, GetWindowThreadProcessId, IsWindowVisible, WM_APP, WS_CAPTION};
 
 use super::App;
 use super::panels::{ShellPanel, WM_APP_PANEL};
+
+pub(super) const WM_APP_FOREGROUND: u32 = WM_APP + 13;
 
 impl App {
     /// NewWin, then every shown icon in order of addition; `tray_keys[i]` belongs to row `i + 1`.
@@ -113,6 +115,71 @@ impl App {
             TrayOp::Key => TrayClick::Key,
         };
         log::debug!("tray click {:?} on {:?} ({})", op, icon.key, icon.tip);
+        if op == TrayOp::Right {
+            // The app's menu takes focus; the tray stays open under it (as in Windows 11).
+            if let Some(ShellPanel::Tray(p)) = &self.panel {
+                p.hold();
+            }
+            self.held_pid = icon.pid;
+            self.foreground_watch = watch_foreground(self.ping, WM_APP_FOREGROUND).map_err(|e| log::warn!("foreground watch: {e}")).ok();
+        }
         send_click(&icon, click, at);
+    }
+
+    /// While the tray is held open under an app's menu: close it once focus really moves on.
+    pub(super) fn on_foreground(&mut self, hwnd: HWND) {
+        let Some(ShellPanel::Tray(p)) = &self.panel else {
+            self.foreground_watch = None;
+            return;
+        };
+        let change = unsafe {
+            let mut pid = 0;
+            GetWindowThreadProcessId(hwnd, Some(&mut pid));
+            ForegroundChange {
+                is_panel: hwnd == p.hwnd(),
+                visible: IsWindowVisible(hwnd).as_bool(),
+                same_app: pid == self.held_pid,
+                captioned: (GetWindowLongW(hwnd, GWL_STYLE) as u32 & WS_CAPTION.0) == WS_CAPTION.0,
+            }
+        };
+        log::debug!("held tray: foreground {hwnd:?} {change:?}");
+        if change.is_panel {
+            self.foreground_watch = None;
+        } else if held_tray_closes(change) {
+            self.foreground_watch = None;
+            self.begin_close_panel();
+        }
+    }
+}
+
+/// A foreground change seen while the tray is held open under an app's menu.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct ForegroundChange {
+    pub is_panel: bool,
+    pub visible: bool,
+    /// Same process as the icon whose menu is open.
+    pub same_app: bool,
+    pub captioned: bool,
+}
+
+/// The app's invisible helper window and its popup menu keep the tray open; anything else with
+/// a visible window (the app's main window, the desktop, another app) closes it.
+pub(super) fn held_tray_closes(c: ForegroundChange) -> bool {
+    !c.is_panel && c.visible && !(c.same_app && !c.captioned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// After a right click the tray stays open under the app's own menu.
+    #[test]
+    fn a_held_tray_closes_only_when_focus_really_moves_on() {
+        let fg = |is_panel, visible, same_app, captioned| ForegroundChange { is_panel, visible, same_app, captioned };
+        assert!(!held_tray_closes(fg(false, false, true, false)), "the app's hidden helper window takes focus for its menu");
+        assert!(!held_tray_closes(fg(false, true, true, false)), "the app's popup menu itself");
+        assert!(!held_tray_closes(fg(true, true, false, true)), "back to the tray");
+        assert!(held_tray_closes(fg(false, true, true, true)), "a menu item opened the app's window");
+        assert!(held_tray_closes(fg(false, true, false, true)), "a click on another app or the desktop");
     }
 }

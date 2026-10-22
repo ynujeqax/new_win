@@ -88,6 +88,9 @@ pub struct App {
     tray_keys: Vec<newwin_core::tray::IconKey>,
     /// Fallback row names by process id.
     tray_names: std::collections::HashMap<u32, String>,
+    /// While the tray is held open under an app's menu: that app, and a foreground watch.
+    held_pid: u32,
+    foreground_watch: Option<WinEventHookGuard>,
     // Volume (M2)
     audio: Option<newwin_platform::audio::AudioService>,
     /// (level, muted) of the default output device.
@@ -264,6 +267,10 @@ impl App {
             self.restart_tray_host();
             self.reapply_taskbar(true);
             self.on_explorer_restarted();
+            return Some(LRESULT(0));
+        }
+        if msg == tray_view::WM_APP_FOREGROUND {
+            self.on_foreground(HWND(wp.0 as *mut _));
             return Some(LRESULT(0));
         }
         if msg == layout_view::WM_APP_LAYOUT {
@@ -465,6 +472,8 @@ fn start() -> Result<Rc<RefCell<App>>> {
         reorder_watch: None,
         tray_keys: Vec::new(),
         tray_names: std::collections::HashMap::new(),
+        held_pid: 0,
+        foreground_watch: None,
         audio: None,
         volume: None,
         volume_device: String::new(),
