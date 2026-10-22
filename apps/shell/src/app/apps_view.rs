@@ -72,6 +72,8 @@ impl App {
                     self.refresh_window(h);
                 }
                 self.model.set_active(h);
+                // Each window has its own layout.
+                self.read_layout();
             }
         }
         self.refresh_if_changed();

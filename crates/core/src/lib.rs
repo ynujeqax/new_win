@@ -5,6 +5,7 @@ pub mod apps;
 pub mod audio;
 pub mod clock;
 pub mod glass;
+pub mod input_lang;
 pub mod items;
 pub mod layout;
 pub mod network;

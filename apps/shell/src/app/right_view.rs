@@ -44,6 +44,8 @@ pub(super) struct RightView {
     pub speaker: Option<SpeakerView>,
     /// `None` until the network has been read once.
     pub net: Option<super::network_view::NetView>,
+    /// `None` until the layout has been read once.
+    pub lang: Option<super::layout_view::LangView>,
 }
 
 /// The speaker icon's animated state.
@@ -69,6 +71,7 @@ impl RightView {
             time: None,
             speaker: None,
             net: None,
+            lang: None,
         }
     }
 
@@ -105,7 +108,8 @@ impl RightView {
     pub(super) fn animating(&self, now: u64) -> bool {
         let speaker = self.speaker.as_ref().is_some_and(|s| s.waves.running(now) || s.mute.running(now));
         let net = self.net.as_ref().is_some_and(|n| n.animating(now));
-        speaker || net || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
+        let lang = self.lang.as_ref().is_some_and(|l| l.fade.running(now));
+        speaker || net || lang || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
     }
 
     /// Draws the tray button, the separators, the hover pill and the right items.
@@ -163,7 +167,18 @@ impl RightView {
                         n.paint(p, PointF { x: r.x + r.w / 2.0, y: h / 2.0 }, s(18.0), lit(Target::Right(RightItem::Network)), stroke, now);
                     }
                 }
-                RightItem::Layout => {}
+                RightItem::Layout => {
+                    if let Some(l) = &self.lang {
+                        let color = lit(Target::Right(RightItem::Layout));
+                        let f = l.fade.value(now);
+                        if let Some(t) = l.prev_text.as_ref().filter(|_| f < 1.0) {
+                            text(p, t, color.with_alpha(color.a * (1.0 - f)));
+                        }
+                        if let Some(t) = &l.text {
+                            text(p, t, color.with_alpha(color.a * f));
+                        }
+                    }
+                }
             }
         }
     }
@@ -177,7 +192,7 @@ impl App {
             RightItem::Time => self.right.time.as_ref().map(|t| t.width() + 2.0 * pad),
             RightItem::Volume => self.right.speaker.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Network => self.right.net.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
-            RightItem::Layout => None,
+            RightItem::Layout => self.right.lang.as_ref().and_then(|l| l.text.as_ref()).map(|t| t.width() + 2.0 * pad),
         }
     }
 
@@ -190,6 +205,10 @@ impl App {
         let strong = text_style(a, dpi, theme::WEIGHT_SEMIBOLD);
         self.right.time = self.text.layout(&self.time_text, &strong, w / 3.0).ok();
         self.right.date = self.text.layout(&self.date_text, &regular, w / 3.0).ok();
+        if let Some(l) = self.right.lang.as_mut() {
+            l.text = self.text.layout(&l.code, &regular, w / 3.0).ok();
+            l.prev_text = l.prev.as_ref().and_then(|p| self.text.layout(p, &regular, w / 3.0).ok());
+        }
         let (edge, pad, pill_h) = (s(6.0), s(theme::PILL_PAD_X), s(theme::PILL_HEIGHT));
         let y = ((h - pill_h) / 2.0).round();
         self.right.chevron = RectF::new(edge, y, pill_h, pill_h);
@@ -215,7 +234,8 @@ impl App {
             RightItem::Date => Some(format_long_date()),
             RightItem::Volume => self.volume_tooltip(),
             RightItem::Network => self.network_tooltip(),
-            RightItem::Time | RightItem::Layout => None,
+            RightItem::Layout => self.layout_tooltip(),
+            RightItem::Time => None,
         }
     }
 
@@ -266,6 +286,7 @@ impl App {
             (RightItem::Date, Button::Left) => launch::open_notification_center(),
             (RightItem::Volume, Button::Left) => self.toggle_volume_panel(),
             (RightItem::Volume, Button::Middle) => self.toggle_mute(),
+            (RightItem::Layout, Button::Left) => self.switch_layout(),
             (RightItem::Network, Button::Left) => {
                 if let Err(e) = newwin_platform::launch::shell_execute("open", "ms-settings:network", "") {
                     log::error!("network settings: {e}");

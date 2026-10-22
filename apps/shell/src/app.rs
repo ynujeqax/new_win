@@ -34,6 +34,7 @@ use crate::watchdog::PING_WINDOW_CLASS;
 mod apps_view;
 mod clock_view;
 mod glass_regions;
+mod layout_view;
 mod menus;
 mod network_view;
 mod panels;
@@ -94,6 +95,8 @@ pub struct App {
     // Network (M2)
     network: Option<newwin_platform::network::NetworkWatch>,
     net_info: Option<newwin_core::network::NetInfo>,
+    // Keyboard layout (M2)
+    input_hook: Option<newwin_platform::input_hook::InputHook>,
     ping: HWND,
     bar: HWND,
     bar_layer: Option<Layer>,
@@ -255,6 +258,10 @@ impl App {
             self.reapply_taskbar(true);
             self.restart_tray_host();
             self.on_explorer_restarted();
+            return Some(LRESULT(0));
+        }
+        if msg == layout_view::WM_APP_LAYOUT {
+            self.on_layout_hotkey();
             return Some(LRESULT(0));
         }
         if msg == network_view::WM_APP_NET {
@@ -460,6 +467,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         audio_switch_warned: false,
         network: None,
         net_info: None,
+        input_hook: None,
         ping: HWND::default(),
         bar: HWND::default(),
         bar_layer: None,
@@ -538,6 +546,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.load_windows(enumerate_top_level(), foreground);
         a.start_audio();
         a.start_network();
+        a.start_layout();
         a.tick_clock();
         a.reposition();
         a.start_visibility();

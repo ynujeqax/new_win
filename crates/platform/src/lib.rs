@@ -7,6 +7,8 @@ pub mod audio;
 pub mod clock;
 pub mod dpi;
 pub mod fullscreen;
+pub mod input_hook;
+pub mod keyboard_layout;
 pub mod launch;
 pub mod log;
 pub mod network;
