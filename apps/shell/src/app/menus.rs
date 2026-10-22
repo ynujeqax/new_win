@@ -228,10 +228,12 @@ impl App {
                 SEARCH => self.toggle_spotlight(),
                 RESTART_NEWWIN => {
                     log::info!("restart requested from the menu");
+                    self.save_usage_now();
                     unsafe { PostQuitMessage(APPS_EXIT_RESTART) };
                 }
                 QUIT => {
                     log::info!("quit requested from the menu");
+                    self.save_usage_now();
                     self.restore_taskbar();
                     unsafe { PostQuitMessage(0) };
                 }

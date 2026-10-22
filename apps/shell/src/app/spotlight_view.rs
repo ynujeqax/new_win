@@ -256,6 +256,11 @@ impl App {
                 })));
             }
             Kind::System(cmd) => {
+                // The session may end before the save timer: count and write first.
+                if matches!(cmd, SystemCommand::ShutDown | SystemCommand::Restart | SystemCommand::SignOut) {
+                    self.usage.bump(&key);
+                    self.save_usage_now();
+                }
                 let r = match cmd {
                     SystemCommand::Settings => {
                         self.open_settings_file();
@@ -268,7 +273,8 @@ impl App {
                     SystemCommand::SignOut => launch::run(SystemTarget::SignOut),
                 };
                 match r {
-                    Ok(()) => self.on_launched(key),
+                    Ok(()) if !matches!(cmd, SystemCommand::ShutDown | SystemCommand::Restart | SystemCommand::SignOut) => self.on_launched(key),
+                    Ok(()) => {}
                     Err(e) => log::warn!("{cmd:?} failed: {e}"),
                 }
             }
@@ -278,6 +284,17 @@ impl App {
     pub(super) fn on_launched(&mut self, key: String) {
         self.usage.bump(&key);
         unsafe { SetTimer(Some(self.bar), USAGE_SAVE_TIMER, DEBOUNCE_MS, None) };
+    }
+
+    /// Writes `usage.toml` at once, on this thread (the file is tiny): before the session or
+    /// NewWin ends, when the save timer would be too late.
+    pub(super) fn save_usage_now(&mut self) {
+        unsafe {
+            let _ = KillTimer(Some(self.bar), USAGE_SAVE_TIMER);
+        }
+        if let Err(e) = save_atomic(&usage_path(), &self.usage.to_toml()) {
+            log::warn!("cannot write usage.toml: {e}");
+        }
     }
 
     pub(super) fn save_usage(&mut self) {
