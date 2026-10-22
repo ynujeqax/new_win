@@ -11,6 +11,7 @@ pub mod layout;
 pub mod network;
 pub mod spotlight;
 pub mod strings;
+pub mod text_edit;
 pub mod tray;
 pub mod visibility;
 pub mod watchdog;
