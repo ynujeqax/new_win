@@ -2,6 +2,7 @@
 
 pub mod anim;
 pub mod apps;
+pub mod audio;
 pub mod clock;
 pub mod glass;
 pub mod items;
