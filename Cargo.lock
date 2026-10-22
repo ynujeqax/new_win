@@ -55,6 +55,7 @@ dependencies = [
  "log",
  "newwin-core",
  "windows",
+ "windows-core",
 ]
 
 [[package]]

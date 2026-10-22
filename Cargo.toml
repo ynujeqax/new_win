@@ -19,6 +19,7 @@ newwin-config = { path = "crates/config" }
 newwin-platform = { path = "crates/platform" }
 newwin-ui = { path = "crates/ui" }
 windows = "0.62.2"
+windows-core = "0.62.2"
 serde = { version = "1.0.229", features = ["derive"] }
 toml = "1.1.8"
 log = { version = "0.4.34", features = ["std"] }
