@@ -55,7 +55,8 @@ pub struct Appearance {
     #[serde(deserialize_with = "sat::u32")]
     pub margin: u32,
     pub corner_radius: f32,
-    pub background_opacity: f32,
+    /// Liquid glass: blur what is under the bar (false: tint only).
+    pub glass: bool,
     pub font_family: String,
     pub font_size: f32,
     pub date_format: String,
@@ -68,7 +69,7 @@ impl Default for Appearance {
             height: 30,
             margin: 6,
             corner_radius: 11.0,
-            background_opacity: 0.065,
+            glass: true,
             font_family: "Segoe UI Variable Text".into(),
             font_size: 13.0,
             date_format: "system".into(),
@@ -171,7 +172,6 @@ impl Config {
         a.height = a.height.clamp(24, 48);
         a.margin = a.margin.min(16);
         a.corner_radius = clamp_f(a.corner_radius, 0.0, 16.0, d.corner_radius);
-        a.background_opacity = clamp_f(a.background_opacity, 0.0, 1.0, d.background_opacity);
         a.font_size = clamp_f(a.font_size, 10.0, 18.0, d.font_size);
         self
     }

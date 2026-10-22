@@ -167,7 +167,8 @@ fn main() -> Result<()> {
         clip.SetTop2(0.0)?;
         clip.SetRight2(bw as f32)?;
         clip.SetBottom2(bh as f32)?;
-        for r in [11.0f32] {
+        {
+            let r = 11.0f32;
             clip.SetTopLeftRadiusX2(r)?;
             clip.SetTopLeftRadiusY2(r)?;
             clip.SetTopRightRadiusX2(r)?;

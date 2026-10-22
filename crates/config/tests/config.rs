@@ -27,7 +27,6 @@ fn missing_file_gives_defaults() {
     assert_eq!(c.appearance.height, 30);
     assert_eq!(c.appearance.margin, 6);
     assert_eq!(c.appearance.corner_radius, 11.0);
-    assert_eq!(c.appearance.background_opacity, 0.065);
     assert_eq!(c.appearance.font_family, "Segoe UI Variable Text");
     assert_eq!(c.appearance.font_size, 13.0);
     assert_eq!(c.appearance.date_format, "system");
@@ -75,8 +74,16 @@ fn out_of_type_range_integers_are_clamped_not_rejected() {
 
 #[test]
 fn sanitize_fixes_nan_and_negative_floats() {
-    let c = parse("[appearance]\nbackground_opacity = nan\ncorner_radius = -5.0\nfont_size = inf\n").unwrap();
-    assert_eq!(c.appearance.background_opacity, 0.065);
+    let c = parse("[appearance]\ncorner_radius = -5.0\nfont_size = inf\n").unwrap();
     assert_eq!(c.appearance.corner_radius, 0.0);
     assert_eq!(c.appearance.font_size, 18.0);
+}
+
+#[test]
+fn glass_flag_defaults_on_and_old_opacity_is_ignored() {
+    assert!(Appearance::default().glass);
+    assert!(!parse("[appearance]\nglass = false\n").unwrap().appearance.glass);
+    let old = parse("[appearance]\nbackground_opacity = 0.2\nheight = 32\n").unwrap();
+    assert!(old.appearance.glass);
+    assert_eq!(old.appearance.height, 32);
 }

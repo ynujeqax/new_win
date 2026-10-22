@@ -2,7 +2,7 @@
 
 use newwin_config::Appearance;
 use newwin_platform::dpi::{scale, scale_px};
-use newwin_ui::{Color, Painter, PointF, RectF, TextLayout, TextStyle, theme};
+use newwin_ui::{Painter, PointF, RectF, TextLayout, TextStyle, theme};
 use windows::Win32::Foundation::RECT;
 
 pub fn text_style(a: &Appearance, dpi: u32, weight: u16) -> TextStyle {
@@ -14,7 +14,7 @@ pub fn paint_background(p: &mut Painter, w: f32, h: f32, dpi: u32, a: &Appearanc
     let full = RectF::new(0.0, 0.0, w, h);
     let r = scale(a.corner_radius, dpi);
     p.fill_round_rect(full, r, theme::TINT);
-    p.fill_round_rect(full, r, Color::rgba(255, 255, 255, a.background_opacity));
+
     p.stroke_round_rect(full, r, theme::BORDER, 1.0);
 }
 
