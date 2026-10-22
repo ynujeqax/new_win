@@ -66,7 +66,11 @@ type CopyLog = Rc<RefCell<Vec<(usize, Vec<u8>)>>>;
 struct FakeExplorer(CopyLog);
 
 impl Handler for FakeExplorer {
-    fn on_message(&mut self, _: HWND, msg: u32, _: WPARAM, lp: LPARAM) -> Option<LRESULT> {
+    fn on_message(&mut self, _: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
+        if msg == WM_COMMAND || msg == WM_USER + 5 {
+            self.0.borrow_mut().push((msg as usize | 0x1_0000, wp.0.to_le_bytes().to_vec()));
+            return Some(LRESULT(0x77));
+        }
         if msg != WM_COPYDATA {
             return None;
         }
@@ -183,4 +187,29 @@ fn prune_removes_icons_of_destroyed_windows() {
     }
     assert!(h.prune());
     assert!(h.icons().is_empty());
+}
+
+/// Shell.Application's FileRun / ToggleDesktop post WM_COMMAND to the tray window, which is ours now.
+#[test]
+fn shell_commands_reach_explorer() {
+    let (fake, log) = fake_explorer();
+    let (h, _) = host(Forward::Window(fake));
+    unsafe {
+        let _ = PostMessageW(Some(h.hwnd()), WM_COMMAND, WPARAM(407), LPARAM(0));
+    }
+    pump(100);
+    // Real senders are other threads (and processes).
+    let to = h.hwnd().0 as usize;
+    let other = std::thread::spawn(move || unsafe { SendMessageW(HWND(to as *mut _), WM_USER + 5, Some(WPARAM(9)), Some(LPARAM(0))) }.0);
+    while !other.is_finished() {
+        pump(10);
+    }
+    assert_eq!(other.join().unwrap(), 0x77, "a sent message returns explorer's answer");
+    let got: Vec<(usize, usize)> = log
+        .borrow()
+        .iter()
+        .filter(|(d, _)| *d & 0x1_0000 != 0)
+        .map(|(d, b)| (d & 0xFFFF, usize::from_le_bytes(b[..8].try_into().unwrap())))
+        .collect();
+    assert_eq!(got, vec![(WM_COMMAND as usize, 407), ((WM_USER + 5) as usize, 9)]);
 }

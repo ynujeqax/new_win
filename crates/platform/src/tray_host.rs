@@ -143,7 +143,29 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
             });
             unsafe { DefWindowProcW(hwnd, msg, wp, lp) }
         }
+        // Shell commands (Shell.Application's FileRun, ToggleDesktop, … post WM_COMMAND) and
+        // explorer's private WM_USER messages are meant for explorer's tray.
+        WM_COMMAND | WM_USER..=0xBFFF => forward_other(hwnd, msg, wp, lp),
         _ => unsafe { DefWindowProcW(hwnd, msg, wp, lp) },
+    }
+}
+
+/// Passes a message on to explorer: sent ones wait (up to 1 s) for its answer, posted ones are
+/// posted on.
+fn forward_other(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRESULT {
+    let target = HWND(with_host(hwnd, |s| s.target.load(Ordering::Relaxed)).unwrap_or(0) as *mut _);
+    if target.is_invalid() || target == hwnd {
+        return LRESULT(0);
+    }
+    unsafe {
+        if InSendMessageEx(None) & ISMEX_SEND != 0 {
+            let mut result = 0usize;
+            let ok = SendMessageTimeoutW(target, msg, wp, lp, SMTO_ABORTIFHUNG, 1000, Some(&mut result));
+            LRESULT(if ok.0 == 0 { 0 } else { result as isize })
+        } else {
+            let _ = PostMessageW(Some(target), msg, wp, lp);
+            LRESULT(0)
+        }
     }
 }
 
