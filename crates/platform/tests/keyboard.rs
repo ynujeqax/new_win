@@ -4,6 +4,9 @@ use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::UI::Input::KeyboardAndMouse::{INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, SendInput, VK_LWIN};
 use windows::Win32::UI::WindowsAndMessaging::{MSG, PM_REMOVE, PeekMessageW, WM_APP, WS_EX_TOOLWINDOW, WS_POPUP};
 
+/// The hook keeps its target in process-wide statics: one hook per test at a time.
+static ONE_HOOK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 #[test]
 fn current_layout_has_a_three_letter_code() {
     let l = current_layout().expect("a layout");
@@ -14,6 +17,7 @@ fn current_layout_has_a_three_letter_code() {
 
 #[test]
 fn hook_starts_and_stops() {
+    let _one = ONE_HOOK.lock();
     let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "kbd").unwrap();
     let start = std::time::Instant::now();
     let hook = InputHook::start(notify, WM_APP + 10, WM_APP + 14, true).unwrap();
@@ -39,6 +43,7 @@ fn spotlight_posts(notify: HWND, ms: u64) -> usize {
 /// the untagged tap is masked by the hook, and the tagged press carries its own mask.
 #[test]
 fn win_taps_post_spotlight_but_tagged_ones_do_not() {
+    let _one = ONE_HOOK.lock();
     let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "kbd-tap").unwrap();
     let hook = InputHook::start(notify, WM_APP + 10, WM_APP + 14, true).unwrap();
     let key = |up: bool| INPUT {
