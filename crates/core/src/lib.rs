@@ -2,6 +2,7 @@
 
 pub mod apps;
 pub mod clock;
+pub mod glass;
 pub mod layout;
 pub mod strings;
 pub mod visibility;
