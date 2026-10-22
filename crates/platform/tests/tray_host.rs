@@ -213,3 +213,18 @@ fn shell_commands_reach_explorer() {
         .collect();
     assert_eq!(got, vec![(WM_COMMAND as usize, 407), ((WM_USER + 5) as usize, 9)]);
 }
+
+#[test]
+fn clicks_follow_explorers_sequence() {
+    use newwin_platform::tray_host::{TrayClick, click_messages};
+    use windows::Win32::Foundation::POINT;
+    let at = POINT { x: 100, y: 50 };
+    let xy = (50 << 16) | 100;
+    let lp = |m: u32| ((7u32 << 16) | m) as isize;
+    let v4 = |c| click_messages(4, c, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect::<Vec<_>>();
+    assert_eq!(v4(TrayClick::Left), vec![(xy, lp(WM_LBUTTONDOWN)), (xy, lp(WM_LBUTTONUP)), (xy, lp(WM_USER))]);
+    assert_eq!(v4(TrayClick::Right), vec![(xy, lp(WM_RBUTTONDOWN)), (xy, lp(WM_RBUTTONUP)), (xy, lp(WM_CONTEXTMENU))]);
+    assert_eq!(v4(TrayClick::Key), vec![(xy, lp(WM_USER + 1))]);
+    let old: Vec<(usize, isize)> = click_messages(0, TrayClick::Left, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect();
+    assert_eq!(old, vec![(7, WM_LBUTTONDOWN as isize), (7, WM_LBUTTONUP as isize)]);
+}
