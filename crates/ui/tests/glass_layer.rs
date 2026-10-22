@@ -93,3 +93,9 @@ fn glass_can_be_captured_while_a_screenshot_is_taken() {
     assert_eq!(affinity(), WDA_EXCLUDEFROMCAPTURE.0);
     unsafe { DestroyWindow(hwnd).unwrap() };
 }
+
+#[test]
+fn the_pill_keeps_the_same_gap_above_and_below_in_a_36_px_bar() {
+    // (36 - 26) / 2 = 5 px each side, a whole pixel, so the pill sits exactly in the middle.
+    assert_eq!(newwin_ui::theme::PILL_HEIGHT, 26.0);
+}

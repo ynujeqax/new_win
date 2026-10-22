@@ -24,9 +24,9 @@ fn missing_file_gives_defaults() {
     assert_eq!(c.bar.hide_delay_ms, 400);
     assert_eq!(c.bar.trigger_height_px, 1);
     assert!(c.bar.ignore_fullscreen);
-    assert_eq!(c.appearance.height, 30);
+    assert_eq!(c.appearance.height, 36);
     assert_eq!(c.appearance.margin, 6);
-    assert_eq!(c.appearance.corner_radius, 15.0);
+    assert_eq!(c.appearance.corner_radius, 18.0);
     assert_eq!(c.appearance.font_family, "Segoe UI Variable Text");
     assert_eq!(c.appearance.font_size, 13.0);
     assert_eq!(c.appearance.date_format, "system");
@@ -77,6 +77,8 @@ fn sanitize_fixes_nan_and_negative_floats() {
     let c = parse("[appearance]\ncorner_radius = -5.0\nfont_size = inf\n").unwrap();
     assert_eq!(c.appearance.corner_radius, 0.0);
     assert_eq!(c.appearance.font_size, 18.0);
+    // A capsule needs half the tallest bar (48 px).
+    assert_eq!(parse("[appearance]\ncorner_radius = 99.0\n").unwrap().appearance.corner_radius, 24.0);
 }
 
 #[test]

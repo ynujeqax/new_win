@@ -10,9 +10,9 @@ pub const ACTIVE_PILL: Color = Color::rgba(255, 255, 255, 0.16);
 pub const HOVER_PILL: Color = Color::rgba(255, 255, 255, 0.07);
 pub const SEPARATOR: Color = Color::rgba(255, 255, 255, 0.12);
 
-pub const PILL_HEIGHT: f32 = 22.0;
+pub const PILL_HEIGHT: f32 = 26.0;
 /// Half the pill height: a capsule, like the bar itself.
-pub const PILL_RADIUS: f32 = 11.0;
+pub const PILL_RADIUS: f32 = 13.0;
 pub const PILL_PAD_X: f32 = 9.0;
 pub const ITEM_GAP: f32 = 2.0;
 

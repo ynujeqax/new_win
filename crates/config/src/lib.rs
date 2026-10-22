@@ -66,9 +66,9 @@ pub struct Appearance {
 impl Default for Appearance {
     fn default() -> Self {
         Self {
-            height: 30,
+            height: 36,
             margin: 6,
-            corner_radius: 15.0,
+            corner_radius: 18.0,
             glass: true,
             font_family: "Segoe UI Variable Text".into(),
             font_size: 13.0,
@@ -171,7 +171,7 @@ impl Config {
         let a = &mut self.appearance;
         a.height = a.height.clamp(24, 48);
         a.margin = a.margin.min(16);
-        a.corner_radius = clamp_f(a.corner_radius, 0.0, 16.0, d.corner_radius);
+        a.corner_radius = clamp_f(a.corner_radius, 0.0, 24.0, d.corner_radius);
         a.font_size = clamp_f(a.font_size, 10.0, 18.0, d.font_size);
         self
     }

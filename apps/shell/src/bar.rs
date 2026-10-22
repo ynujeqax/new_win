@@ -34,9 +34,9 @@ mod tests {
     fn floating_bar_rect() {
         let mon = RECT { left: 0, top: 0, right: 2560, bottom: 1440 };
         let a = Appearance::default();
-        assert_eq!(bar_rect(mon, 96, &a), RECT { left: 6, top: 6, right: 2554, bottom: 36 });
-        assert_eq!(bar_rect(mon, 144, &a), RECT { left: 9, top: 9, right: 2551, bottom: 54 });
+        assert_eq!(bar_rect(mon, 96, &a), RECT { left: 6, top: 6, right: 2554, bottom: 42 });
+        assert_eq!(bar_rect(mon, 144, &a), RECT { left: 9, top: 9, right: 2551, bottom: 63 });
         let offset = RECT { left: 100, top: 50, right: 1100, bottom: 850 };
-        assert_eq!(bar_rect(offset, 96, &a), RECT { left: 106, top: 56, right: 1094, bottom: 86 });
+        assert_eq!(bar_rect(offset, 96, &a), RECT { left: 106, top: 56, right: 1094, bottom: 92 });
     }
 }
