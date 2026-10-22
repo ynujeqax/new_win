@@ -1,6 +1,12 @@
 use std::path::Path;
 
-use newwin_platform::taskbar::{NativeTaskbar, native_taskbar_visible, restore_from_state_file};
+use newwin_platform::taskbar::{NativeTaskbar, explorer_tray, native_taskbar_visible, restore_from_state_file};
+use newwin_platform::window::{WindowSpec, create_window};
+use std::cell::RefCell;
+use std::rc::Rc;
+use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
+use windows::Win32::System::Threading::GetCurrentProcessId;
+use windows::Win32::UI::WindowsAndMessaging::{DestroyWindow, GetWindowThreadProcessId, WS_EX_TOOLWINDOW, WS_POPUP};
 
 #[test]
 fn restore_from_missing_state_file_is_noop() {
@@ -38,4 +44,30 @@ fn state_file_heals_an_unrestored_hide() {
     assert!(restore_from_state_file(&state).unwrap());
     assert!(native_taskbar_visible());
     assert!(!state.exists());
+}
+
+struct Noop;
+
+impl newwin_platform::window::Handler for Noop {
+    fn on_message(&mut self, _: HWND, _: u32, _: WPARAM, _: LPARAM) -> Option<LRESULT> {
+        None
+    }
+}
+
+/// Our own tray window (M2) has the same class as explorer's; the native taskbar is explorer's.
+#[test]
+fn explorer_tray_skips_windows_of_this_process() {
+    let ours = create_window(
+        &WindowSpec { class: "Shell_TrayWnd", ex_style: WS_EX_TOOLWINDOW, style: WS_POPUP, rect: RECT::default(), layered_alpha: None },
+        Rc::new(RefCell::new(Noop)),
+    )
+    .unwrap();
+    let found = explorer_tray().expect("explorer's taskbar exists");
+    let mut pid = 0;
+    unsafe { GetWindowThreadProcessId(found, Some(&mut pid)) };
+    unsafe {
+        let _ = DestroyWindow(ours);
+    }
+    assert_ne!(found, ours);
+    assert_ne!(pid, unsafe { GetCurrentProcessId() });
 }

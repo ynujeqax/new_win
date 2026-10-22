@@ -7,10 +7,11 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicIsize, AtomicU32, Ordering};
 
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent};
 use windows::Win32::UI::Shell::{ABM_GETSTATE, ABM_SETSTATE, ABS_ALWAYSONTOP, ABS_AUTOHIDE, APPBARDATA, SHAppBarMessage};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EVENT_OBJECT_SHOW, EnumWindows, FindWindowW, GetClassNameW, GetWindowThreadProcessId, IsWindowVisible, OBJID_WINDOW,
+    EVENT_OBJECT_SHOW, EnumWindows, GetClassNameW, GetWindowThreadProcessId, IsWindowVisible, OBJID_WINDOW,
     PostMessageW, RegisterWindowMessageW, SW_HIDE, SW_SHOWNA, ShowWindow, WINEVENT_OUTOFCONTEXT,
 };
 use windows::core::{BOOL, Result, w};
@@ -88,14 +89,38 @@ fn restore_native(autohide_was_on: bool) -> Result<()> {
 }
 
 fn primary_tray() -> Result<HWND> {
-    unsafe { FindWindowW(w!("Shell_TrayWnd"), None) }
+    explorer_tray().ok_or_else(|| windows::core::Error::new(windows::core::HRESULT(-1), "explorer taskbar not found"))
+}
+
+fn pid_of(hwnd: HWND) -> u32 {
+    let mut pid = 0;
+    unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
+    pid
+}
+
+/// Explorer's primary taskbar. NewWin's own tray host has the same class, so windows of this
+/// process are skipped (`FindWindow` would return ours first).
+pub fn explorer_tray() -> Option<HWND> {
+    unsafe extern "system" fn find(hwnd: HWND, lp: LPARAM) -> BOOL {
+        let out = unsafe { &mut *(lp.0 as *mut Option<HWND>) };
+        if class_name(hwnd) == PRIMARY_CLASS && pid_of(hwnd) != unsafe { GetCurrentProcessId() } {
+            *out = Some(hwnd);
+            return false.into();
+        }
+        true.into()
+    }
+    let mut found = None;
+    unsafe {
+        let _ = EnumWindows(Some(find), LPARAM(&mut found as *mut _ as isize));
+    }
+    found
 }
 
 fn all_trays() -> Vec<HWND> {
     unsafe extern "system" fn collect(hwnd: HWND, lp: LPARAM) -> BOOL {
         let out = unsafe { &mut *(lp.0 as *mut Vec<HWND>) };
         let class = class_name(hwnd);
-        if class == PRIMARY_CLASS || class == SECONDARY_CLASS {
+        if (class == PRIMARY_CLASS || class == SECONDARY_CLASS) && pid_of(hwnd) != unsafe { GetCurrentProcessId() } {
             out.push(hwnd);
         }
         true.into()
@@ -177,8 +202,7 @@ pub fn watch_taskbar_show(notify: HWND, msg: u32) -> Result<WinEventHookGuard> {
     }
     SHOW_NOTIFY.store(notify.0 as isize, Ordering::Relaxed);
     SHOW_MSG.store(msg, Ordering::Relaxed);
-    let mut pid = 0u32;
-    unsafe { GetWindowThreadProcessId(primary_tray()?, Some(&mut pid)) };
+    let pid = pid_of(primary_tray()?);
     let hook = unsafe {
         SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, None, Some(on_show), pid, 0, WINEVENT_OUTOFCONTEXT)
     };
