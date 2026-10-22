@@ -114,7 +114,9 @@ impl App {
             work = self.monitor;
         }
         let anchor = PointF { x: (work.left + work.right) as f32 / 2.0, y: (work.top as f32 + theme::SPOTLIGHT_TOP * (work.bottom - work.top) as f32).round() };
-        match Panel::show_after_glass(&self.gfx, view, anchor, self.dpi, self.bar, WM_APP_SPOTLIGHT_PANEL) {
+        // Without the glass thread no frame will come: show at once (the tint is all there is).
+        let shown = if self.backdrops.is_some() { Panel::show_after_glass(&self.gfx, view, anchor, self.dpi, self.bar, WM_APP_SPOTLIGHT_PANEL) } else { Panel::show(&self.gfx, view, anchor, self.dpi, self.bar, WM_APP_SPOTLIGHT_PANEL) };
+        match shown {
             Ok(p) => self.spotlight = Some(p),
             Err(e) => log::error!("cannot open Spotlight: {e}"),
         }
@@ -180,7 +182,7 @@ impl App {
             PointF { x: r.left as f32 + row.x + newwin_platform::dpi::scale(theme::POPUP_ITEM_PAD_X, self.dpi), y: r.top as f32 + row.bottom() }
         };
         p.hold();
-        self.open(items, at, MenuCtx::SpotlightRow { index });
+        self.open(items, at, MenuCtx::SpotlightRow { item: c.clone() });
     }
 
     fn pointer_over(&self, hwnd: HWND) -> bool {
@@ -192,12 +194,13 @@ impl App {
         pt.x >= r.left && pt.x < r.right && pt.y >= r.top && pt.y < r.bottom
     }
 
-    pub(super) fn on_spotlight_menu_pick(&mut self, index: usize, id: u32) {
+    /// `item` was taken when the menu opened: a re-index meanwhile cannot change what it runs.
+    pub(super) fn on_spotlight_menu_pick(&mut self, item: Candidate, id: u32) {
         match id {
-            MENU_OPEN => self.launch_candidate(index, false),
-            MENU_ADMIN => self.launch_candidate(index, true),
+            MENU_OPEN => self.launch(item, false),
+            MENU_ADMIN => self.launch(item, true),
             MENU_LOCATION => {
-                if let Some(path) = self.shown_catalog().get(index).and_then(|c| c.file_path.clone()) {
+                if let Some(path) = item.file_path.clone() {
                     self.submit_job(Job::Run(Box::new(move || {
                         if let Err(e) = launch::open_file_location(&path) {
                             log::warn!("open file location {path}: {e}");
@@ -233,7 +236,12 @@ impl App {
     /// Runs entry `index` of the shown catalog; apps launch on the worker (a UAC prompt or a slow
     /// app must not freeze the bar) and count once they started.
     pub(super) fn launch_candidate(&mut self, index: usize, admin: bool) {
-        let Some(c) = self.shown_catalog().get(index).cloned() else { return };
+        if let Some(c) = self.shown_catalog().get(index).cloned() {
+            self.launch(c, admin);
+        }
+    }
+
+    fn launch(&mut self, c: Candidate, admin: bool) {
         self.close_spotlight();
         let key = c.usage_key();
         match c.kind {

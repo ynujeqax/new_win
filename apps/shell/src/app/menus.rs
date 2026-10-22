@@ -1,6 +1,7 @@
 //! Popup menus of the bar: window list, app menu, overflow, and the system (Win+X) menu.
 
 use newwin_core::apps::{GroupKey, Hwnd, left_click};
+use newwin_core::spotlight::Candidate;
 use newwin_core::visibility::VisInput;
 use newwin_platform::activate;
 use newwin_platform::dpi::scale;
@@ -58,8 +59,8 @@ pub(super) enum MenuCtx {
     BarMenu,
     /// Right click on the NewWin row of the tray.
     NewWinMenu,
-    /// The row menu of a Spotlight result (`index` into the catalog it shows).
-    SpotlightRow { index: usize },
+    /// The row menu of a Spotlight result.
+    SpotlightRow { item: Candidate },
 }
 
 impl MenuCtx {
@@ -221,7 +222,7 @@ impl App {
                     self.run_click(action, rect);
                 }
             }
-            &MenuCtx::SpotlightRow { index } => self.on_spotlight_menu_pick(index, id),
+            MenuCtx::SpotlightRow { item } => self.on_spotlight_menu_pick(item.clone(), id),
             MenuCtx::BarMenu | MenuCtx::NewWinMenu => match id {
                 NEWWIN_SETTINGS => self.open_settings_file(),
                 SEARCH => self.toggle_spotlight(),
