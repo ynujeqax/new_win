@@ -43,3 +43,11 @@ fn system_menu_targets() {
     assert_eq!(action(SystemTarget::SignOut), SignOut);
     assert_eq!(action(SystemTarget::Sleep), Sleep);
 }
+
+#[test]
+fn now_ms_never_goes_back() {
+    let a = newwin_platform::clock::now_ms();
+    std::thread::sleep(std::time::Duration::from_millis(20));
+    let b = newwin_platform::clock::now_ms();
+    assert!(a > 0 && b >= a + 10, "{a} then {b}");
+}

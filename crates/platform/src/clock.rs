@@ -37,3 +37,8 @@ pub fn ui_language_tag() -> String {
     }
     String::from_utf16_lossy(&buf[..(n - 1) as usize])
 }
+
+/// Milliseconds since boot, for animations; never goes back (unlike the wall clock).
+pub fn now_ms() -> u64 {
+    unsafe { windows::Win32::System::SystemInformation::GetTickCount64() }
+}

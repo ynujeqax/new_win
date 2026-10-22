@@ -80,6 +80,27 @@ impl TextCache {
         }
     }
 
+    /// Like [`Self::layout`], with the UTF-16 range `bold` = (start, len) in semibold (a search
+    /// match). A range past the end is clamped.
+    pub fn layout_emphasis(&mut self, s: &str, style: &TextStyle, max_width: f32, bold: Option<(usize, usize)>) -> Result<TextLayout> {
+        let format = self.format(style)?;
+        let wide: Vec<u16> = s.encode_utf16().collect();
+        unsafe {
+            let layout = self.gfx.dwrite().CreateTextLayout(&wide, &format, max_width.max(0.0), style.size * 2.0)?;
+            if let Some((start, len)) = bold {
+                let start = start.min(wide.len());
+                let len = len.min(wide.len() - start);
+                if len > 0 {
+                    let range = DWRITE_TEXT_RANGE { startPosition: start as u32, length: len as u32 };
+                    layout.SetFontWeight(DWRITE_FONT_WEIGHT(i32::from(crate::theme::WEIGHT_SEMIBOLD)), range)?;
+                }
+            }
+            let mut m = DWRITE_TEXT_METRICS::default();
+            layout.GetMetrics(&mut m)?;
+            Ok(TextLayout { layout, width: m.width.min(max_width), height: m.height })
+        }
+    }
+
     /// Width the text needs without trimming.
     pub fn natural_width(&mut self, s: &str, style: &TextStyle) -> Result<f32> {
         Ok(self.layout(s, style, 100_000.0)?.width())

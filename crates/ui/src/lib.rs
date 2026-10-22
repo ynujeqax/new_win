@@ -7,6 +7,7 @@ mod anim;
 pub mod backdrop;
 mod geom;
 mod glass;
+pub mod icons;
 mod gfx;
 mod layer;
 mod paint;

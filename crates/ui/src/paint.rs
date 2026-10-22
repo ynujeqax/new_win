@@ -1,6 +1,6 @@
 //! Drawing primitives in physical pixels.
 
-use windows::Win32::Graphics::Direct2D::Common::D2D1_GRADIENT_STOP;
+use windows::Win32::Graphics::Direct2D::Common::{D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN, D2D1_GRADIENT_STOP};
 use windows::Win32::Graphics::Direct2D::*;
 use windows::core::Interface;
 use windows_numerics::Vector2;
@@ -10,11 +10,17 @@ use crate::{Color, PointF, RectF, TextLayout};
 pub struct Painter<'a> {
     dc: &'a ID2D1DeviceContext,
     clip: RectF,
+    /// Round caps and joins for line icons, created on first use.
+    round: Option<ID2D1StrokeStyle>,
+}
+
+fn v(p: PointF) -> Vector2 {
+    Vector2 { X: p.x, Y: p.y }
 }
 
 impl<'a> Painter<'a> {
     pub(crate) fn new(dc: &'a ID2D1DeviceContext, clip: RectF) -> Self {
-        Self { dc, clip }
+        Self { dc, clip, round: None }
     }
 
     /// The region being redrawn; drawing outside it is discarded.
@@ -71,6 +77,85 @@ impl<'a> Painter<'a> {
     pub fn line(&mut self, a: PointF, b: PointF, c: Color, width: f32) {
         let Some(br) = self.brush(c) else { return };
         unsafe { self.dc.DrawLine(Vector2 { X: a.x, Y: a.y }, Vector2 { X: b.x, Y: b.y }, &br, width, None) };
+    }
+
+    fn round_style(&mut self) -> Option<ID2D1StrokeStyle> {
+        if self.round.is_none() {
+            let props = D2D1_STROKE_STYLE_PROPERTIES {
+                startCap: D2D1_CAP_STYLE_ROUND,
+                endCap: D2D1_CAP_STYLE_ROUND,
+                dashCap: D2D1_CAP_STYLE_ROUND,
+                lineJoin: D2D1_LINE_JOIN_ROUND,
+                miterLimit: 10.0,
+                dashStyle: D2D1_DASH_STYLE_SOLID,
+                dashOffset: 0.0,
+            };
+            self.round = unsafe { self.dc.GetFactory().ok()?.CreateStrokeStyle(&props, None).ok() };
+        }
+        self.round.clone()
+    }
+
+    /// One figure through `pts`, open or closed, as a path geometry.
+    fn figure(&self, pts: &[PointF], closed: bool, filled: bool) -> Option<ID2D1PathGeometry> {
+        let (first, rest) = pts.split_first()?;
+        unsafe {
+            let geo = self.dc.GetFactory().ok()?.CreatePathGeometry().ok()?;
+            let sink = geo.Open().ok()?;
+            sink.BeginFigure(v(*first), if filled { D2D1_FIGURE_BEGIN_FILLED } else { D2D1_FIGURE_BEGIN_HOLLOW });
+            let rest: Vec<Vector2> = rest.iter().map(|p| v(*p)).collect();
+            sink.AddLines(&rest);
+            sink.EndFigure(if closed { D2D1_FIGURE_END_CLOSED } else { D2D1_FIGURE_END_OPEN });
+            sink.Close().ok()?;
+            Some(geo)
+        }
+    }
+
+    /// Connected line segments with round caps and joins.
+    pub fn stroke_polyline(&mut self, pts: &[PointF], c: Color, width: f32) {
+        self.stroke_figure(pts, false, c, width);
+    }
+
+    /// Like [`Self::stroke_polyline`], back to the first point.
+    pub fn stroke_polygon(&mut self, pts: &[PointF], c: Color, width: f32) {
+        self.stroke_figure(pts, true, c, width);
+    }
+
+    fn stroke_figure(&mut self, pts: &[PointF], closed: bool, c: Color, width: f32) {
+        let style = self.round_style();
+        let (Some(geo), Some(b)) = (self.figure(pts, closed, false), self.brush(c)) else { return };
+        unsafe { self.dc.DrawGeometry(&geo, &b, width, style.as_ref()) };
+    }
+
+    pub fn fill_polygon(&mut self, pts: &[PointF], c: Color) {
+        let (Some(geo), Some(b)) = (self.figure(pts, true, true), self.brush(c)) else { return };
+        unsafe { self.dc.FillGeometry(&geo, &b, None) };
+    }
+
+    /// Circular arc; angles in degrees, 0 = to the right, positive = clockwise on screen.
+    pub fn stroke_arc(&mut self, center: PointF, radius: f32, start_deg: f32, sweep_deg: f32, c: Color, width: f32) {
+        let at = |deg: f32| {
+            let r = deg.to_radians();
+            Vector2 { X: center.x + radius * r.cos(), Y: center.y + radius * r.sin() }
+        };
+        let style = self.round_style();
+        let Some(b) = self.brush(c) else { return };
+        unsafe {
+            let Ok(f) = self.dc.GetFactory() else { return };
+            let Ok(geo) = f.CreatePathGeometry() else { return };
+            let Ok(sink) = geo.Open() else { return };
+            sink.BeginFigure(at(start_deg), D2D1_FIGURE_BEGIN_HOLLOW);
+            sink.AddArc(&D2D1_ARC_SEGMENT {
+                point: at(start_deg + sweep_deg),
+                size: D2D_SIZE_F { width: radius, height: radius },
+                rotationAngle: 0.0,
+                sweepDirection: if sweep_deg >= 0.0 { D2D1_SWEEP_DIRECTION_CLOCKWISE } else { D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE },
+                arcSize: if sweep_deg.abs() > 180.0 { D2D1_ARC_SIZE_LARGE } else { D2D1_ARC_SIZE_SMALL },
+            });
+            sink.EndFigure(D2D1_FIGURE_END_OPEN);
+            if sink.Close().is_ok() {
+                self.dc.DrawGeometry(&geo, &b, width, style.as_ref());
+            }
+        }
     }
 
     pub fn text(&mut self, t: &TextLayout, origin: PointF, c: Color) {

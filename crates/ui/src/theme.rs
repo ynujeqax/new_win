@@ -43,3 +43,13 @@ pub const GLASS_RIM_H: [(f32, Color); 4] = [
 /// Soft inner glow: (inset px, color) strokes inside the edge.
 pub const GLASS_GLOW: [(f32, Color); 3] =
     [(1.0, Color::rgba(255, 255, 255, 0.07)), (2.0, Color::rgba(255, 255, 255, 0.04)), (3.0, Color::rgba(255, 255, 255, 0.02))];
+
+// M2 (spec: M2 §2.1, §3)
+pub const PANEL_RADIUS: f32 = 16.0;
+pub const PANEL_SHOW_MS: u32 = 150;
+pub const PANEL_HIDE_MS: u32 = 120;
+pub const PANEL_DROP_PX: f32 = 6.0;
+pub const HOVER_GLIDE_MS: u32 = 140;
+pub const ICON_STROKE: f32 = 1.35;
+pub const TOOLTIP_DELAY_MS: u32 = 500;
+pub const TOOLTIP_TEXT: f32 = 12.0;
