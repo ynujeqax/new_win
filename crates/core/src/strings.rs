@@ -38,6 +38,17 @@ pub struct Strings {
     pub sound_settings: &'static str,
     pub not_connected: &'static str,
     pub no_internet: &'static str,
+    // Spotlight (M3)
+    pub lock: &'static str,
+    pub open: &'static str,
+    pub run_as_admin: &'static str,
+    pub open_file_location: &'static str,
+    pub no_results: &'static str,
+    pub kind_app: &'static str,
+    pub kind_system: &'static str,
+    pub press_again_shut_down: &'static str,
+    pub press_again_restart: &'static str,
+    pub spotlight_keys: &'static str,
 }
 
 static EN: Strings = Strings {
@@ -74,6 +85,16 @@ static EN: Strings = Strings {
     sound_settings: "Sound settings…",
     not_connected: "Not connected",
     no_internet: "No internet",
+    lock: "Lock",
+    open: "Open",
+    run_as_admin: "Run as administrator",
+    open_file_location: "Open file location",
+    no_results: "No results",
+    kind_app: "App",
+    kind_system: "System",
+    press_again_shut_down: "Press ↵ again to shut down",
+    press_again_restart: "Press ↵ again to restart",
+    spotlight_keys: "↑↓ select · ↵ open · Ctrl ↵ run as administrator · Esc close",
 };
 
 static UK: Strings = Strings {
@@ -110,6 +131,16 @@ static UK: Strings = Strings {
     sound_settings: "Налаштування звуку…",
     not_connected: "Немає підключення",
     no_internet: "Без інтернету",
+    lock: "Заблокувати",
+    open: "Відкрити",
+    run_as_admin: "Запустити від імені адміністратора",
+    open_file_location: "Відкрити розташування файлу",
+    no_results: "Нічого не знайдено",
+    kind_app: "Програма",
+    kind_system: "Система",
+    press_again_shut_down: "Натисніть ↵ ще раз, щоб завершити роботу",
+    press_again_restart: "Натисніть ↵ ще раз, щоб перезавантажити",
+    spotlight_keys: "↑↓ вибір · ↵ відкрити · Ctrl ↵ від імені адміністратора · Esc закрити",
 };
 
 /// `lang_tag` is a BCP-47 tag such as `en-US` or `uk-UA`.

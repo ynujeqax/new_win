@@ -103,3 +103,71 @@ fn rank_1000_apps_under_1ms() {
     }
     assert!(t.elapsed().as_micros() < 4000, "{:?}", t.elapsed());
 }
+
+#[test]
+fn system_commands_in_order_with_usage_keys() {
+    let s = newwin_core::strings::strings_for("en-US");
+    let c = system_candidates(s);
+    let names: Vec<_> = c.iter().map(|c| c.name.as_str()).collect();
+    assert_eq!(names, ["Settings", "Shut down", "Restart", "Sleep", "Lock", "Sign out"]);
+    let keys: Vec<_> = c.iter().map(Candidate::usage_key).collect();
+    assert_eq!(keys, ["system:settings", "system:shut_down", "system:restart", "system:sleep", "system:lock", "system:sign_out"]);
+    assert!(c.iter().all(|c| !c.can_run_as_admin() && c.id == c.usage_key()));
+    assert_eq!(c[1].kind, Kind::System(SystemCommand::ShutDown));
+}
+
+#[test]
+fn only_shut_down_and_restart_need_confirm() {
+    use SystemCommand::*;
+    let need: Vec<_> = [Settings, ShutDown, Restart, Sleep, Lock, SignOut].into_iter().filter(|c| c.needs_confirm()).collect();
+    assert_eq!(need, [ShutDown, Restart]);
+}
+
+#[test]
+fn confirm_needs_second_enter() {
+    let mut c = Confirm::default();
+    assert!(!c.press(2, true, 0));
+    assert_eq!(c.armed(100), Some(2));
+    assert_eq!(c.expires_at(), Some(CONFIRM_MS));
+    assert!(c.press(2, true, 100));
+    assert_eq!(c.armed(100), None);
+}
+
+#[test]
+fn confirm_resets_on_other_row_and_after_3s() {
+    let mut c = Confirm::default();
+    assert!(!c.press(2, true, 0));
+    assert!(!c.press(3, true, 10));
+    assert_eq!(c.armed(10), Some(3));
+    assert_eq!(c.armed(3010), None, "expired");
+    assert!(!c.press(3, true, 3010), "after expiry the next Enter arms again");
+    c.reset();
+    assert_eq!(c.armed(3011), None);
+}
+
+#[test]
+fn no_confirm_runs_at_once() {
+    let mut c = Confirm::default();
+    c.press(2, true, 0);
+    assert!(c.press(4, false, 1));
+    assert_eq!(c.armed(1), None);
+}
+
+#[test]
+fn uninstallers_and_documents_are_not_listed() {
+    assert!(!is_listed("Uninstall Steam", Some(r"C:\G\Steam\uninstall.exe")));
+    assert!(!is_listed("Steam Remover", Some(r"C:\G\unins000.exe")));
+    assert!(!is_listed("Readme", Some(r"C:\G\readme.TXT")));
+    assert!(!is_listed("Website", Some(r"C:\G\site.url")));
+    assert!(!is_listed("  ", None));
+    assert!(is_listed("Steam", Some(r"C:\Programs\Steam\Steam.exe")));
+    assert!(is_listed("Settings", None));
+}
+
+#[test]
+fn uk_strings_present() {
+    let s = newwin_core::strings::strings_for("uk-UA");
+    assert_eq!(s.lock, "Заблокувати");
+    assert_eq!(s.press_again_shut_down, "Натисніть ↵ ще раз, щоб завершити роботу");
+    assert_eq!(newwin_core::strings::strings_for("en").spotlight_keys, "↑↓ select · ↵ open · Ctrl ↵ run as administrator · Esc close");
+}

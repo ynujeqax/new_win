@@ -2,6 +2,8 @@
 
 use std::cmp::Reverse;
 
+use crate::strings::Strings;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MatchLevel {
     Prefix,
@@ -218,4 +220,72 @@ pub fn rank(query: &str, cands: &[Candidate], launches: &dyn Fn(&str) -> u32, ma
     }
     hits.truncate(max);
     hits
+}
+
+impl SystemCommand {
+    /// Shut down and Restart run only on a second Enter (spec: M3 §2.3).
+    pub fn needs_confirm(self) -> bool {
+        matches!(self, SystemCommand::ShutDown | SystemCommand::Restart)
+    }
+}
+
+/// The system commands, in the order they are listed, named in the UI language.
+pub fn system_candidates(s: &Strings) -> Vec<Candidate> {
+    use SystemCommand::*;
+    [(Settings, s.settings), (ShutDown, s.shut_down), (Restart, s.restart), (Sleep, s.sleep), (Lock, s.lock), (SignOut, s.sign_out)]
+        .into_iter()
+        .map(|(cmd, name)| {
+            let mut c = Candidate { name: name.to_string(), id: String::new(), kind: Kind::System(cmd), file_path: None, packaged: false };
+            c.id = c.usage_key();
+            c
+        })
+        .collect()
+}
+
+/// How long a first Enter on Shut down / Restart waits for the second.
+pub const CONFIRM_MS: u64 = 3000;
+
+/// The double-Enter confirmation: which row is armed, since when.
+#[derive(Default, Debug)]
+pub struct Confirm {
+    armed: Option<(usize, u64)>,
+}
+
+impl Confirm {
+    /// An Enter (or click) on row `index`; true when the command runs now.
+    pub fn press(&mut self, index: usize, needs_confirm: bool, now_ms: u64) -> bool {
+        if !needs_confirm || self.armed(now_ms) == Some(index) {
+            self.armed = None;
+            return true;
+        }
+        self.armed = Some((index, now_ms));
+        false
+    }
+
+    pub fn armed(&self, now_ms: u64) -> Option<usize> {
+        self.armed.filter(|&(_, at)| now_ms < at + CONFIRM_MS).map(|(i, _)| i)
+    }
+
+    pub fn expires_at(&self) -> Option<u64> {
+        self.armed.map(|(_, at)| at + CONFIRM_MS)
+    }
+
+    pub fn reset(&mut self) {
+        self.armed = None;
+    }
+}
+
+/// Start-menu entries that are not apps: uninstallers and documents.
+pub fn is_listed(name: &str, file_path: Option<&str>) -> bool {
+    let name = name.trim().to_lowercase();
+    if name.is_empty() || name.starts_with("uninstall") {
+        return false;
+    }
+    let Some(path) = file_path else { return true };
+    let file = path.rsplit(['\\', '/']).next().unwrap_or(path).to_lowercase();
+    if file.starts_with("unins") {
+        return false;
+    }
+    let ext = file.rsplit_once('.').map(|(_, e)| e).unwrap_or("");
+    !matches!(ext, "txt" | "chm" | "pdf" | "htm" | "html" | "url" | "rtf" | "md" | "log" | "ini")
 }
