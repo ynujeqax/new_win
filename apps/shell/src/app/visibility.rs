@@ -53,7 +53,6 @@ impl App {
         let cmds = vis.handle(input);
         log::debug!("visibility {input:?} -> {:?} {cmds:?}", vis.state());
         self.exec(cmds);
-        self.sync_glass();
     }
 
     fn exec(&mut self, cmds: Vec<VisCmd>) {
@@ -70,6 +69,9 @@ impl App {
                 VisCmd::SetCatcher(m) => self.set_catcher(m),
             }
         }
+        // Every visibility change passes here, including the first one at start (pinned mode
+        // shows the bar there without any input), so the glass regions always follow it.
+        self.sync_glass();
     }
 
     pub(super) fn on_timer(&mut self, id: usize) {
