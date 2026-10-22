@@ -35,6 +35,7 @@ mod apps_view;
 mod clock_view;
 mod glass_regions;
 mod menus;
+mod network_view;
 mod panels;
 mod right_view;
 mod tray_view;
@@ -90,6 +91,9 @@ pub struct App {
     volume_device: String,
     volume_wheel: newwin_core::audio::Wheel,
     audio_switch_warned: bool,
+    // Network (M2)
+    network: Option<newwin_platform::network::NetworkWatch>,
+    net_info: Option<newwin_core::network::NetInfo>,
     ping: HWND,
     bar: HWND,
     bar_layer: Option<Layer>,
@@ -251,6 +255,10 @@ impl App {
             self.reapply_taskbar(true);
             self.restart_tray_host();
             self.on_explorer_restarted();
+            return Some(LRESULT(0));
+        }
+        if msg == network_view::WM_APP_NET {
+            self.on_network_event();
             return Some(LRESULT(0));
         }
         if msg == volume_view::WM_APP_AUDIO {
@@ -450,6 +458,8 @@ fn start() -> Result<Rc<RefCell<App>>> {
         volume_device: String::new(),
         volume_wheel: newwin_core::audio::Wheel::default(),
         audio_switch_warned: false,
+        network: None,
+        net_info: None,
         ping: HWND::default(),
         bar: HWND::default(),
         bar_layer: None,
@@ -527,6 +537,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
         a.load_windows(enumerate_top_level(), foreground);
         a.start_audio();
+        a.start_network();
         a.tick_clock();
         a.reposition();
         a.start_visibility();

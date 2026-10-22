@@ -9,6 +9,7 @@ pub mod dpi;
 pub mod fullscreen;
 pub mod launch;
 pub mod log;
+pub mod network;
 pub mod paths;
 pub mod taskbar;
 pub mod tray_host;

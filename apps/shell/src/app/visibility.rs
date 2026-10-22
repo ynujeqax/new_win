@@ -84,6 +84,7 @@ impl App {
             super::glass_regions::SNIP_CHECK_TIMER => self.check_snip(),
             super::right_view::ANIM_TIMER => self.paint(),
             super::right_view::TOOLTIP_TIMER => self.show_tooltip(),
+            super::network_view::NET_DEBOUNCE_TIMER => self.read_network(),
             HIDE_WINDOW_TIMER => unsafe {
                 log::debug!("hide timer: hiding the bar window");
                 self.hide_started = None;

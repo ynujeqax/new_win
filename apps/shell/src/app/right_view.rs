@@ -42,6 +42,8 @@ pub(super) struct RightView {
     pub time: Option<TextLayout>,
     /// `None` until the audio service runs.
     pub speaker: Option<SpeakerView>,
+    /// `None` until the network has been read once.
+    pub net: Option<super::network_view::NetView>,
 }
 
 /// The speaker icon's animated state.
@@ -66,6 +68,7 @@ impl RightView {
             date: None,
             time: None,
             speaker: None,
+            net: None,
         }
     }
 
@@ -101,7 +104,8 @@ impl RightView {
 
     pub(super) fn animating(&self, now: u64) -> bool {
         let speaker = self.speaker.as_ref().is_some_and(|s| s.waves.running(now) || s.mute.running(now));
-        speaker || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
+        let net = self.net.as_ref().is_some_and(|n| n.animating(now));
+        speaker || net || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
     }
 
     /// Draws the tray button, the separators, the hover pill and the right items.
@@ -154,7 +158,12 @@ impl RightView {
                         }
                     }
                 }
-                RightItem::Layout | RightItem::Network => {}
+                RightItem::Network => {
+                    if let Some(n) = &self.net {
+                        n.paint(p, PointF { x: r.x + r.w / 2.0, y: h / 2.0 }, s(18.0), lit(Target::Right(RightItem::Network)), stroke, now);
+                    }
+                }
+                RightItem::Layout => {}
             }
         }
     }
@@ -167,7 +176,8 @@ impl App {
             RightItem::Date => self.right.date.as_ref().map(|t| t.width() + 2.0 * pad),
             RightItem::Time => self.right.time.as_ref().map(|t| t.width() + 2.0 * pad),
             RightItem::Volume => self.right.speaker.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
-            RightItem::Layout | RightItem::Network => None,
+            RightItem::Network => self.right.net.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
+            RightItem::Layout => None,
         }
     }
 
@@ -186,7 +196,7 @@ impl App {
         self.right.left_sep_x = self.right.chevron.right() + s(6.0);
         let widths: Vec<(RightItem, f32)> = self.right.items.iter().filter_map(|&i| self.right_width(i, pad).map(|w| (i, w))).collect();
         let (xs, sep) = place_right(&widths, w - edge, s(theme::ITEM_GAP), s(13.0));
-        self.right.slots = xs.iter().zip(&widths).map(|(&(item, x), &(_, w))| RightSlot { item, rect: RectF::new(x, y, w, pill_h) }).collect();
+        self.right.slots = xs.iter().zip(&widths).map(|(&(item, x), &(_, w))| RightSlot { item, rect: RectF::new(x.round(), y, w.round(), pill_h) }).collect();
         self.right.sep_x = sep;
         log::debug!("right slots {:?}", self.right.slots.iter().map(|s| (s.item, s.rect.x, s.rect.w)).collect::<Vec<_>>());
         let right_start = self.right.slots.first().map_or(w - edge, |s| s.rect.x);
@@ -204,7 +214,8 @@ impl App {
         match item {
             RightItem::Date => Some(format_long_date()),
             RightItem::Volume => self.volume_tooltip(),
-            RightItem::Time | RightItem::Layout | RightItem::Network => None,
+            RightItem::Network => self.network_tooltip(),
+            RightItem::Time | RightItem::Layout => None,
         }
     }
 
@@ -255,6 +266,11 @@ impl App {
             (RightItem::Date, Button::Left) => launch::open_notification_center(),
             (RightItem::Volume, Button::Left) => self.toggle_volume_panel(),
             (RightItem::Volume, Button::Middle) => self.toggle_mute(),
+            (RightItem::Network, Button::Left) => {
+                if let Err(e) = newwin_platform::launch::shell_execute("open", "ms-settings:network", "") {
+                    log::error!("network settings: {e}");
+                }
+            }
             _ => {}
         }
     }

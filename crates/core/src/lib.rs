@@ -7,6 +7,7 @@ pub mod clock;
 pub mod glass;
 pub mod items;
 pub mod layout;
+pub mod network;
 pub mod strings;
 pub mod tray;
 pub mod visibility;
