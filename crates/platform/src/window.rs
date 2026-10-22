@@ -12,7 +12,7 @@ use std::cell::RefCell;
 use std::collections::{HashSet, VecDeque};
 use std::rc::Rc;
 
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
+use windows::Win32::Foundation::{ERROR_CLASS_ALREADY_EXISTS, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::{HSTRING, Result};
@@ -121,8 +121,12 @@ fn register(class: &'static str) -> Result<()> {
             hCursor: LoadCursorW(None, IDC_ARROW)?,
             ..Default::default()
         };
+        // Classes are per process; another thread may have registered it first.
         if RegisterClassW(&wc) == 0 {
-            return Err(windows::core::Error::from_thread());
+            let e = windows::core::Error::from_thread();
+            if e.code() != ERROR_CLASS_ALREADY_EXISTS.to_hresult() {
+                return Err(e);
+            }
         }
     }
     REGISTERED.with(|r| r.borrow_mut().insert(class));
