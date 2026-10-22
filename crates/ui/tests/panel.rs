@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use newwin_ui::panel::{Panel, PanelContent, PanelInput, PanelReply};
-use newwin_ui::popup::{CLOSED, PICKED};
+use newwin_ui::popup::{CLOSED, PICKED, REGIONS};
 use newwin_ui::{Gfx, Painter, PointF};
 use windows::Win32::Foundation::{LPARAM, RECT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::*;
@@ -48,6 +48,54 @@ fn panel_posts_action_then_closed() {
         std::thread::sleep(Duration::from_millis(5));
     }
     assert_eq!(got, vec![(7, PICKED), (panel.hwnd().0 as usize, CLOSED)]);
+}
+
+/// A panel whose height follows `rows` (like Spotlight growing with its results).
+struct Growing {
+    rows: u32,
+}
+
+impl PanelContent for Growing {
+    fn size(&self) -> (f32, f32) {
+        (200.0, 40.0 + 30.0 * self.rows as f32)
+    }
+    fn paint(&mut self, _: &mut Painter, _: u64) {}
+    fn input(&mut self, _: PanelInput, _: u64) -> PanelReply {
+        PanelReply::default()
+    }
+    fn animating(&self, _: u64) -> bool {
+        false
+    }
+}
+
+/// The glass behind a panel is read for its window rect: a resize must make the owner re-send it.
+#[test]
+fn a_resized_panel_posts_regions_and_an_unchanged_one_does_not() {
+    let gfx = Gfx::new().unwrap();
+    let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "notify").unwrap();
+    let panel = Panel::show(&gfx, Growing { rows: 0 }, PointF { x: 300.0, y: 60.0 }, 96, notify, MSG).unwrap();
+    let posted = || {
+        let mut got = Vec::new();
+        let mut m = MSG::default();
+        unsafe {
+            while PeekMessageW(&mut m, None, 0, 0, PM_REMOVE).as_bool() {
+                if m.message == MSG {
+                    got.push((m.wParam.0, m.lParam.0));
+                } else {
+                    DispatchMessageW(&m);
+                }
+            }
+        }
+        got
+    };
+    posted();
+    panel.update(|c| c.rows = 3);
+    assert_eq!(posted(), vec![(panel.hwnd().0 as usize, REGIONS)]);
+    let mut r = RECT::default();
+    unsafe { GetWindowRect(panel.hwnd(), &mut r).unwrap() };
+    assert_eq!(r.bottom - r.top, 130);
+    panel.update(|_| {});
+    assert_eq!(posted(), vec![]);
 }
 
 #[derive(Default)]

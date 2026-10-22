@@ -5,7 +5,7 @@ use newwin_core::visibility::VisInput;
 use newwin_platform::clock::now_ms;
 use newwin_ui::GlassWindow;
 use newwin_ui::panel::Panel;
-use newwin_ui::popup::{CLOSED, PICKED};
+use newwin_ui::popup::{CLOSED, PICKED, REGIONS};
 use newwin_ui::tray_list::TrayList;
 use newwin_ui::volume_panel::VolumePanel;
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
@@ -96,6 +96,7 @@ impl App {
                 Some(Target::Right(RightItem::Volume)) => self.on_volume_action(wp.0 as u32),
                 _ => {}
             },
+            REGIONS => self.sync_glass(),
             CLOSED if self.panel.as_ref().map(|p| p.hwnd().0 as usize) == Some(wp.0) => self.close_panel(),
             _ => {}
         }

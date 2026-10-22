@@ -2,7 +2,8 @@
 //!
 //! Results are posted like [`crate::popup`]'s: `lParam` = [`PICKED`] with the content's action
 //! id in `wParam`, then `lParam` = [`CLOSED`] with the panel's HWND once the closing animation
-//! has run. The owner drops the [`Panel`] on `CLOSED`.
+//! has run. The owner drops the [`Panel`] on `CLOSED`. `lParam` = [`REGIONS`] (same `wParam`)
+//! when the panel changed size: the owner re-sends the glass regions.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -17,7 +18,7 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
 use crate::backdrop::Frame;
-use crate::popup::{CLOSED, PICKED};
+use crate::popup::{CLOSED, PICKED, REGIONS};
 use crate::{Backdrop, Gfx, Layer, Painter, PointF, RectF, fade, paint_glass, set_offset_opacity, slide_y_both, theme};
 
 /// Not exported by the `windows` crate.
@@ -412,6 +413,8 @@ impl<C: PanelContent> State<C> {
             let _ = layer.resize(size.0 as u32, size.1 as u32);
             let _ = layer.set_corner_radius(radius_for(size.1, self.dpi));
         }
+        // The glass thread reads the screen for the old rect until the owner re-sends it.
+        self.post(self.hwnd.0 as usize, REGIONS);
     }
 
     fn after(&mut self, reply: PanelReply) {

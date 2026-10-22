@@ -10,7 +10,7 @@ use newwin_platform::apps_index::AppsWatch;
 use newwin_platform::launch::{self, SystemTarget};
 use newwin_platform::worker::{AppsIndexed, Job};
 use newwin_ui::panel::Panel;
-use newwin_ui::popup::{CLOSED, MenuItem, PICKED};
+use newwin_ui::popup::{CLOSED, MenuItem, PICKED, REGIONS};
 use newwin_ui::spotlight::{SpotlightLabels, SpotlightOp, SpotlightView, decode_action};
 use newwin_ui::{PointF, theme};
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
@@ -132,6 +132,7 @@ impl App {
     pub(super) fn on_spotlight_panel(&mut self, wp: WPARAM, lp: LPARAM) {
         match lp.0 {
             PICKED => self.on_spotlight_action(wp.0 as u32),
+            REGIONS => self.sync_glass(),
             CLOSED if self.spotlight.as_ref().map(|p| p.hwnd().0 as usize) == Some(wp.0) => {
                 self.spotlight = None;
                 self.sync_glass();
