@@ -102,12 +102,22 @@ impl TrayList {
         (v * self.dpi as f32 / 96.0).round()
     }
 
-    pub fn set_rows(&mut self, rows: Vec<TrayRow>) {
+    /// New rows from the tray model; false (and nothing redone) when they did not change. The
+    /// selection stays on the same row (by its label) if that row is still there.
+    pub fn set_rows(&mut self, rows: Vec<TrayRow>) -> bool {
+        if rows == self.rows {
+            return false;
+        }
+        let selected = self.hover.and_then(|k| self.visible().get(k).map(|&(i, _)| self.rows[i].clone()));
         self.rows = rows;
-        self.hover = None;
-        self.pill_o = Tween::at_rest(0.0);
         self.scroll = Tween::at_rest(self.scroll.target().min(self.max_scroll()));
+        self.hover = selected.and_then(|row| self.visible().iter().position(|&(i, _)| self.rows[i] == row));
+        match self.hover {
+            Some(k) => self.pill_y = Tween::at_rest(self.rect(k, self.scroll.target()).y),
+            None => self.pill_o = Tween::at_rest(0.0),
+        }
         self.rebuild();
+        true
     }
 
     pub fn query(&self) -> &str {
@@ -390,6 +400,19 @@ mod tests {
         assert!(!r.close);
         let r = l.input(PanelInput::Release(l.row_center(2)), 0);
         assert_eq!((r.action, r.close), (Some(action_id(2, TrayOp::Left)), true));
+    }
+
+    #[test]
+    fn row_updates_keep_the_selection() {
+        let mut l = list();
+        l.input(PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN.0), 0);
+        l.input(PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN.0), 0);
+        l.input(PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN.0), 0);
+        assert!(!l.set_rows(l.rows.clone()), "same rows: nothing to do");
+        // An app above the selection goes away; the selection stays on Steam.
+        assert!(l.set_rows(vec![TrayRow { label: "NewWin".into(), header: true }, TrayRow { label: "Steam".into(), header: false }]));
+        let r = l.input(PanelInput::Key(VK_RETURN.0), 0);
+        assert_eq!(r.action, Some(action_id(1, TrayOp::Key)), "Enter still picks Steam");
     }
 
     #[test]

@@ -71,7 +71,9 @@ impl App {
         }
         let rows = self.tray_rows();
         if let Some(ShellPanel::Tray(p)) = &self.panel {
-            p.update(|l| l.set_rows(rows));
+            p.update(|l| {
+                l.set_rows(rows);
+            });
         }
         self.sync_glass();
     }
