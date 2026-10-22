@@ -30,7 +30,7 @@
 
 ### 2.1. Скло й рух
 
-- **Пігулка наведення** спільна для всієї правої частини: одна пігулка білим 0.11 плавно перетікає між елементами (позиція й ширина анімуються, 140 мс ease-out). З'являється й зникає прозорістю за 120 мс.
+- **Пігулка наведення** спільна для всієї правої частини: одна пігулка кольору `theme::HOVER_PILL` (як у M1) плавно перетікає між елементами (позиція й ширина анімуються, 140 мс ease-out). З'являється й зникає прозорістю за 120 мс.
 - **Підказки** — маленькі скляні капсули під елементом, з'являються через 500 мс наведення, текст 12 px. Поки курсор їде між елементами, наступна з'являється без затримки.
 - **Іконки анімуються**, а не підміняються:
   - хвилі динаміка з'являються й гаснуть прозорістю по одній (100 мс на хвилю);
@@ -97,9 +97,9 @@
 
 ### 4.2. Мережа (`crates/platform/src/network.rs`)
 
-- `NotifyIpInterfaceChange` (IPv4 і IPv6) і `INetworkListManagerEvents::ConnectivityChanged` будять обробку. Колбек лише робить `PostMessage`; розбір іде в UI-потоці з debounce 300 мс (один одноразовий таймер), бо при підключенні Windows шле серію подій.
+- `NotifyIpInterfaceChange` (IPv4 і IPv6) і `NotifyNetworkConnectivityHintChange` будять обробку (обидва з IP Helper, без COM). Колбек лише робить `PostMessage`; розбір іде в UI-потоці з debounce 300 мс (один одноразовий таймер), бо при підключенні Windows шле серію подій.
 - Обробка: `GetBestInterfaceEx` до `0.0.0.0` → адаптер → `IfType` (`IF_TYPE_ETHERNET_CSMACD` → Ethernet, `IF_TYPE_IEEE80211` → Wi-Fi), назва й IPv4 з `GetAdaptersAddresses`. Для Wi-Fi SSID і сила сигналу — `WlanQueryInterface` (`wlan_intf_opcode_current_connection`), а сповіщення сили — `WlanRegisterNotification` (лише якщо активне Wi-Fi).
-- Інтернет є чи ні — `INetworkListManager::GetConnectivity` (`NLM_CONNECTIVITY_IPV4_INTERNET` / `IPV6_INTERNET`).
+- Інтернет є чи ні — `GetNetworkConnectivityHint` (`NetworkConnectivityLevelHintInternetAccess`; рівні `LocalAccess` і `ConstrainedInternetAccess` означають «без інтернету»).
 - Стан: `Ethernet { internet }`, `WiFi { internet, bars 0..=3 }`, `Disconnected`.
 
 ### 4.3. Розкладка (`crates/platform/src/keyboard_layout.rs`)
@@ -116,7 +116,9 @@
 - Невидиме top-level вікно класу `Shell_TrayWnd` (`WS_POPUP`, `WS_EX_TOOLWINDOW | WS_EX_TOPMOST`, ніколи не показується), з дочірнім `TrayNotifyWnd` для старих програм, що шукають саме його.
 - Створюється на UI-потоці після приховування рідного таскбару. Потім `SetWindowPos(HWND_TOPMOST)`, щоб у z-порядку воно стало вище за `Shell_TrayWnd` explorer: `FindWindow` повертає перше вікно класу в z-порядку. Перевірка: `FindWindowW("Shell_TrayWnd")` має повернути наш `HWND`, інакше — повтор і запис у журнал.
 - Після цього розсилаємо `TaskbarCreated` (`HWND_BROADCAST`) — усі програми заново реєструють іконки в нас.
-- Трей explorer (`explorer_tray`) — вікно класу `Shell_TrayWnd`, що належить процесу `explorer.exe`, а не нам. Шукається при старті й після кожного `TaskbarCreated` від explorer.
+- Трей explorer (`explorer_tray`) — вікно класу `Shell_TrayWnd`, що належить процесу `explorer.exe`, а не нам. Шукається при старті й після кожного `TaskbarCreated` від explorer. **Код M1, який шукав рідний таскбар через `FindWindow`, переходить на цей пошук**, інакше знаходив би наше вікно.
+- Вікно хоста має **власну віконну процедуру з короткими позиками стану**, а не спільний обробник `App`: `WM_COPYDATA` надсилається синхронно, і поки `App` зайнятий (наприклад, сам викликає `SHAppBarMessage`), спільний обробник віддав би повідомлення в `DefWindowProc`, і воно загубилося б.
+- Explorer може знову підняти своє вікно вище за наше. Хук `EVENT_OBJECT_REORDER`, прив'язаний до процесу explorer, будить перевірку `FindWindow`, і тоді наше вікно знову піднімається. Опитування немає.
 
 ### 5.2. `WM_COPYDATA`
 
@@ -133,7 +135,7 @@
 
 ### 5.3. Модель (`crates/core/src/tray.rs`)
 
-- Ключ: `(hwnd, Id(u32) | Guid(u128))`. Якщо є `NIF_GUID`, ключ — GUID.
+- Ключ: `Id { hwnd, id }` або, якщо є `NIF_GUID`, лише `Guid(u128)` (як у Windows: вікно іконки з GUID може змінитися).
 - Поля: `tip`, `callback_message`, `version` (0 або 3/4 з `NIM_SETVERSION`), `hidden`, `added_seq` (порядок додавання), `pid`.
 - Операції: `apply(command) -> Change` (`Added`/`Updated`/`Removed`/`Ignored`). `NIM_MODIFY` неіснуючого ключа ігнорується, `NIM_ADD` наявного — оновлює. `NIM_SETFOCUS` повертає фокус у трей (закриття контекстного меню програми).
 - `rows(filter) -> Vec<Row>` — видимі рядки з підписами (§3.1) і позиціями збігу фільтра.
