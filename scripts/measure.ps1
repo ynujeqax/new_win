@@ -26,7 +26,35 @@ function Get-PrivateMb([int]$processId) {
     [double]$row.WorkingSetPrivate / 1MB
 }
 
+Add-Type -Namespace M -Name T -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr OpenThread(uint access, bool inherit, uint id);
+[DllImport("kernel32.dll")] public static extern bool CloseHandle(IntPtr h);
+[DllImport("kernel32.dll")] public static extern int GetThreadDescription(IntPtr h, out IntPtr desc);
+[DllImport("kernel32.dll")] public static extern IntPtr LocalFree(IntPtr p);
+'@
+
+# Rust names its threads (newwin-glass, newwin-tray-fwd, newwin-input, …); Windows' own are unnamed.
+function Get-ThreadName([int]$id) {
+    $h = [M.T]::OpenThread(0x0800, $false, $id)  # THREAD_QUERY_LIMITED_INFORMATION
+    if ($h -eq [IntPtr]::Zero) { return '' }
+    $p = [IntPtr]::Zero
+    $name = ''
+    if ([M.T]::GetThreadDescription($h, [ref]$p) -ge 0 -and $p -ne [IntPtr]::Zero) {
+        $name = [Runtime.InteropServices.Marshal]::PtrToStringUni($p)
+        [M.T]::LocalFree($p) | Out-Null
+    }
+    [M.T]::CloseHandle($h) | Out-Null
+    $name
+}
+
+function Get-ThreadTimes([int]$processId) {
+    $t = @{}
+    foreach ($th in (Get-Process -Id $processId).Threads) { $t[$th.Id] = $th.TotalProcessorTime.TotalMilliseconds }
+    $t
+}
+
 $roles = Get-Roles
+$threadStart = Get-ThreadTimes $roles.shell
 $cpuStart = @{}
 foreach ($role in $roles.Keys) {
     $cpuStart[$role] = (Get-Process -Id $roles[$role]).TotalProcessorTime
@@ -61,7 +89,7 @@ foreach ($role in $roles.Keys) {
 
 $log = Join-Path $env:LOCALAPPDATA 'NewWin\logs\newwin.log'
 $firstFrame = $null
-$hit = Select-String -Path $log -Pattern 'first-frame-ms=(\d+)' -ErrorAction SilentlyContinue | Select-Object -Last 1
+$hit = Select-String -Path $log -Pattern 'pid=\d+ first-frame-ms=(\d+)' -ErrorAction SilentlyContinue | Select-Object -Last 1
 if ($hit) { $firstFrame = [int]$hit.Matches[0].Groups[1].Value }
 
 $checks = @(
@@ -74,6 +102,16 @@ $checks = @(
 )
 
 Write-Host ("Elapsed {0:N0} s, {1} logical CPUs" -f $elapsed, $cpus)
+if (-not $restarted) {
+    $threadEnd = Get-ThreadTimes $roles.shell
+    Write-Host ("shell threads: {0}" -f $threadEnd.Count)
+    foreach ($id in $threadEnd.Keys) {
+        $name = Get-ThreadName $id
+        $before = if ($threadStart.ContainsKey($id)) { $threadStart[$id] } else { 0 }
+        $delta = $threadEnd[$id] - $before
+        if ($name -or $delta -gt 0) { Write-Host ('      thread {0,-6} {1,-18} +{2:N0} ms CPU' -f $id, $name, $delta) }
+    }
+}
 $failed = $false
 foreach ($c in $checks) {
     $verdict = if ($c.ok) { 'PASS' } else { $failed = $true; 'FAIL' }

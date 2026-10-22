@@ -104,6 +104,7 @@ pub struct Panel<C: PanelContent + 'static> {
 impl<C: PanelContent + 'static> Panel<C> {
     /// Shows `content` with its top centred at `anchor` (screen px) and takes the foreground.
     pub fn show(gfx: &Rc<Gfx>, content: C, anchor: PointF, dpi: u32, notify: HWND, msg: u32) -> Result<Panel<C>> {
+        let started = std::time::Instant::now();
         let size = content.size();
         let (mon, _) = primary_monitor();
         let r = panel_rect(anchor, size, mon);
@@ -142,6 +143,7 @@ impl<C: PanelContent + 'static> Panel<C> {
             s.paint();
             s.animate(true);
         }
+        log::info!("panel first-frame-ms={:.1}", started.elapsed().as_secs_f64() * 1000.0);
         unsafe {
             let _ = ShowWindow(hwnd, SW_SHOW);
             let _ = SetForegroundWindow(hwnd);
