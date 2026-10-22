@@ -141,35 +141,53 @@ impl AudioService {
     pub fn start(notify: HWND, msg: u32) -> AudioService {
         let n = notify.0 as isize;
         let mut s = AudioService {
-            enumerator: unsafe { CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL) }.map_err(|e| log::warn!("audio: no device enumerator: {e}")).ok(),
+            enumerator: None,
             endpoint: None,
             volume_cb: VolumeCallback { notify: n, msg }.into(),
             device_cb: DeviceCallback { notify: n, msg }.into(),
         };
-        if let Some(e) = &s.enumerator
-            && let Err(err) = unsafe { e.RegisterEndpointNotificationCallback(&s.device_cb) }
-        {
-            log::warn!("audio: device notifications unavailable: {err}");
-        }
+        s.connect();
         s.rebind();
         s
     }
 
-    /// Follows the current default output device (call on `AUDIO_DEVICES`).
+    /// (Re)creates the device enumerator and its device notifications; after the audio service
+    /// restarts, the old one may no longer deliver anything.
+    fn connect(&mut self) {
+        if let Some(old) = self.enumerator.take() {
+            let _ = unsafe { old.UnregisterEndpointNotificationCallback(&self.device_cb) };
+        }
+        let e: Option<IMMDeviceEnumerator> = unsafe { CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL) }.map_err(|e| log::warn!("audio: no device enumerator: {e}")).ok();
+        if let Some(e) = &e
+            && let Err(err) = unsafe { e.RegisterEndpointNotificationCallback(&self.device_cb) }
+        {
+            log::warn!("audio: device notifications unavailable: {err}");
+        }
+        self.enumerator = e;
+    }
+
+    fn bind(&mut self) -> Result<()> {
+        let e = self.enumerator.as_ref().ok_or_else(|| windows::core::Error::from(windows::Win32::Foundation::E_FAIL))?;
+        let v = unsafe { e.GetDefaultAudioEndpoint(eRender, eConsole).and_then(|d| d.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None))? };
+        if let Err(err) = unsafe { v.RegisterControlChangeNotify(&self.volume_cb) } {
+            log::warn!("audio: volume notifications unavailable: {err}");
+        }
+        self.endpoint = Some(v);
+        Ok(())
+    }
+
+    /// Follows the current default output device (call on `AUDIO_DEVICES`, and before opening
+    /// the panel when there is no device). Without one, the enumerator is created afresh once.
     pub fn rebind(&mut self) {
         if let Some(old) = self.endpoint.take() {
             let _ = unsafe { old.UnregisterControlChangeNotify(&self.volume_cb) };
         }
-        let Some(e) = &self.enumerator else { return };
-        let endpoint = unsafe { e.GetDefaultAudioEndpoint(eRender, eConsole).and_then(|d| d.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)) };
-        match endpoint {
-            Ok(v) => {
-                if let Err(err) = unsafe { v.RegisterControlChangeNotify(&self.volume_cb) } {
-                    log::warn!("audio: volume notifications unavailable: {err}");
-                }
-                self.endpoint = Some(v);
-            }
-            Err(err) => log::info!("audio: no default output device ({err})"),
+        if self.bind().is_ok() {
+            return;
+        }
+        self.connect();
+        if let Err(err) = self.bind() {
+            log::info!("audio: no default output device ({err})");
         }
     }
 
