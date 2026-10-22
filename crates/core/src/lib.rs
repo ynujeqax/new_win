@@ -5,5 +5,6 @@ pub mod clock;
 pub mod glass;
 pub mod layout;
 pub mod strings;
+pub mod tray;
 pub mod visibility;
 pub mod watchdog;
