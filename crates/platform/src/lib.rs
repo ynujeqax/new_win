@@ -5,6 +5,7 @@ pub mod appbar;
 pub mod appinfo;
 pub mod apps_index;
 pub mod audio;
+pub mod clipboard;
 pub mod clock;
 pub mod dpi;
 pub mod fullscreen;

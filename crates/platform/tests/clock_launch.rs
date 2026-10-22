@@ -1,5 +1,5 @@
 use newwin_platform::clock::{format_bar_date, format_bar_time, local_second_and_millis, ui_language_tag};
-use newwin_platform::launch::{Action, SystemTarget, action};
+use newwin_platform::launch::{Action, SystemTarget, action, apps_folder_path, open_file_location};
 
 #[test]
 fn time_has_no_seconds_unless_asked() {
@@ -56,4 +56,26 @@ fn now_ms_never_goes_back() {
 fn long_date_names_the_year() {
     let d = newwin_platform::clock::format_long_date();
     assert!(d.chars().filter(|c| c.is_ascii_digit()).count() >= 4, "{d:?}");
+}
+
+#[test]
+fn apps_folder_path_form() {
+    assert_eq!(apps_folder_path("Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"), r"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App");
+}
+
+#[test]
+fn lock_is_lock_workstation() {
+    assert_eq!(action(SystemTarget::Lock), Action::Lock);
+}
+
+#[test]
+fn open_file_location_of_missing_file_errs() {
+    let missing = std::env::temp_dir().join("newwin-no-such-dir-4e57").join("nothing.exe");
+    assert!(open_file_location(&missing.to_string_lossy()).is_err());
+}
+
+#[test]
+fn clipboard_read_never_panics() {
+    // Whatever the user copied: text or `None`.
+    let _ = newwin_platform::clipboard::text();
 }

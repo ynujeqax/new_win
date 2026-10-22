@@ -2,8 +2,11 @@
 
 use windows::Win32::System::Com::{CLSCTX_INPROC_SERVER, CoCreateInstance};
 use windows::Win32::System::Power::SetSuspendState;
-use windows::Win32::System::Shutdown::{EWX_LOGOFF, ExitWindowsEx, SHUTDOWN_REASON};
-use windows::Win32::UI::Shell::{IShellDispatch4, Shell, ShellExecuteW};
+use windows::Win32::System::Shutdown::{EWX_LOGOFF, ExitWindowsEx, LockWorkStation, SHUTDOWN_REASON};
+use newwin_core::spotlight::Candidate;
+use windows::Win32::System::Com::CoTaskMemFree;
+use windows::Win32::UI::Shell::Common::ITEMIDLIST;
+use windows::Win32::UI::Shell::{IShellDispatch4, SEE_MASK_FLAG_NO_UI, SHELLEXECUTEINFOW, SHOpenFolderAndSelectItems, SHParseDisplayName, Shell, ShellExecuteExW, ShellExecuteW};
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 use windows::core::{HSTRING, PCWSTR, Result};
 
@@ -25,6 +28,7 @@ pub enum SystemTarget {
     Run,
     SignOut,
     Sleep,
+    Lock,
     ShutDown,
     Restart,
     Desktop,
@@ -37,6 +41,7 @@ pub enum Action {
     ToggleDesktop,
     SignOut,
     Sleep,
+    Lock,
 }
 
 /// What each menu entry launches — the same targets Windows uses.
@@ -60,6 +65,7 @@ pub fn action(t: SystemTarget) -> Action {
         Run => Action::RunDialog,
         SignOut => Action::SignOut,
         Sleep => Action::Sleep,
+        Lock => Action::Lock,
         ShutDown => Action::Shell { verb: "open", file: "shutdown.exe", args: "/s /t 0" },
         Restart => Action::Shell { verb: "open", file: "shutdown.exe", args: "/r /t 0" },
         Desktop => Action::ToggleDesktop,
@@ -85,6 +91,7 @@ pub fn run(t: SystemTarget) -> Result<()> {
         Action::RunDialog => unsafe { shell_dispatch()?.FileRun() },
         Action::ToggleDesktop => unsafe { shell_dispatch()?.ToggleDesktop() },
         Action::SignOut => unsafe { ExitWindowsEx(EWX_LOGOFF, SHUTDOWN_REASON(0)) },
+        Action::Lock => unsafe { LockWorkStation() },
         Action::Sleep => {
             unsafe { SetSuspendState(false, false, false) };
             Ok(())
@@ -98,4 +105,47 @@ pub fn open_notification_center() {
     const VK_LWIN: u16 = 0x5B;
     const VK_N: u16 = 0x4E;
     crate::input_hook::send_tagged(&[(VK_LWIN, false), (VK_N, false), (VK_N, true), (VK_LWIN, true)]);
+}
+
+/// `shell:AppsFolder\<id>`: how the Start menu itself launches an app, classic or packaged.
+pub fn apps_folder_path(id: &str) -> String {
+    format!(r"shell:AppsFolder\{id}")
+}
+
+fn shell_execute_ex(verb: &str, file: &str) -> Result<()> {
+    let (verb, file) = (HSTRING::from(verb), HSTRING::from(file));
+    let mut info = SHELLEXECUTEINFOW {
+        cbSize: size_of::<SHELLEXECUTEINFOW>() as u32,
+        fMask: SEE_MASK_FLAG_NO_UI,
+        lpVerb: PCWSTR(verb.as_ptr()),
+        lpFile: PCWSTR(file.as_ptr()),
+        nShow: SW_SHOWNORMAL.0,
+        ..Default::default()
+    };
+    unsafe { ShellExecuteExW(&mut info) }
+}
+
+/// Launches a Spotlight app. Needs COM initialized on the calling thread.
+pub fn open_app(id: &str) -> Result<()> {
+    shell_execute_ex("open", &apps_folder_path(id))
+}
+
+/// Elevated, through the same AppsFolder path (keeps the shortcut's arguments; checked by the
+/// M3 probe). A declined UAC prompt is an error (`ERROR_CANCELLED`).
+pub fn run_as_admin(c: &Candidate) -> Result<()> {
+    shell_execute_ex("runas", &apps_folder_path(&c.id))
+}
+
+/// Opens Explorer on the file's folder with the file selected.
+pub fn open_file_location(path: &str) -> Result<()> {
+    if !std::path::Path::new(path).exists() {
+        return Err(windows::Win32::Foundation::ERROR_FILE_NOT_FOUND.into());
+    }
+    unsafe {
+        let mut pidl: *mut ITEMIDLIST = std::ptr::null_mut();
+        SHParseDisplayName(&HSTRING::from(path), None, &mut pidl, 0, None)?;
+        let r = SHOpenFolderAndSelectItems(pidl, None, 0);
+        CoTaskMemFree(Some(pidl as _));
+        r
+    }
 }
