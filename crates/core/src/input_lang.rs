@@ -97,3 +97,67 @@ impl LayoutHotkeys {
         report
     }
 }
+
+/// What the hook does with a key event for Spotlight (spec: M3 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TapAction {
+    /// Let it through.
+    Pass,
+    /// Win was pressed and released alone: swallow this Win up, replay it masked, open Spotlight.
+    WinTap,
+    /// `Ctrl+Esc`: swallow the Esc, open Spotlight.
+    CtrlEsc,
+    /// The Esc up of a `Ctrl+Esc`.
+    Swallow,
+}
+
+/// Spots a lone Win tap and `Ctrl+Esc` in the hook's key events.
+pub struct WinKeyTap {
+    enabled: bool,
+    win: bool,
+    spoiled: bool,
+    ctrl: bool,
+    eat_esc_up: bool,
+}
+
+impl WinKeyTap {
+    pub fn new(enabled: bool) -> Self {
+        Self { enabled, win: false, spoiled: false, ctrl: false, eat_esc_up: false }
+    }
+
+    pub fn key(&mut self, vk: u16, down: bool) -> TapAction {
+        if !self.enabled {
+            return TapAction::Pass;
+        }
+        const ESC: u16 = 0x1B;
+        match (classify(vk), down) {
+            (Key::Win, true) => {
+                if !self.win {
+                    self.spoiled = false;
+                }
+                self.win = true;
+                return TapAction::Pass;
+            }
+            (Key::Win, false) => {
+                let tap = self.win && !self.spoiled;
+                self.win = false;
+                return if tap { TapAction::WinTap } else { TapAction::Pass };
+            }
+            (Key::Ctrl, d) => self.ctrl = d,
+            _ => {}
+        }
+        if down && self.win {
+            self.spoiled = true;
+            return TapAction::Pass;
+        }
+        if vk == ESC && down && self.ctrl {
+            self.eat_esc_up = true;
+            return TapAction::CtrlEsc;
+        }
+        if vk == ESC && !down && self.eat_esc_up {
+            self.eat_esc_up = false;
+            return TapAction::Swallow;
+        }
+        TapAction::Pass
+    }
+}

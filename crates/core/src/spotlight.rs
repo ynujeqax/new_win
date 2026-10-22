@@ -194,16 +194,18 @@ fn rank_one(query: &str, cands: &[Candidate], launches: &dyn Fn(&str) -> u32) ->
     if q.is_empty() {
         return Vec::new();
     }
-    let mut found: Vec<(MatchLevel, Reverse<u32>, bool, Vec<char>, usize, Vec<(usize, usize)>)> = Vec::new();
+    // (sort key, hit): level, more launches, apps before system commands, name, position.
+    type Key = (MatchLevel, Reverse<u32>, bool, Vec<char>, usize);
+    let mut found: Vec<(Key, Hit)> = Vec::new();
     for (i, c) in cands.iter().enumerate() {
         let name = folded(&c.name);
         if let Some(m) = match_folded(&name, &q) {
             let system = matches!(c.kind, Kind::System(_));
-            found.push((m.level, Reverse(launches(&c.usage_key())), system, name.chars, i, m.ranges));
+            found.push(((m.level, Reverse(launches(&c.usage_key())), system, name.chars, i), Hit { index: i, ranges: m.ranges }));
         }
     }
-    found.sort_by(|a, b| (a.0, a.1, a.2, &a.3, a.4).cmp(&(b.0, b.1, b.2, &b.3, b.4)));
-    found.into_iter().map(|f| Hit { index: f.4, ranges: f.5 }).collect()
+    found.sort_by(|a, b| a.0.cmp(&b.0));
+    found.into_iter().map(|(_, h)| h).collect()
 }
 
 /// Up to `max` results for `query`: direct matches first, then matches of the query typed in

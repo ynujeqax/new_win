@@ -39,6 +39,7 @@ mod menus;
 mod network_view;
 mod panels;
 mod right_view;
+mod spotlight_view;
 mod tray_view;
 mod volume_view;
 mod visibility;
@@ -271,6 +272,10 @@ impl App {
         }
         if msg == tray_view::WM_APP_FOREGROUND {
             self.on_foreground(HWND(wp.0 as *mut _));
+            return Some(LRESULT(0));
+        }
+        if msg == spotlight_view::WM_APP_SPOTLIGHT {
+            self.toggle_spotlight();
             return Some(LRESULT(0));
         }
         if msg == layout_view::WM_APP_LAYOUT {

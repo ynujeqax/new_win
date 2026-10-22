@@ -93,13 +93,9 @@ pub fn run(t: SystemTarget) -> Result<()> {
 }
 
 /// Win+N: Windows' notification center with the calendar (works with the taskbar hidden,
-/// checked by `examples/win_n_probe.rs`).
+/// checked by `examples/win_n_probe.rs`). Tagged, so our own hook ignores it.
 pub fn open_notification_center() {
-    use windows::Win32::UI::Input::KeyboardAndMouse::{INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, SendInput, VIRTUAL_KEY, VK_LWIN, VK_N};
-    let key = |vk: VIRTUAL_KEY, up: bool| INPUT {
-        r#type: INPUT_KEYBOARD,
-        Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: vk, dwFlags: if up { KEYEVENTF_KEYUP } else { Default::default() }, ..Default::default() } },
-    };
-    let keys = [key(VK_LWIN, false), key(VK_N, false), key(VK_N, true), key(VK_LWIN, true)];
-    unsafe { SendInput(&keys, size_of::<INPUT>() as i32) };
+    const VK_LWIN: u16 = 0x5B;
+    const VK_N: u16 = 0x4E;
+    crate::input_hook::send_tagged(&[(VK_LWIN, false), (VK_N, false), (VK_N, true), (VK_LWIN, true)]);
 }

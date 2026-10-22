@@ -29,7 +29,7 @@ pub(super) struct LangView {
 
 impl App {
     pub(super) fn start_layout(&mut self) {
-        self.input_hook = InputHook::start(self.ping, WM_APP_LAYOUT).map_err(|e| log::error!("keyboard hook: {e}")).ok();
+        self.input_hook = InputHook::start(self.ping, WM_APP_LAYOUT, super::spotlight_view::WM_APP_SPOTLIGHT, self.config.spotlight.win_key).map_err(|e| log::error!("keyboard hook: {e}")).ok();
         self.read_layout();
     }
 
