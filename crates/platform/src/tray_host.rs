@@ -249,6 +249,11 @@ impl TrayHost {
         self.hwnd
     }
 
+    /// The window copies are forwarded to (explorer's tray).
+    pub fn target(&self) -> HWND {
+        HWND(self.target.load(Ordering::Relaxed) as *mut _)
+    }
+
     pub fn icons(&self) -> Vec<TrayIcon> {
         with_host(self.hwnd, |s| s.model.icons().to_vec()).unwrap_or_default()
     }

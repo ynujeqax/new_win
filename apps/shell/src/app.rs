@@ -59,11 +59,15 @@ const WM_APP_GLASS: u32 = WM_APP + 6;
 const WM_APP_TRAY: u32 = WM_APP + 7;
 const WM_APP_REORDER: u32 = WM_APP + 12;
 
-/// Our own `TaskbarCreated` comes back to us; one within this long after ours is not explorer's.
-const OWN_ANNOUNCE_WINDOW: std::time::Duration = std::time::Duration::from_secs(2);
-
-fn is_own_announce(last: Option<std::time::Instant>, now: std::time::Instant) -> bool {
-    last.is_some_and(|t| now.saturating_duration_since(t) < OWN_ANNOUNCE_WINDOW)
+/// `TaskbarCreated` also comes from our own tray host (start, quit, restart handling). Explorer
+/// restarted only if its tray (`current`) is a different window than the one we forward to
+/// (`known`).
+fn is_explorer_restart(current: Option<isize>, known: Option<isize>) -> bool {
+    match known {
+        // No tray host to compare with: M1's behaviour, every TaskbarCreated is a restart.
+        None => true,
+        Some(k) => current.is_some_and(|c| c != k),
+    }
 }
 
 /// `PostQuitMessage` code that makes the watchdog start a fresh shell.
@@ -80,7 +84,6 @@ pub struct App {
     // Tray host (M2)
     tray_host: Option<TrayHost>,
     reorder_watch: Option<WinEventHookGuard>,
-    last_announce: Option<std::time::Instant>,
     /// The icon behind each app row of the open tray panel.
     tray_keys: Vec<newwin_core::tray::IconKey>,
     /// Fallback row names by process id.
@@ -223,15 +226,15 @@ impl App {
         self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
         if let Some(h) = &self.tray_host {
             h.announce();
-            self.last_announce = Some(std::time::Instant::now());
             log::info!("tray host up");
         }
     }
 
+    /// Forwards to the new explorer, which apps then register with again; done first, so the
+    /// AppBar calls that re-hide the taskbar reach the new explorer and not the dead one.
     fn restart_tray_host(&mut self) {
         let Some(h) = &self.tray_host else { return };
         h.explorer_restarted();
-        self.last_announce = Some(std::time::Instant::now());
         // Bound to the old explorer process.
         self.reorder_watch = None;
         self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
@@ -251,12 +254,15 @@ impl App {
 
     fn on_ping_message(&mut self, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
         if msg == self.taskbar_created {
-            if is_own_announce(self.last_announce, std::time::Instant::now()) {
+            // After restore_taskbar (quit, sign-out) the host's own goodbye arrives here.
+            let current = newwin_platform::taskbar::explorer_tray().map(|h| h.0 as isize);
+            let known = self.tray_host.as_ref().map(|h| h.target().0 as isize);
+            if self.taskbar.is_none() || !is_explorer_restart(current, known) {
                 return Some(LRESULT(0));
             }
             log::info!("explorer restarted, hiding the taskbar again");
-            self.reapply_taskbar(true);
             self.restart_tray_host();
+            self.reapply_taskbar(true);
             self.on_explorer_restarted();
             return Some(LRESULT(0));
         }
@@ -457,7 +463,6 @@ fn start() -> Result<Rc<RefCell<App>>> {
         taskbar_created: taskbar_created_message(),
         tray_host: None,
         reorder_watch: None,
-        last_announce: None,
         tray_keys: Vec::new(),
         tray_names: std::collections::HashMap::new(),
         audio: None,
@@ -557,15 +562,17 @@ fn start() -> Result<Rc<RefCell<App>>> {
 
 #[cfg(test)]
 mod tests {
-    use std::time::{Duration, Instant};
-
     use super::*;
 
     #[test]
-    fn own_announce_is_not_an_explorer_restart() {
-        let now = Instant::now();
-        assert!(is_own_announce(Some(now - Duration::from_millis(300)), now));
-        assert!(!is_own_announce(Some(now - Duration::from_secs(3)), now));
-        assert!(!is_own_announce(None, now));
+    fn explorer_restart_is_a_new_explorer_tray() {
+        // Our own TaskbarCreated (start, quit, explorer restart handling): explorer's tray is the same.
+        assert!(!is_explorer_restart(Some(0x100d2), Some(0x100d2)));
+        // A new explorer made a new tray window.
+        assert!(is_explorer_restart(Some(0x2040a), Some(0x100d2)));
+        // Explorer gone: nothing to re-hide or register with.
+        assert!(!is_explorer_restart(None, Some(0x100d2)));
+        // Without a tray host there is nothing to compare: treat it as a restart (M1 behaviour).
+        assert!(is_explorer_restart(Some(0x100d2), None));
     }
 }
