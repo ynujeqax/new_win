@@ -175,7 +175,9 @@ impl TrayModel {
                 self.icons[p].pid = pid;
                 Change::Updated
             }
-            (TrayCommand::Add, None) => {
+            // An update for an icon we never saw: the app registered with an earlier tray (explorer,
+            // a NewWin before a restart) and does not register again; take it as an add.
+            (TrayCommand::Add | TrayCommand::Modify, None) => {
                 let mut icon = TrayIcon {
                     key: d.key,
                     hwnd: d.hwnd,
@@ -229,7 +231,15 @@ impl TrayModel {
 pub fn row_label(tip: &str, fallback: &str) -> String {
     let line = tip.split(['\r', '\n']).next().unwrap_or("");
     let cut = [" - ", " – ", " — "].iter().filter_map(|s| line.find(s)).min().unwrap_or(line.len());
-    let label = line[..cut].trim();
+    let mut label = line[..cut].trim();
+    // A trailing counter such as unread messages: "Telegram Desktop (148758)".
+    if let Some(open) = label.rfind(" (")
+        && let Some(inner) = label[open + 2..].strip_suffix(')')
+        && !inner.is_empty()
+        && inner.chars().all(|c| c.is_ascii_digit())
+    {
+        label = label[..open].trim_end();
+    }
     if label.is_empty() { fallback.trim().to_string() } else { label.to_string() }
 }
 

@@ -15,6 +15,12 @@ use super::App;
 use super::apps_view::{Button, Target};
 use crate::bar::text_style;
 
+/// A capsule already showing `shown`'s tooltip only changes its text (the volume while the wheel
+/// turns); a fresh one would fade in again on every notch.
+fn reuse_tooltip(shown: Option<RightItem>, want: RightItem) -> bool {
+    shown == Some(want)
+}
+
 pub(super) const ANIM_TIMER: usize = 5;
 pub(super) const TOOLTIP_TIMER: usize = 6;
 const FRAME_MS: u32 = 16;
@@ -46,6 +52,8 @@ pub(super) struct RightView {
     pub net: Option<super::network_view::NetView>,
     /// `None` until the layout has been read once.
     pub lang: Option<super::layout_view::LangView>,
+    /// Whose tooltip is showing.
+    pub tooltip_item: Option<RightItem>,
 }
 
 /// The speaker icon's animated state.
@@ -72,6 +80,7 @@ impl RightView {
             speaker: None,
             net: None,
             lang: None,
+            tooltip_item: None,
         }
     }
 
@@ -260,6 +269,14 @@ impl App {
     pub(super) fn show_tooltip(&mut self) {
         let Some(Target::Right(item)) = self.hover else { return };
         let (Some(text), Some(r)) = (self.tooltip_text(item), self.right.slot(item)) else { return };
+        if reuse_tooltip(self.right.tooltip_item.filter(|_| self.tooltip.is_some()), item) {
+            if let Some(t) = &self.tooltip {
+                t.set_text(&text);
+            }
+            self.sync_glass();
+            return;
+        }
+        self.right.tooltip_item = Some(item);
         let a = &self.config.appearance;
         let style = PopupStyle { font_family: a.font_family.clone(), font_size_px: scale(a.font_size, self.dpi), dpi: self.dpi };
         let anchor = PointF { x: self.bar_rect.left as f32 + r.x + r.w / 2.0, y: self.bar_rect.bottom as f32 + scale(6.0, self.dpi).round() };
@@ -275,6 +292,7 @@ impl App {
         unsafe {
             let _ = KillTimer(Some(self.bar), TOOLTIP_TIMER);
         }
+        self.right.tooltip_item = None;
         if self.tooltip.take().is_some() {
             self.sync_glass();
         }
@@ -294,5 +312,17 @@ impl App {
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_shown_tooltip_is_updated_not_recreated() {
+        assert!(reuse_tooltip(Some(RightItem::Volume), RightItem::Volume), "scrolling the wheel: same capsule, new text");
+        assert!(!reuse_tooltip(Some(RightItem::Date), RightItem::Volume), "another item: a capsule in its place");
+        assert!(!reuse_tooltip(None, RightItem::Volume));
     }
 }

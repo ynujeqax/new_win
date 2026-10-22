@@ -90,12 +90,22 @@ fn model_add_modify_delete_in_order() {
     assert_eq!(add(&mut m, 1, 1, "A2"), Change::Updated);
     assert_eq!(m.icons().iter().map(|i| i.tip.as_str()).collect::<Vec<_>>(), ["A2", "B"]);
     assert_eq!(m.icons()[0].pid, 42);
-    let modify_unknown = parse_notify(&nid(1, FULL, 9, 9, NIF_TIP, 0, "Z", (0, 0), 0, None)).unwrap();
-    assert_eq!(m.apply(&modify_unknown, 1), Change::Ignored);
+    let set_version_unknown = parse_notify(&nid(4, FULL, 9, 9, 0, 0, "", (0, 0), 4, None)).unwrap();
+    assert_eq!(m.apply(&set_version_unknown, 1), Change::Ignored);
     let del = parse_notify(&nid(2, FULL, 1, 1, 0, 0, "", (0, 0), 0, None)).unwrap();
     assert_eq!(m.apply(&del, 1), Change::Removed);
     assert_eq!(m.apply(&del, 1), Change::Ignored);
     assert_eq!(m.icons().len(), 1);
+}
+
+/// Apps that registered with an earlier tray (Telegram after NewWin restarts) only send updates.
+#[test]
+fn modify_of_an_unknown_icon_adds_it() {
+    let mut m = TrayModel::default();
+    let modify = parse_notify(&nid(1, FULL, 9, 3, NIF_TIP | NIF_MESSAGE, 0x8001, "Telegram Desktop (148758)", (0, 0), 0, None)).unwrap();
+    assert_eq!(m.apply(&modify, 7), Change::Added);
+    assert_eq!((m.icons()[0].callback_message, m.icons()[0].pid), (0x8001, 7));
+    assert_eq!(m.apply(&modify, 7), Change::Updated);
 }
 
 #[test]
@@ -135,6 +145,8 @@ fn labels() {
     assert_eq!(row_label("NVIDIA Settings – Ready", ""), "NVIDIA Settings");
     assert_eq!(row_label("  ", " Discord "), "Discord");
     assert_eq!(row_label("", ""), "");
+    assert_eq!(row_label("Telegram Desktop (148758)", ""), "Telegram Desktop", "unread counter");
+    assert_eq!(row_label("Notes (beta)", ""), "Notes (beta)", "words in brackets stay");
 }
 
 #[test]
