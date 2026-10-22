@@ -14,6 +14,7 @@ use newwin_platform::clock::ui_language_tag;
 use newwin_platform::dpi::{primary_monitor, scale};
 use newwin_platform::paths::taskbar_state_file;
 use newwin_platform::taskbar::{NativeTaskbar, WinEventHookGuard, restore_from_state_file, taskbar_created_message, watch_taskbar_show};
+use newwin_platform::tray_host::{Forward, HostOptions, TrayHost, watch_reorder};
 use newwin_platform::window::{Handler, WindowSpec, create_window, run_message_loop};
 use newwin_platform::windows_watch::{AppNames, WindowWatcher, enumerate_top_level};
 use newwin_platform::worker::{Worker, take_resolved};
@@ -46,6 +47,15 @@ const WM_APP_TASKBAR_SHOWN: u32 = WM_APP + 1;
 const WM_APP_APPBAR: u32 = WM_APP + 3;
 const WM_APP_NAME: u32 = WM_APP + 4;
 const WM_APP_GLASS: u32 = WM_APP + 6;
+const WM_APP_TRAY: u32 = WM_APP + 7;
+const WM_APP_REORDER: u32 = WM_APP + 12;
+
+/// Our own `TaskbarCreated` comes back to us; one within this long after ours is not explorer's.
+const OWN_ANNOUNCE_WINDOW: std::time::Duration = std::time::Duration::from_secs(2);
+
+fn is_own_announce(last: Option<std::time::Instant>, now: std::time::Instant) -> bool {
+    last.is_some_and(|t| now.saturating_duration_since(t) < OWN_ANNOUNCE_WINDOW)
+}
 
 /// `PostQuitMessage` code that makes the watchdog start a fresh shell.
 pub const APPS_EXIT_RESTART: i32 = EXIT_RESTART as i32;
@@ -58,6 +68,10 @@ pub struct App {
     taskbar: Option<NativeTaskbar>,
     show_watch: Option<WinEventHookGuard>,
     taskbar_created: u32,
+    // Tray host (M2)
+    tray_host: Option<TrayHost>,
+    reorder_watch: Option<WinEventHookGuard>,
+    last_announce: Option<std::time::Instant>,
     ping: HWND,
     bar: HWND,
     bar_layer: Option<Layer>,
@@ -177,7 +191,34 @@ impl App {
         }
     }
 
+    /// Our `Shell_TrayWnd`: apps register their icons with it (it is first for `FindWindow`).
+    fn start_tray_host(&mut self) {
+        let opts = HostOptions { class: "Shell_TrayWnd", topmost: true, forward: Forward::Explorer };
+        self.tray_host = TrayHost::create(opts, self.ping, WM_APP_TRAY).map_err(|e| log::error!("tray host: {e}")).ok();
+        self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
+        if let Some(h) = &self.tray_host {
+            h.announce();
+            self.last_announce = Some(std::time::Instant::now());
+            log::info!("tray host up");
+        }
+    }
+
+    fn restart_tray_host(&mut self) {
+        let Some(h) = &self.tray_host else { return };
+        h.explorer_restarted();
+        self.last_announce = Some(std::time::Instant::now());
+        // Bound to the old explorer process.
+        self.reorder_watch = None;
+        self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
+    }
+
+    /// The tray model changed (`wParam` = `Change`); the tray panel arrives in Task 9.
+    fn on_tray_changed(&mut self, _change: usize) {}
+
     fn restore_taskbar(&mut self) {
+        // Apps go back to explorer, and restoring talks to explorer directly.
+        self.reorder_watch = None;
+        self.tray_host = None;
         self.show_watch = None;
         if let Some(tb) = self.taskbar.take()
             && let Err(e) = tb.restore()
@@ -188,9 +229,23 @@ impl App {
 
     fn on_ping_message(&mut self, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
         if msg == self.taskbar_created {
+            if is_own_announce(self.last_announce, std::time::Instant::now()) {
+                return Some(LRESULT(0));
+            }
             log::info!("explorer restarted, hiding the taskbar again");
             self.reapply_taskbar(true);
+            self.restart_tray_host();
             self.on_explorer_restarted();
+            return Some(LRESULT(0));
+        }
+        if msg == WM_APP_TRAY {
+            self.on_tray_changed(wp.0);
+            return Some(LRESULT(0));
+        }
+        if msg == WM_APP_REORDER {
+            if let Some(h) = &self.tray_host {
+                h.ensure_on_top();
+            }
             return Some(LRESULT(0));
         }
         if msg == WM_APP_GLASS {
@@ -354,6 +409,9 @@ fn start() -> Result<Rc<RefCell<App>>> {
         taskbar: None,
         show_watch: None,
         taskbar_created: taskbar_created_message(),
+        tray_host: None,
+        reorder_watch: None,
+        last_announce: None,
         ping: HWND::default(),
         bar: HWND::default(),
         bar_layer: None,
@@ -421,6 +479,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.catcher = catcher;
         a.taskbar = Some(NativeTaskbar::hide(&state)?);
         a.show_watch = watch_taskbar_show(ping, WM_APP_TASKBAR_SHOWN).map_err(|e| log::error!("taskbar watch: {e}")).ok();
+        a.start_tray_host();
         a.appbar = AppBar::register(bar, WM_APP_APPBAR).map_err(|e| log::error!("appbar: {e}")).ok();
         a.bar_layer = Some(Layer::new(&a.gfx, bar, Backdrop::Glass, 1, 1)?);
         if a.config.appearance.glass {
@@ -436,4 +495,19 @@ fn start() -> Result<Rc<RefCell<App>>> {
     }
     log::info!("first-frame-ms={}", ms_since_process_start());
     Ok(app)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::{Duration, Instant};
+
+    use super::*;
+
+    #[test]
+    fn own_announce_is_not_an_explorer_restart() {
+        let now = Instant::now();
+        assert!(is_own_announce(Some(now - Duration::from_millis(300)), now));
+        assert!(!is_own_announce(Some(now - Duration::from_secs(3)), now));
+        assert!(!is_own_announce(None, now));
+    }
 }

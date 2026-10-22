@@ -87,6 +87,7 @@ fn on_notify(hwnd: HWND, bytes: &[u8]) -> isize {
         (change, s.notify, s.msg)
     });
     let Some((change, notify, msg)) = applied else { return 0 };
+    log::debug!("tray {:?} {change:?} key={:?} tip={:?} pid={pid}", d.command, d.key, d.tip);
     if change == Change::Ignored {
         return 0;
     }

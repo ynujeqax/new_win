@@ -67,6 +67,9 @@ fn main() -> Result<()> {
         for (id, name) in &devices {
             println!("{} {name}", if *id == original { "*" } else { " " });
         }
+        if std::env::args().any(|a| a == "--list") {
+            return Ok(());
+        }
         let Some(pos) = devices.iter().position(|(id, _)| *id == original) else { return Ok(()) };
         if devices.len() < 2 {
             println!("only one device: switching cannot be tried");
