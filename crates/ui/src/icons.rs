@@ -95,24 +95,6 @@ pub fn speaker(p: &mut Painter, c: PointF, s: f32, waves: f32, mute: f32, color:
     slash(p, c, s, mute, color, w);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::PointF;
-
-    #[test]
-    fn chevron_turns_upside_down() {
-        let c = PointF { x: 10.0, y: 10.0 };
-        let up = chevron_points(c, 8.0, 0.0);
-        assert!(up[1].y < up[0].y && up[1].y < up[2].y, "^ points up: {up:?}");
-        assert!(up[0].x < up[2].x);
-        let down = chevron_points(c, 8.0, 1.0);
-        assert!(down[1].y > down[0].y && down[1].y > down[2].y, "turned: {down:?}");
-        assert!(down[0].x > down[2].x, "ends mirrored");
-        assert!((down[1].x - c.x).abs() < 1e-4);
-    }
-}
-
 /// Where the magnifier's parts go: the lens (centre, radius) and the handle (from, to).
 pub struct MagnifierGeometry {
     pub lens: PointF,
@@ -134,4 +116,22 @@ pub fn magnifier(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
     let d = 2.0 * m.radius;
     p.stroke_round_rect(RectF::new(m.lens.x - m.radius, m.lens.y - m.radius, d, d), m.radius, color, w);
     p.line(m.handle.0, m.handle.1, color, w);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::PointF;
+
+    #[test]
+    fn chevron_turns_upside_down() {
+        let c = PointF { x: 10.0, y: 10.0 };
+        let up = chevron_points(c, 8.0, 0.0);
+        assert!(up[1].y < up[0].y && up[1].y < up[2].y, "^ points up: {up:?}");
+        assert!(up[0].x < up[2].x);
+        let down = chevron_points(c, 8.0, 1.0);
+        assert!(down[1].y > down[0].y && down[1].y > down[2].y, "turned: {down:?}");
+        assert!(down[0].x > down[2].x, "ends mirrored");
+        assert!((down[1].x - c.x).abs() < 1e-4);
+    }
 }
