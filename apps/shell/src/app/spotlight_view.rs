@@ -6,6 +6,8 @@ use super::App;
 
 /// The keyboard hook saw a lone Win tap or `Ctrl+Esc`.
 pub(super) const WM_APP_SPOTLIGHT: u32 = WM_APP + 14;
+/// The worker rebuilt the app index.
+pub(super) const WM_APP_APPS: u32 = WM_APP + 16;
 
 impl App {
     pub(super) fn toggle_spotlight(&mut self) {

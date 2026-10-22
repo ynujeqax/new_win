@@ -559,7 +559,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         if a.config.appearance.glass {
             a.backdrops = Some(Backdrops::spawn(ping, WM_APP_GLASS));
         }
-        a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME)));
+        a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME, spotlight_view::WM_APP_APPS)));
         a.watcher = Some(WindowWatcher::start(ping)?);
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
         a.load_windows(enumerate_top_level(), foreground);

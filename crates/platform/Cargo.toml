@@ -9,6 +9,8 @@ newwin-core.workspace = true
 log.workspace = true
 windows-core.workspace = true
 windows = { workspace = true, features = [
+    "ApplicationModel",
+    "Foundation",
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
     "Win32_UI_Shell",

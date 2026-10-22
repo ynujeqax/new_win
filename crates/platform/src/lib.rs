@@ -3,6 +3,7 @@
 pub mod activate;
 pub mod appbar;
 pub mod appinfo;
+pub mod apps_index;
 pub mod audio;
 pub mod clock;
 pub mod dpi;

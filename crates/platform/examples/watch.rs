@@ -81,7 +81,7 @@ fn main() -> windows::core::Result<()> {
     )?;
     {
         let mut a = app.borrow_mut();
-        a.names = Some(AppNames::new(Worker::spawn(notify, WM_NAME)));
+        a.names = Some(AppNames::new(Worker::spawn(notify, WM_NAME, WM_NAME + 1)));
         a.watcher = Some(WindowWatcher::start(notify)?);
         for h in enumerate_top_level() {
             a.refresh(h);
