@@ -2,7 +2,7 @@
 
 use newwin_config::Appearance;
 use newwin_platform::dpi::{scale, scale_px};
-use newwin_ui::{Painter, PointF, RectF, TextLayout, TextStyle, paint_glass};
+use newwin_ui::{Painter, RectF, TextStyle, paint_glass};
 use windows::Win32::Foundation::RECT;
 
 pub fn text_style(a: &Appearance, dpi: u32, weight: u16) -> TextStyle {
@@ -12,11 +12,6 @@ pub fn text_style(a: &Appearance, dpi: u32, weight: u16) -> TextStyle {
 /// Liquid glass over the blurred backdrop (`with_backdrop`) or the plain fallback tint.
 pub fn paint_background(p: &mut Painter, w: f32, h: f32, dpi: u32, a: &Appearance, with_backdrop: bool) {
     paint_glass(p, RectF::new(0.0, 0.0, w, h), scale(a.corner_radius, dpi), with_backdrop);
-}
-
-/// Text vertically centered in a bar of height `h`.
-pub fn text_origin(x: f32, h: f32, t: &TextLayout) -> PointF {
-    PointF { x, y: ((h - t.height()) / 2.0).round() }
 }
 
 /// Floating bar: `margin` from the top, left and right monitor edges, `height` tall (physical px).

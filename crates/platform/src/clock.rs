@@ -1,6 +1,6 @@
 //! Date/time text in the user's regional format, and the UI language.
 
-use windows::Win32::Globalization::{GetDateFormatEx, GetTimeFormatEx, GetUserDefaultUILanguage, LCIDToLocaleName, TIME_FORMAT_FLAGS, TIME_NOSECONDS};
+use windows::Win32::Globalization::{DATE_LONGDATE, GetDateFormatEx, GetTimeFormatEx, GetUserDefaultUILanguage, LCIDToLocaleName, TIME_FORMAT_FLAGS, TIME_NOSECONDS};
 use windows::Win32::System::SystemInformation::GetLocalTime;
 use windows::core::{HSTRING, PCWSTR};
 
@@ -12,6 +12,13 @@ pub fn format_bar_date(date_format: &str) -> String {
     let pattern = HSTRING::from(if date_format == "system" { SYSTEM_DATE_PATTERN } else { date_format });
     let mut buf = [0u16; 128];
     let n = unsafe { GetDateFormatEx(PCWSTR::null(), Default::default(), None, &pattern, Some(&mut buf), PCWSTR::null()) };
+    String::from_utf16_lossy(&buf[..(n.max(1) - 1) as usize])
+}
+
+/// The long date in the user's format, e.g. "Thursday, October 22, 2026" (the date tooltip).
+pub fn format_long_date() -> String {
+    let mut buf = [0u16; 128];
+    let n = unsafe { GetDateFormatEx(PCWSTR::null(), DATE_LONGDATE, None, PCWSTR::null(), Some(&mut buf), PCWSTR::null()) };
     String::from_utf16_lossy(&buf[..(n.max(1) - 1) as usize])
 }
 

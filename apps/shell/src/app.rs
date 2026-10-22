@@ -21,7 +21,7 @@ use newwin_platform::worker::{Worker, take_resolved};
 use newwin_ui::backdrop::{Backdrops, Region};
 use newwin_ui::popup::Popup;
 use newwin_ui::tooltip::Tooltip;
-use newwin_ui::{Backdrop, Gfx, Layer, PointF, TextCache, TextLayout};
+use newwin_ui::{Backdrop, Gfx, Layer, PointF, TextCache};
 use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, FILETIME, GetLastError, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::System::SystemInformation::GetSystemTimePreciseAsFileTime;
 use windows::Win32::System::Threading::{CreateMutexW, GetCurrentProcess, GetProcessTimes};
@@ -36,11 +36,13 @@ mod clock_view;
 mod glass_regions;
 mod menus;
 mod panels;
+mod right_view;
 mod visibility;
 
 use apps_view::{BarItem, Button, Target};
 use menus::{MenuCtx, WM_APP_POPUP};
 use panels::ShellPanel;
+use right_view::RightView;
 
 /// Not exported by the `windows` crate.
 const WM_MOUSELEAVE: u32 = 0x02A3;
@@ -116,10 +118,8 @@ pub struct App {
     // Clock
     date_text: String,
     time_text: String,
-    date_layout: Option<TextLayout>,
-    time_layout: Option<TextLayout>,
-    date_x: f32,
-    time_x: f32,
+    // Tray button and right side (M2)
+    right: RightView,
 }
 
 fn ms_since_process_start() -> u64 {
@@ -405,6 +405,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         Config::default()
     });
 
+    let right = RightView::new(&config.items.right);
     let gfx = Gfx::new()?;
     let app = Rc::new(RefCell::new(App {
         text: TextCache::new(&gfx),
@@ -445,12 +446,9 @@ fn start() -> Result<Rc<RefCell<App>>> {
         bar_glass: false,
         fullscreen: false,
         snips: SnipTracker::default(),
+        right,
         date_text: String::new(),
         time_text: String::new(),
-        date_layout: None,
-        time_layout: None,
-        date_x: 0.0,
-        time_x: 0.0,
     }));
 
     let ping = create_window(

@@ -51,3 +51,9 @@ fn now_ms_never_goes_back() {
     let b = newwin_platform::clock::now_ms();
     assert!(a > 0 && b >= a + 10, "{a} then {b}");
 }
+
+#[test]
+fn long_date_names_the_year() {
+    let d = newwin_platform::clock::format_long_date();
+    assert!(d.chars().filter(|c| c.is_ascii_digit()).count() >= 4, "{d:?}");
+}

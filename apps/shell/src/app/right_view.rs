@@ -1,0 +1,233 @@
+//! The tray button on the left and the right side of the bar (spec: M2 §2): placement, the
+//! gliding hover pill, tooltips, clicks.
+
+use newwin_core::anim::Tween;
+use newwin_core::items::{RightItem, parse_right, place_right};
+use newwin_platform::clock::{format_long_date, now_ms};
+use newwin_platform::dpi::scale;
+use newwin_platform::launch;
+use newwin_ui::popup::PopupStyle;
+use newwin_ui::tooltip::Tooltip;
+use newwin_ui::{Painter, PointF, RectF, TextLayout, icons, theme};
+use windows::Win32::UI::WindowsAndMessaging::{KillTimer, SetTimer};
+
+use super::App;
+use super::apps_view::{Button, Target};
+use crate::bar::text_style;
+
+pub(super) const ANIM_TIMER: usize = 5;
+pub(super) const TOOLTIP_TIMER: usize = 6;
+const FRAME_MS: u32 = 16;
+const PILL_FADE_MS: u32 = 120;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct RightSlot {
+    pub item: RightItem,
+    pub rect: RectF,
+}
+
+/// Everything the right side (and the tray button) draws, kept apart from the bar's layer so the
+/// paint closure can borrow it.
+pub(super) struct RightView {
+    pub items: Vec<RightItem>,
+    pub slots: Vec<RightSlot>,
+    pub sep_x: Option<f32>,
+    pub chevron: RectF,
+    pub left_sep_x: f32,
+    pub chevron_turn: Tween,
+    pill_x: Tween,
+    pill_w: Tween,
+    pill_o: Tween,
+    pub date: Option<TextLayout>,
+    pub time: Option<TextLayout>,
+}
+
+impl RightView {
+    pub(super) fn new(names: &[String]) -> RightView {
+        RightView {
+            items: parse_right(names),
+            slots: Vec::new(),
+            sep_x: None,
+            chevron: RectF::default(),
+            left_sep_x: 0.0,
+            chevron_turn: Tween::at_rest(0.0),
+            pill_x: Tween::at_rest(0.0),
+            pill_w: Tween::at_rest(0.0),
+            pill_o: Tween::at_rest(0.0),
+            date: None,
+            time: None,
+        }
+    }
+
+    pub(super) fn slot(&self, item: RightItem) -> Option<RectF> {
+        self.slots.iter().find(|s| s.item == item).map(|s| s.rect)
+    }
+
+    /// The tray button or a right item under `p`.
+    pub(super) fn hit(&self, p: PointF) -> Option<(Target, RectF)> {
+        if self.chevron.contains(p) {
+            return Some((Target::Tray, self.chevron));
+        }
+        self.slots.iter().find(|s| s.rect.contains(p)).map(|s| (Target::Right(s.item), s.rect))
+    }
+
+    /// The hover pill heads for `rect`, or fades out. A pill that was invisible appears in place
+    /// instead of gliding from wherever it was last.
+    pub(super) fn hover_to(&mut self, rect: Option<RectF>, now: u64) {
+        match rect {
+            Some(r) => {
+                if self.pill_o.value(now) < 0.05 {
+                    self.pill_x = Tween::at_rest(r.x);
+                    self.pill_w = Tween::at_rest(r.w);
+                } else {
+                    self.pill_x.to(r.x, now, theme::HOVER_GLIDE_MS);
+                    self.pill_w.to(r.w, now, theme::HOVER_GLIDE_MS);
+                }
+                self.pill_o.to(1.0, now, PILL_FADE_MS);
+            }
+            None => self.pill_o.to(0.0, now, PILL_FADE_MS),
+        }
+    }
+
+    pub(super) fn animating(&self, now: u64) -> bool {
+        [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
+    }
+
+    /// Draws the tray button, the separators, the hover pill and the right items.
+    pub(super) fn paint(&self, p: &mut Painter, h: f32, dpi: u32, now: u64, hover: Option<Target>) {
+        let s = |v: f32| scale(v, dpi).round();
+        let stroke = scale(theme::ICON_STROKE, dpi);
+        let pill_h = s(theme::PILL_HEIGHT);
+        let y = ((h - pill_h) / 2.0).round();
+        let o = self.pill_o.value(now);
+        if o > 0.0 {
+            let pill = RectF::new(self.pill_x.value(now), y, self.pill_w.value(now), pill_h);
+            p.fill_round_rect(pill, s(theme::PILL_RADIUS), theme::HOVER_PILL.with_alpha(theme::HOVER_PILL.a * o));
+        }
+        let sep = |p: &mut Painter, x: f32| {
+            let x = x.round() + 0.5;
+            p.line(PointF { x, y: (h / 2.0 - s(7.0)).round() }, PointF { x, y: (h / 2.0 + s(7.0)).round() }, theme::SEPARATOR, 1.0);
+        };
+        let lit = |t: Target| if hover == Some(t) { theme::TEXT_STRONG } else { theme::TEXT_INACTIVE };
+        let c = self.chevron;
+        icons::chevron(p, PointF { x: c.x + c.w / 2.0, y: h / 2.0 }, s(16.0), self.chevron_turn.value(now), lit(Target::Tray), stroke);
+        sep(p, self.left_sep_x);
+        if let Some(x) = self.sep_x {
+            sep(p, x);
+        }
+        for slot in &self.slots {
+            let r = slot.rect;
+            let text = |p: &mut Painter, t: &TextLayout, color| {
+                p.text(t, PointF { x: (r.x + (r.w - t.width()) / 2.0).round(), y: ((h - t.height()) / 2.0).round() }, color);
+            };
+            match slot.item {
+                // The clock keeps M1's look; hover only brightens the date.
+                RightItem::Date => {
+                    if let Some(t) = &self.date {
+                        text(p, t, if hover == Some(Target::Right(RightItem::Date)) { theme::TEXT_STRONG } else { theme::TEXT });
+                    }
+                }
+                RightItem::Time => {
+                    if let Some(t) = &self.time {
+                        text(p, t, theme::TEXT_STRONG);
+                    }
+                }
+                RightItem::Layout | RightItem::Network | RightItem::Volume => {}
+            }
+        }
+    }
+}
+
+impl App {
+    /// Width of a right item, or `None` while it has nothing to show (it is left out).
+    fn right_width(&self, item: RightItem, pad: f32) -> Option<f32> {
+        match item {
+            RightItem::Date => self.right.date.as_ref().map(|t| t.width() + 2.0 * pad),
+            RightItem::Time => self.right.time.as_ref().map(|t| t.width() + 2.0 * pad),
+            RightItem::Layout | RightItem::Network | RightItem::Volume => None,
+        }
+    }
+
+    /// Lays out the tray button and the right side; returns where the app pills may start and end.
+    pub(super) fn relayout_right(&mut self, w: f32, h: f32) -> (f32, f32) {
+        let dpi = self.dpi;
+        let a = &self.config.appearance;
+        let s = |v: f32| scale(v, dpi).round();
+        let regular = text_style(a, dpi, theme::WEIGHT_REGULAR);
+        let strong = text_style(a, dpi, theme::WEIGHT_SEMIBOLD);
+        self.right.time = self.text.layout(&self.time_text, &strong, w / 3.0).ok();
+        self.right.date = self.text.layout(&self.date_text, &regular, w / 3.0).ok();
+        let (edge, pad, pill_h) = (s(6.0), s(theme::PILL_PAD_X), s(theme::PILL_HEIGHT));
+        let y = ((h - pill_h) / 2.0).round();
+        self.right.chevron = RectF::new(edge, y, pill_h, pill_h);
+        self.right.left_sep_x = self.right.chevron.right() + s(6.0);
+        let widths: Vec<(RightItem, f32)> = self.right.items.iter().filter_map(|&i| self.right_width(i, pad).map(|w| (i, w))).collect();
+        let (xs, sep) = place_right(&widths, w - edge, s(theme::ITEM_GAP), s(13.0));
+        self.right.slots = xs.iter().zip(&widths).map(|(&(item, x), &(_, w))| RightSlot { item, rect: RectF::new(x, y, w, pill_h) }).collect();
+        self.right.sep_x = sep;
+        let right_start = self.right.slots.first().map_or(w - edge, |s| s.rect.x);
+        (self.right.left_sep_x + s(7.0), right_start - s(16.0))
+    }
+
+    /// Repaints while a tween runs; stops waking once all are at rest.
+    pub(super) fn keep_animating(&mut self) {
+        if self.right.animating(now_ms()) {
+            unsafe { SetTimer(Some(self.bar), ANIM_TIMER, FRAME_MS, None) };
+        }
+    }
+
+    fn tooltip_text(&self, item: RightItem) -> Option<String> {
+        match item {
+            RightItem::Date => Some(format_long_date()),
+            RightItem::Time | RightItem::Layout | RightItem::Network | RightItem::Volume => None,
+        }
+    }
+
+    /// The hovered target changed: move the pill and the tooltip along.
+    pub(super) fn on_hover_changed(&mut self, rect: Option<RectF>) {
+        let now = now_ms();
+        let right_group = matches!(self.hover, Some(Target::Tray | Target::Right(_)));
+        self.right.hover_to(rect.filter(|_| right_group), now);
+        match self.hover {
+            Some(Target::Right(item)) if self.tooltip_text(item).is_some() => {
+                if self.tooltip.is_some() {
+                    // Moving between items while a tooltip shows: no new delay.
+                    self.show_tooltip();
+                } else {
+                    unsafe { SetTimer(Some(self.bar), TOOLTIP_TIMER, theme::TOOLTIP_DELAY_MS, None) };
+                }
+            }
+            _ => self.hide_tooltip(),
+        }
+    }
+
+    pub(super) fn show_tooltip(&mut self) {
+        let Some(Target::Right(item)) = self.hover else { return };
+        let (Some(text), Some(r)) = (self.tooltip_text(item), self.right.slot(item)) else { return };
+        let a = &self.config.appearance;
+        let style = PopupStyle { font_family: a.font_family.clone(), font_size_px: scale(a.font_size, self.dpi), dpi: self.dpi };
+        let anchor = PointF { x: self.bar_rect.left as f32 + r.x + r.w / 2.0, y: self.bar_rect.bottom as f32 + scale(6.0, self.dpi).round() };
+        self.tooltip = None;
+        match Tooltip::show(&self.gfx, &text, anchor, &style) {
+            Ok(t) => self.tooltip = Some(t),
+            Err(e) => log::error!("tooltip failed: {e}"),
+        }
+        self.sync_glass();
+    }
+
+    pub(super) fn hide_tooltip(&mut self) {
+        unsafe {
+            let _ = KillTimer(Some(self.bar), TOOLTIP_TIMER);
+        }
+        if self.tooltip.take().is_some() {
+            self.sync_glass();
+        }
+    }
+
+    pub(super) fn on_right_click(&mut self, item: RightItem, button: Button) {
+        self.hide_tooltip();
+        if let (RightItem::Date, Button::Left) = (item, button) {
+            launch::open_notification_center();
+        }
+    }
+}

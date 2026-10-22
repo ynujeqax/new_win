@@ -1,7 +1,9 @@
 //! Running apps on the bar: model updates, layout, painting, hit testing, clicks.
 
 use newwin_core::apps::{ClickAction, WindowInfo, is_screen_snip, left_click, middle_click};
+use newwin_core::items::RightItem;
 use newwin_core::layout::fit_labels;
+use newwin_platform::clock::now_ms;
 use newwin_platform::activate;
 use newwin_platform::dpi::scale;
 use newwin_platform::windows_watch::{WindowEvent, describe};
@@ -9,12 +11,15 @@ use newwin_platform::worker::ResolvedName;
 use newwin_ui::{Painter, PointF, RectF, TextLayout, theme};
 
 use super::App;
-use crate::bar::{paint_background, text_origin, text_style};
+use crate::bar::{paint_background, text_style};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Target {
     Group(usize),
     Overflow,
+    /// The tray button `⌃`.
+    Tray,
+    Right(RightItem),
 }
 
 pub(super) struct BarItem {
@@ -112,15 +117,7 @@ impl App {
         let strong = text_style(a, dpi, theme::WEIGHT_SEMIBOLD);
         let pill_pad = s(theme::PILL_PAD_X);
         let pill_h = s(theme::PILL_HEIGHT);
-        let edge = s(6.0);
-
-        // Right: date, then time (bold).
-        self.time_layout = self.text.layout(&self.time_text, &strong, w / 3.0).ok();
-        self.date_layout = self.text.layout(&self.date_text, &regular, w / 3.0).ok();
-        let time_w = self.time_layout.as_ref().map_or(0.0, |t| t.width());
-        let date_w = self.date_layout.as_ref().map_or(0.0, |t| t.width());
-        self.time_x = w - edge - pill_pad - time_w;
-        self.date_x = self.time_x - s(6.0) - date_w;
+        let (start, end) = self.relayout_right(w, h);
 
         // Left: one pill per app group, shrinking or overflowing into » when crowded.
         let active = self.model.active_group();
@@ -130,10 +127,10 @@ impl App {
             .iter()
             .map(|(n, act)| self.text.natural_width(n, if *act { &strong } else { &regular }).unwrap_or(0.0) + 2.0 * pill_pad)
             .collect();
-        let available = (self.date_x - s(16.0) - edge).max(0.0);
+        let available = (end - start).max(0.0);
         let fit = fit_labels(&natural, available, s(40.0), s(theme::ITEM_GAP), s(24.0));
         let mut items = Vec::new();
-        let mut x = edge;
+        let mut x = start;
         let y = ((h - pill_h) / 2.0).round();
         for (i, width) in fit.widths.iter().enumerate() {
             let (name, act) = &names[i];
@@ -161,8 +158,8 @@ impl App {
         let a = &self.config.appearance;
         let radius = scale(theme::PILL_RADIUS, dpi).round();
         let active = self.model.active_group();
-        let (items, hover, glass) = (&self.items, self.hover, self.bar_glass);
-        let (date, time, date_x, time_x) = (&self.date_layout, &self.time_layout, self.date_x, self.time_x);
+        let (items, hover, glass, right) = (&self.items, self.hover, self.bar_glass, &self.right);
+        let now = now_ms();
         let r = layer.draw(None, |p: &mut Painter| {
             paint_background(p, w, h, dpi, a, glass);
             for it in items {
@@ -183,32 +180,31 @@ impl App {
                 let x = (it.rect.x + (it.rect.w - it.text.width()) / 2.0).round();
                 p.text(&it.text, PointF { x, y: (it.rect.y + (it.rect.h - it.text.height()) / 2.0).round() }, color);
             }
-            if let Some(d) = date {
-                p.text(d, text_origin(date_x, h, d), theme::TEXT);
-            }
-            if let Some(t) = time {
-                p.text(t, text_origin(time_x, h, t), theme::TEXT_STRONG);
-            }
+            right.paint(p, h, dpi, now, hover);
         });
         if let Err(e) = r.and_then(|_| self.gfx.commit()) {
             log::error!("bar paint failed: {e}");
         }
+        self.keep_animating();
     }
 
-    pub(super) fn hit(&self, p: PointF) -> Option<&BarItem> {
-        self.items.iter().find(|it| it.rect.contains(p))
+    /// What is under `p`: the tray button, a right item, or an app pill.
+    pub(super) fn hit(&self, p: PointF) -> Option<(Target, RectF)> {
+        self.right.hit(p).or_else(|| self.items.iter().find(|it| it.rect.contains(p)).map(|it| (it.target, it.rect)))
     }
 
     pub(super) fn update_hover(&mut self, p: Option<PointF>) {
-        let hover = p.and_then(|p| self.hit(p)).map(|it| it.target);
+        let hit = p.and_then(|p| self.hit(p));
+        let hover = hit.map(|(t, _)| t);
         if hover != self.hover {
             self.hover = hover;
+            self.on_hover_changed(hit.map(|(_, r)| r));
             self.paint();
         }
     }
 
     pub(super) fn on_click(&mut self, button: Button, p: PointF) {
-        let target = self.hit(p).map(|it| (it.target, it.rect));
+        let target = self.hit(p);
         log::debug!(
             "click {button:?} at {p:?} target={:?} foreground={:?} popup_open={}",
             target.map(|t| t.0),
@@ -216,6 +212,7 @@ impl App {
             self.popup.is_some()
         );
         // A click on the item whose menu is open just closes it (toggle).
+        self.hide_tooltip();
         let toggled = self.popup.as_ref().is_some_and(|(_, ctx)| target.map(|t| t.0) == ctx.anchor_target() && button != Button::Middle);
         self.close_popup();
         if toggled {
@@ -226,6 +223,7 @@ impl App {
             (Some((Target::Group(g), rect)), Button::Middle) => self.run_click(middle_click(&self.model, g), rect),
             (Some((Target::Group(g), rect)), Button::Right) => self.open_app_menu(g, rect),
             (Some((Target::Overflow, rect)), Button::Left | Button::Right) => self.open_overflow_menu(rect),
+            (Some((Target::Right(item), _)), b) => self.on_right_click(item, b),
             (None, Button::Right) => self.open_bar_menu(p),
             _ => {}
         }
