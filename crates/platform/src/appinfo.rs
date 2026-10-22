@@ -235,3 +235,31 @@ pub fn process_display_name(pid: u32) -> Option<String> {
         (!stem.is_empty()).then(|| stem.to_string())
     })
 }
+
+/// (pid, exe file name) of every process in our session, including ones we may not open (a
+/// SYSTEM process in the user's session, like the NVIDIA container): the terminal-services list
+/// carries each session id, which `ProcessIdToSessionId` would refuse for those.
+pub fn session_processes() -> Vec<(u32, String)> {
+    use windows::Win32::System::RemoteDesktop::{ProcessIdToSessionId, WTS_CURRENT_SERVER_HANDLE, WTS_PROCESS_INFOW, WTSEnumerateProcessesW, WTSFreeMemory};
+    let mut mine = 0;
+    if unsafe { ProcessIdToSessionId(std::process::id(), &mut mine) }.is_err() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    unsafe {
+        let (mut list, mut count): (*mut WTS_PROCESS_INFOW, u32) = (std::ptr::null_mut(), 0);
+        if WTSEnumerateProcessesW(Some(WTS_CURRENT_SERVER_HANDLE), 0, 1, &mut list, &mut count).is_err() || list.is_null() {
+            return out;
+        }
+        for p in std::slice::from_raw_parts(list, count as usize) {
+            if p.SessionId == mine
+                && !p.pProcessName.is_null()
+                && let Ok(name) = p.pProcessName.to_string()
+            {
+                out.push((p.ProcessId, name));
+            }
+        }
+        WTSFreeMemory(list as _);
+    }
+    out
+}

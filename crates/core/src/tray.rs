@@ -276,3 +276,63 @@ pub fn is_bar_duplicate(key: &IconKey) -> bool {
     let data1 = u32::from_le_bytes([b[0], b[1], b[2], b[3]]);
     b[4..] == TAIL && matches!(data1, 0x7820_ae73 | 0x7820_ae74)
 }
+
+/// A background app whose icon may never reach our tray: it registers once, with explorer,
+/// before NewWin starts, and ignores `TaskbarCreated` (the NVIDIA container runs as SYSTEM, so
+/// our broadcast is filtered out). Its icon window lives on, so the tray re-creates the icon from
+/// what the app sent when it did register with us, and clicks reach the app as usual.
+#[derive(Debug, PartialEq, Eq)]
+pub struct KnownIcon {
+    /// Executable file name.
+    pub exe: &'static str,
+    /// Class of the (message-only) window that owns the icon.
+    pub window_class: &'static str,
+    pub uid: u32,
+    pub callback_message: u32,
+    pub version: u32,
+    pub tip: &'static str,
+}
+
+/// Recorded from the app's own registration (live, 2026-10-22).
+pub const KNOWN_ICONS: [KnownIcon; 1] = [KnownIcon {
+    exe: "nvdisplay.container.exe",
+    window_class: "NotificationIconWindowClass",
+    uid: 1051,
+    callback_message: 0xB00,
+    version: 3,
+    tip: "NVIDIA Settings",
+}];
+
+impl KnownIcon {
+    /// `NIM_ADD` and `NIM_SETVERSION` as the app sends them, for its icon window `hwnd`.
+    pub fn registration(&self, hwnd: u32) -> [NotifyData; 2] {
+        let key = IconKey::Id { hwnd, id: self.uid };
+        let add = NotifyData {
+            command: TrayCommand::Add,
+            hwnd,
+            id: self.uid,
+            key,
+            flags: NIF_MESSAGE | NIF_TIP,
+            callback_message: self.callback_message,
+            tip: Some(self.tip.to_string()),
+            state: 0,
+            state_mask: 0,
+            version: 0,
+        };
+        let set_version = NotifyData { command: TrayCommand::SetVersion, flags: 0, tip: None, version: self.version, ..add.clone() };
+        [add, set_version]
+    }
+}
+
+/// The known icons to restore: their process runs (`running`: pid, exe file name) and none of
+/// its processes has an icon in our tray (`icon_pids`). Each comes with the pids to search for
+/// its window.
+pub fn missing_known(running: &[(u32, String)], icon_pids: &[u32]) -> Vec<(&'static KnownIcon, Vec<u32>)> {
+    KNOWN_ICONS
+        .iter()
+        .filter_map(|k| {
+            let pids: Vec<u32> = running.iter().filter(|(_, exe)| exe.eq_ignore_ascii_case(k.exe)).map(|&(pid, _)| pid).collect();
+            (!pids.is_empty() && !pids.iter().any(|p| icon_pids.contains(p))).then_some((k, pids))
+        })
+        .collect()
+}

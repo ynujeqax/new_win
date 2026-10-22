@@ -15,7 +15,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, AtomicU32, Ordering};
 use std::sync::mpsc;
 
-use newwin_core::tray::{Change, IconKey, TrayIcon, TrayModel, parse_notify};
+use newwin_core::tray::{Change, IconKey, KnownIcon, TrayIcon, TrayModel, parse_notify};
 use windows::Win32::Foundation::{ERROR_CLASS_ALREADY_EXISTS, HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
 use windows::Win32::System::DataExchange::COPYDATASTRUCT;
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
@@ -87,7 +87,7 @@ fn on_notify(hwnd: HWND, bytes: &[u8]) -> isize {
         (change, s.notify, s.msg)
     });
     let Some((change, notify, msg)) = applied else { return 0 };
-    log::debug!("tray {:?} {change:?} key={:?} tip={:?} pid={pid}", d.command, d.key, d.tip);
+    log::debug!("tray {:?} {change:?} key={:?} tip={:?} pid={pid} callback={:#x} flags={:#x} version={}", d.command, d.key, d.tip, d.callback_message, d.flags, d.version);
     if change == Change::Ignored {
         return 0;
     }
@@ -262,6 +262,18 @@ impl TrayHost {
         with_host(self.hwnd, |s| s.model.get(key).cloned()).flatten()
     }
 
+    /// Re-creates a known icon whose app never registered with us (see `KnownIcon`), for its
+    /// icon window `hwnd` of process `pid`. Explorer already has it: nothing is forwarded.
+    pub fn restore(&self, k: &KnownIcon, hwnd: HWND, pid: u32) {
+        let h = hwnd.0 as usize as u32;
+        with_host(self.hwnd, |s| {
+            for d in k.registration(h) {
+                s.model.apply(&d, pid);
+            }
+        });
+        log::info!("tray: restored the {} icon ({hwnd:?}, pid {pid})", k.tip);
+    }
+
     /// Drops icons whose window is gone; true if any.
     pub fn prune(&self) -> bool {
         with_host(self.hwnd, |s| s.model.prune(|h| unsafe { IsWindow(Some(HWND(h as usize as *mut _))) }.as_bool())).unwrap_or(false)
@@ -412,4 +424,22 @@ pub fn watch_reorder(notify: HWND, msg: u32) -> Result<WinEventHookGuard> {
         return Err(windows::core::Error::from_thread());
     }
     Ok(WinEventHookGuard(hook))
+}
+
+/// The first window of class `class` that belongs to one of `pids`: message-only windows (icon
+/// windows usually are) first, then top-level ones.
+pub fn find_process_window(pids: &[u32], class: &str) -> Option<HWND> {
+    let class = HSTRING::from(class);
+    for parent in [Some(HWND_MESSAGE), None] {
+        let mut after = None;
+        while let Ok(h) = unsafe { FindWindowExW(parent, after, &class, PCWSTR::null()) } {
+            let mut pid = 0;
+            unsafe { GetWindowThreadProcessId(h, Some(&mut pid)) };
+            if pids.contains(&pid) {
+                return Some(h);
+            }
+            after = Some(h);
+        }
+    }
+    None
 }

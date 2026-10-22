@@ -185,3 +185,28 @@ fn guid_icons_keep_their_uid() {
     m.apply(&parse_notify(&nid(0, FULL, 9, 3, NIF_GUID | NIF_MESSAGE, 0x8001, "", (0, 0), 0, Some(g))).unwrap(), 1);
     assert_eq!((m.icons()[0].key, m.icons()[0].uid), (IconKey::Guid(g), 3));
 }
+
+#[test]
+fn nvidia_is_known_while_its_icon_is_missing() {
+    let running = vec![(2832, "NVDisplay.Container.exe".to_string()), (2216, "NVDisplay.Container.exe".to_string()), (40, "steam.exe".to_string())];
+    let missing = missing_known(&running, &[40]);
+    assert_eq!(missing.len(), 1, "one icon for both container processes");
+    assert_eq!(missing[0].0.window_class, "NotificationIconWindowClass");
+    assert_eq!(missing[0].1, vec![2832, 2216], "the processes to look for its window in");
+    assert!(missing_known(&running, &[2832]).is_empty(), "its own icon registered: nothing to restore");
+    assert!(missing_known(&[(40, "steam.exe".into())], &[]).is_empty(), "not running: nothing");
+}
+
+/// What NVIDIA itself sent when it registered (live, 2026-10-22): restored, the icon takes clicks
+/// exactly like that registration.
+#[test]
+fn a_restored_icon_is_the_registration_it_replays() {
+    let k = &KNOWN_ICONS[0];
+    let mut m = TrayModel::default();
+    for d in k.registration(0x6A04A4) {
+        m.apply(&d, 2832);
+    }
+    let icon = m.get(&IconKey::Id { hwnd: 0x6A04A4, id: 1051 }).unwrap();
+    assert_eq!((icon.callback_message, icon.version, icon.tip.as_str(), icon.hidden, icon.adopted), (0xB00, 3, "NVIDIA Settings", false, false));
+    assert_eq!(icon.pid, 2832);
+}

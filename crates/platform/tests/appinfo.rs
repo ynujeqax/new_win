@@ -104,3 +104,13 @@ fn display_name_of_this_process() {
     assert!(!name.is_empty() && !name.ends_with(".exe"), "{name:?}");
     assert_eq!(newwin_platform::appinfo::process_display_name(0), None);
 }
+
+#[test]
+fn session_processes_include_this_test() {
+    let me = std::env::current_exe().unwrap();
+    let name = me.file_name().unwrap().to_string_lossy().to_string();
+    let procs = newwin_platform::appinfo::session_processes();
+    assert!(procs.iter().any(|(pid, exe)| *pid == std::process::id() && exe.eq_ignore_ascii_case(&name)), "{name}");
+    // A SYSTEM process of our session that we may not open (like the NVIDIA container).
+    assert!(procs.iter().any(|(_, exe)| exe.eq_ignore_ascii_case("csrss.exe")), "csrss.exe of this session");
+}

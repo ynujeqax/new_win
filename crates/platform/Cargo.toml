@@ -44,4 +44,6 @@ windows = { workspace = true, features = [
     "Win32_Networking_WinSock",
     "Win32_System_Registry",
     "Win32_System_Memory",
+    "Win32_System_RemoteDesktop",
+    "Win32_Security",
 ] }

@@ -240,3 +240,34 @@ fn adopted_icons_get_both_right_click_formats() {
     let left: Vec<(usize, isize)> = click_messages(0, true, TrayClick::Left, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect();
     assert_eq!(left, vec![(7, WM_LBUTTONDOWN as isize), (7, WM_LBUTTONUP as isize)], "one left click, never two");
 }
+
+#[test]
+fn finds_a_process_window_by_class() {
+    use newwin_platform::tray_host::find_process_window;
+    let _h = create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "known-icon").unwrap();
+    let me = std::process::id();
+    let found = find_process_window(&[me], "NewWin.Test").expect("our window");
+    let mut pid = 0;
+    unsafe { GetWindowThreadProcessId(found, Some(&mut pid)) };
+    assert_eq!(pid, me);
+    assert_eq!(find_process_window(&[me + 1_000_000], "NewWin.Test"), None, "another process");
+    assert_eq!(find_process_window(&[me], "NewWin.NoSuchClass"), None);
+}
+
+struct Quiet;
+
+impl Handler for Quiet {
+    fn on_message(&mut self, _: HWND, _: u32, _: WPARAM, _: LPARAM) -> Option<LRESULT> {
+        None
+    }
+}
+
+/// The NVIDIA container's icon window is message-only.
+#[test]
+fn finds_a_message_only_window_by_class() {
+    use newwin_platform::tray_host::find_process_window;
+    let spec = WindowSpec { class: "NewWin.MessageOnlyTest", ex_style: WS_EX_TOOLWINDOW, style: WS_POPUP, rect: RECT::default(), layered_alpha: None };
+    let h = create_window(&spec, Rc::new(RefCell::new(Quiet))).unwrap();
+    unsafe { SetParent(h, Some(HWND_MESSAGE)).unwrap() };
+    assert_eq!(find_process_window(&[std::process::id()], "NewWin.MessageOnlyTest"), Some(h));
+}

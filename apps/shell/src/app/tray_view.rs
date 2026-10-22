@@ -1,11 +1,11 @@
 //! The tray panel under `⌃` (spec: M2 §3.1): NewWin, then the apps of our tray host.
 
-use newwin_core::tray::{is_bar_duplicate, row_label};
-use newwin_platform::appinfo::process_display_name;
+use newwin_core::tray::{is_bar_duplicate, missing_known, row_label};
+use newwin_platform::appinfo::{process_display_name, session_processes};
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
 use newwin_platform::launch::shell_execute;
-use newwin_platform::tray_host::{TrayClick, send_click, watch_foreground};
+use newwin_platform::tray_host::{TrayClick, TrayHost, find_process_window, send_click, watch_foreground};
 use newwin_ui::panel::Panel;
 use newwin_ui::popup::PopupStyle;
 use newwin_ui::tray_list::{TrayList, TrayOp, TrayRow, decode_action};
@@ -44,6 +44,7 @@ impl App {
     pub(super) fn open_tray(&mut self) {
         if let Some(h) = &self.tray_host {
             h.prune();
+            restore_known_icons(h);
         }
         let rows = self.tray_rows();
         log::debug!("tray opened: {:?}", rows.iter().map(|r| r.label.as_str()).collect::<Vec<_>>());
@@ -148,6 +149,19 @@ impl App {
         } else if held_tray_closes(change) {
             self.foreground_watch = None;
             self.begin_close_panel();
+        }
+    }
+}
+
+/// Icons of apps that registered with explorer before us and never will with us (NVIDIA): found
+/// by their icon window and put back, so the tray has them and clicks reach the app.
+fn restore_known_icons(h: &TrayHost) {
+    let pids: Vec<u32> = h.icons().iter().map(|i| i.pid).collect();
+    for (k, candidates) in missing_known(&session_processes(), &pids) {
+        if let Some(w) = find_process_window(&candidates, k.window_class) {
+            let mut pid = 0;
+            unsafe { GetWindowThreadProcessId(w, Some(&mut pid)) };
+            h.restore(k, w, pid);
         }
     }
 }
