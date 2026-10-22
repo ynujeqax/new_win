@@ -11,12 +11,13 @@ use newwin_core::watchdog::EXIT_RESTART;
 use newwin_platform::appbar::AppBar;
 use newwin_platform::appinfo::ComGuard;
 use newwin_platform::clock::ui_language_tag;
-use newwin_platform::dpi::primary_monitor;
+use newwin_platform::dpi::{primary_monitor, scale};
 use newwin_platform::paths::taskbar_state_file;
 use newwin_platform::taskbar::{NativeTaskbar, WinEventHookGuard, restore_from_state_file, taskbar_created_message, watch_taskbar_show};
 use newwin_platform::window::{Handler, WindowSpec, create_window, run_message_loop};
 use newwin_platform::windows_watch::{AppNames, WindowWatcher, enumerate_top_level};
 use newwin_platform::worker::{Worker, take_resolved};
+use newwin_ui::backdrop::{Backdrops, Region};
 use newwin_ui::popup::Popup;
 use newwin_ui::{Backdrop, Gfx, Layer, PointF, TextCache, TextLayout};
 use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, FILETIME, GetLastError, HWND, LPARAM, LRESULT, RECT, WPARAM};
@@ -30,6 +31,7 @@ use crate::watchdog::PING_WINDOW_CLASS;
 
 mod apps_view;
 mod clock_view;
+mod glass_regions;
 mod menus;
 mod visibility;
 
@@ -43,6 +45,7 @@ const PBT_APMRESUMEAUTOMATIC: usize = 0x12;
 const WM_APP_TASKBAR_SHOWN: u32 = WM_APP + 1;
 const WM_APP_APPBAR: u32 = WM_APP + 3;
 const WM_APP_NAME: u32 = WM_APP + 4;
+const WM_APP_GLASS: u32 = WM_APP + 6;
 
 /// `PostQuitMessage` code that makes the watchdog start a fresh shell.
 pub const APPS_EXIT_RESTART: i32 = EXIT_RESTART as i32;
@@ -81,6 +84,14 @@ pub struct App {
     overflow_from: Option<usize>,
     hover: Option<Target>,
     popup: Option<(Popup, MenuCtx)>,
+    // Liquid glass
+    backdrops: Option<Backdrops>,
+    /// The regions last sent to the glass thread.
+    glass_sent: Vec<Region>,
+    /// The bar shows a blurred backdrop (else the fallback tint).
+    bar_glass: bool,
+    /// A full-screen app covers the bar.
+    fullscreen: bool,
     // Clock
     date_text: String,
     time_text: String,
@@ -122,10 +133,12 @@ impl App {
         }
         if let Some(layer) = self.bar_layer.as_mut() {
             let _ = layer.resize((r.right - r.left) as u32, (r.bottom - r.top) as u32);
+            let _ = layer.set_corner_radius(scale(self.config.appearance.corner_radius, dpi));
         }
         self.set_catcher(self.catcher_mode);
         self.reserve_space();
         self.refresh();
+        self.sync_glass();
     }
 
     fn reapply_taskbar(&mut self, reinstall_watch: bool) {
@@ -154,6 +167,10 @@ impl App {
         if msg == self.taskbar_created {
             log::info!("explorer restarted, hiding the taskbar again");
             self.reapply_taskbar(true);
+            return Some(LRESULT(0));
+        }
+        if msg == WM_APP_GLASS {
+            self.on_glass(wp, lp);
             return Some(LRESULT(0));
         }
         if msg == WM_APP_NAME {
@@ -334,6 +351,10 @@ fn start() -> Result<Rc<RefCell<App>>> {
         overflow_from: None,
         hover: None,
         popup: None,
+        backdrops: None,
+        glass_sent: Vec::new(),
+        bar_glass: false,
+        fullscreen: false,
         date_text: String::new(),
         time_text: String::new(),
         date_layout: None,
@@ -376,7 +397,10 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.taskbar = Some(NativeTaskbar::hide(&state)?);
         a.show_watch = watch_taskbar_show(ping, WM_APP_TASKBAR_SHOWN).map_err(|e| log::error!("taskbar watch: {e}")).ok();
         a.appbar = AppBar::register(bar, WM_APP_APPBAR).map_err(|e| log::error!("appbar: {e}")).ok();
-        a.bar_layer = Some(Layer::new(&a.gfx, bar, Backdrop::Tint, 1, 1)?);
+        a.bar_layer = Some(Layer::new(&a.gfx, bar, Backdrop::Glass, 1, 1)?);
+        if a.config.appearance.glass {
+            a.backdrops = Some(Backdrops::spawn(ping, WM_APP_GLASS));
+        }
         a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME)));
         a.watcher = Some(WindowWatcher::start(ping)?);
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;

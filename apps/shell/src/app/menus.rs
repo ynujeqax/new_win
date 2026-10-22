@@ -5,7 +5,7 @@ use newwin_core::visibility::VisInput;
 use newwin_platform::activate;
 use newwin_platform::dpi::scale;
 use newwin_platform::launch::{self, SystemTarget};
-use newwin_ui::popup::{CLOSED, MenuItem, PICKED, Popup, PopupStyle};
+use newwin_ui::popup::{CLOSED, MenuItem, PICKED, Popup, PopupStyle, REGIONS};
 use newwin_ui::{PointF, RectF};
 use windows::Win32::Foundation::{LPARAM, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{PostQuitMessage, WM_APP};
@@ -170,6 +170,7 @@ impl App {
     pub(super) fn on_popup(&mut self, wp: WPARAM, lp: LPARAM) {
         match lp.0 {
             PICKED => self.on_pick(wp.0 as u32),
+            REGIONS => self.sync_glass(),
             CLOSED if closes_current(self.popup.as_ref().map(|(p, _)| p.hwnd().0 as isize), wp.0 as isize) => self.close_popup(),
             _ => {}
         }

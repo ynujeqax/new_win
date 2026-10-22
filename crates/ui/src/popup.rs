@@ -2,7 +2,8 @@
 //!
 //! Results are posted to a notify window as `msg`: `lParam` = [`PICKED`] with `wParam` = item id,
 //! or `lParam` = [`CLOSED`] with `wParam` = the root popup's HWND (so a late close of a replaced
-//! menu can be told apart). A popup never destroys itself: the owner drops the [`Popup`] on
+//! menu can be told apart), or `lParam` = [`REGIONS`] (same `wParam`) when a submenu opened or
+//! closed. A popup never destroys itself: the owner drops the [`Popup`] on
 //! `CLOSED` (which always follows a `PICKED`). Submenus never take activation, so the root
 //! keeps keyboard focus and a click anywhere else deactivates it.
 
@@ -16,10 +17,12 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{TME_LEAVE, TRACKMOUSEEVENT, Tr
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
-use crate::{Backdrop, Color, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyle, theme};
+use crate::backdrop::Frame;
+use crate::{Backdrop, Color, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyle, paint_glass, theme};
 
 pub const PICKED: isize = 1;
 pub const CLOSED: isize = 0;
+pub const REGIONS: isize = 2;
 /// Not exported by the `windows` crate.
 const WM_MOUSELEAVE: u32 = 0x02A3;
 
@@ -134,6 +137,8 @@ struct State {
     root: HWND,
     closed: bool,
     child: Option<(usize, Popup)>,
+    /// A blurred backdrop is shown (else the stronger fallback tint).
+    glass: bool,
     font_family: String,
     font_size: f32,
     dpi: u32,
@@ -193,6 +198,7 @@ impl Popup {
             root: root.unwrap_or_default(),
             closed: false,
             child: None,
+            glass: false,
             font_family: style.font_family.clone(),
             font_size: style.font_size_px,
             dpi: style.dpi,
@@ -213,7 +219,9 @@ impl Popup {
             if !is_child {
                 s.root = hwnd;
             }
-            s.layer = Some(Layer::new(gfx, hwnd, Backdrop::Tint, w as u32, h as u32)?);
+            let mut layer = Layer::new(gfx, hwnd, Backdrop::Glass, w as u32, h as u32)?;
+            layer.set_corner_radius((theme::POPUP_RADIUS * style.dpi as f32 / 96.0).round())?;
+            s.layer = Some(layer);
             s.paint();
         }
         unsafe {
@@ -230,6 +238,60 @@ impl Popup {
 
     pub fn hwnd(&self) -> HWND {
         self.hwnd
+    }
+
+    /// This popup's window and its open submenu's, with their screen rectangles.
+    pub fn windows(&self) -> Vec<(HWND, RECT)> {
+        let mut r = RECT::default();
+        unsafe {
+            let _ = GetWindowRect(self.hwnd, &mut r);
+        }
+        let mut out = vec![(self.hwnd, r)];
+        if let Ok(s) = self.state.try_borrow()
+            && let Some((_, child)) = &s.child
+        {
+            out.extend(child.windows());
+        }
+        out
+    }
+
+    /// Shows `frame` under the window `hwnd` (this popup or its submenu).
+    pub fn set_backdrop(&self, hwnd: HWND, frame: &Frame) {
+        let Ok(mut s) = self.state.try_borrow_mut() else { return };
+        if hwnd != self.hwnd {
+            if let Some((_, child)) = &s.child {
+                child.set_backdrop(hwnd, frame);
+            }
+            return;
+        }
+        let mut r = RECT::default();
+        unsafe {
+            let _ = GetWindowRect(self.hwnd, &mut r);
+        }
+        let Some(layer) = s.layer.as_mut() else { return };
+        if let Err(e) = layer.set_backdrop(frame, (r.left, r.top)) {
+            log::error!("popup backdrop failed: {e}");
+            return;
+        }
+        if !s.glass {
+            s.glass = true;
+            s.paint();
+        }
+    }
+
+    /// The screen cannot be captured: fallback look for this popup and its submenu.
+    pub fn set_glass_unavailable(&self) {
+        let Ok(mut s) = self.state.try_borrow_mut() else { return };
+        if let Some(layer) = s.layer.as_mut() {
+            let _ = layer.clear_backdrop();
+        }
+        if s.glass {
+            s.glass = false;
+            s.paint();
+        }
+        if let Some((_, child)) = &s.child {
+            child.set_glass_unavailable();
+        }
     }
 
     pub fn close(self) {}
@@ -255,13 +317,11 @@ impl State {
         let m = self.metrics;
         let r = (theme::POPUP_RADIUS * self.dpi as f32 / 96.0).round();
         let item_r = (theme::POPUP_ITEM_RADIUS * self.dpi as f32 / 96.0).round();
-        let (items, texts, rects, hover, arrow) = (&self.items, &self.texts, &self.rects, self.hover, &self.arrow);
+        let (items, texts, rects, hover, arrow, glass) = (&self.items, &self.texts, &self.rects, self.hover, &self.arrow, self.glass);
         let Some(layer) = self.layer.as_mut() else { return };
         let res = layer.draw(None, |p| {
             let full = RectF::new(0.0, 0.0, w, h);
-            p.fill_round_rect(full, r, theme::TINT);
-            p.fill_round_rect(full, r, theme::POPUP_BG);
-            p.stroke_round_rect(full, r, theme::BORDER, 1.0);
+            paint_glass(p, full, r, glass);
             for (i, it) in items.iter().enumerate() {
                 let rect = rects[i];
                 if it.separator_before && i > 0 {
@@ -325,6 +385,7 @@ impl State {
             if let Some(i) = wants {
                 self.open_child(i);
             }
+            self.post(self.root.0 as usize, REGIONS);
         }
     }
 
@@ -411,8 +472,8 @@ impl Handler for State {
                     if let Some(i) = self.hover {
                         self.activate_item(i);
                     }
-                } else if vk == VK_LEFT.0 {
-                    self.child = None;
+                } else if vk == VK_LEFT.0 && self.child.take().is_some() {
+                    self.post(self.root.0 as usize, REGIONS);
                 }
                 Some(LRESULT(0))
             }

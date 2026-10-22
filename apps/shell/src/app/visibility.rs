@@ -5,7 +5,7 @@ use newwin_core::visibility::{Catcher, Mode, VisCmd, VisConfig, VisInput, Visibi
 use newwin_platform::appbar::{AppBarNotify, parse_appbar_notify};
 use newwin_platform::dpi::scale_px;
 use newwin_platform::fullscreen::foreground_is_fullscreen;
-use newwin_ui::{ease_out_progress, fade, set_offset_opacity, slide_y, theme};
+use newwin_ui::{ease_out_progress, fade, set_offset_opacity, slide_y_both, theme};
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use windows::Win32::UI::Input::KeyboardAndMouse::{TME_LEAVE, TRACKMOUSEEVENT, TrackMouseEvent};
 use windows::Win32::UI::WindowsAndMessaging::*;
@@ -45,6 +45,7 @@ impl App {
         let cmds = vis.handle(input);
         log::debug!("visibility {input:?} -> {:?} {cmds:?}", vis.state());
         self.exec(cmds);
+        self.sync_glass();
     }
 
     fn exec(&mut self, cmds: Vec<VisCmd>) {
@@ -74,6 +75,7 @@ impl App {
                 log::debug!("hide timer: hiding the bar window");
                 self.hide_started = None;
                 let _ = ShowWindow(self.bar, SW_HIDE);
+                self.sync_glass();
             },
             _ => {}
         }
@@ -88,6 +90,8 @@ impl App {
         let hidden = self.hidden_offset();
         let Some(layer) = self.bar_layer.as_mut() else { return };
         let Ok(visual) = layer.visual() else { return };
+        // The blurred backdrop slides the opposite way, so it stays still on screen.
+        let backdrop = layer.backdrop_visual().ok().flatten();
         log::debug!("animate {} (window visible={})", if show { "in" } else { "out" }, unsafe { IsWindowVisible(self.bar) }.as_bool());
         let r = if show {
             // Coming back mid-hide continues from where the hide animation is now, without a jump.
@@ -96,16 +100,16 @@ impl App {
             unsafe {
                 let _ = KillTimer(Some(self.bar), HIDE_WINDOW_TIMER);
                 if !IsWindowVisible(self.bar).as_bool() {
-                    let _ = set_offset_opacity(&self.gfx, &visual, None, hidden, 0.0);
+                    let _ = set_offset_opacity(&self.gfx, &visual, backdrop.as_ref(), hidden, 0.0);
                     let _ = ShowWindow(self.bar, SW_SHOWNOACTIVATE);
                 }
             }
-            slide_y(&self.gfx, &visual, from_y, 0.0, theme::REVEAL_MS)
+            slide_y_both(&self.gfx, &visual, backdrop.as_ref(), from_y, 0.0, theme::REVEAL_MS)
                 .and_then(|_| fade(&self.gfx, &visual, from_opacity, 1.0, theme::REVEAL_MS))
         } else {
             self.hide_started = Some(std::time::Instant::now());
             unsafe { SetTimer(Some(self.bar), HIDE_WINDOW_TIMER, theme::HIDE_MS + 20, None) };
-            slide_y(&self.gfx, &visual, 0.0, hidden, theme::HIDE_MS).and_then(|_| fade(&self.gfx, &visual, 1.0, 0.0, theme::HIDE_MS))
+            slide_y_both(&self.gfx, &visual, backdrop.as_ref(), 0.0, hidden, theme::HIDE_MS).and_then(|_| fade(&self.gfx, &visual, 1.0, 0.0, theme::HIDE_MS))
         };
         if let Err(e) = r {
             log::error!("bar animation failed: {e}");
@@ -194,6 +198,7 @@ impl App {
             AppBarNotify::FullScreen(fs) => {
                 let fs = fs && foreground_is_fullscreen(self.monitor);
                 log::info!("fullscreen app: {fs}");
+                self.fullscreen = fs;
                 if self.config.bar.mode == BarMode::Pinned {
                     // Like the native taskbar: drop below a full-screen app, come back after.
                     unsafe {

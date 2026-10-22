@@ -154,10 +154,10 @@ impl App {
         let a = &self.config.appearance;
         let radius = scale(theme::PILL_RADIUS, dpi).round();
         let active = self.model.active_group();
-        let (items, hover) = (&self.items, self.hover);
+        let (items, hover, glass) = (&self.items, self.hover, self.bar_glass);
         let (date, time, date_x, time_x) = (&self.date_layout, &self.time_layout, self.date_x, self.time_x);
         let r = layer.draw(None, |p: &mut Painter| {
-            paint_background(p, w, h, dpi, a);
+            paint_background(p, w, h, dpi, a, glass);
             for it in items {
                 let is_active = matches!(it.target, Target::Group(g) if Some(g) == active);
                 let is_hover = hover == Some(it.target);

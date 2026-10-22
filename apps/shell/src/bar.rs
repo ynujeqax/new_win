@@ -2,20 +2,16 @@
 
 use newwin_config::Appearance;
 use newwin_platform::dpi::{scale, scale_px};
-use newwin_ui::{Painter, PointF, RectF, TextLayout, TextStyle, theme};
+use newwin_ui::{Painter, PointF, RectF, TextLayout, TextStyle, paint_glass};
 use windows::Win32::Foundation::RECT;
 
 pub fn text_style(a: &Appearance, dpi: u32, weight: u16) -> TextStyle {
     TextStyle { family: a.font_family.clone(), size: scale(a.font_size, dpi), weight }
 }
 
-/// Glass background: dark tint, white overlay, hairline border.
-pub fn paint_background(p: &mut Painter, w: f32, h: f32, dpi: u32, a: &Appearance) {
-    let full = RectF::new(0.0, 0.0, w, h);
-    let r = scale(a.corner_radius, dpi);
-    p.fill_round_rect(full, r, theme::TINT);
-
-    p.stroke_round_rect(full, r, theme::BORDER, 1.0);
+/// Liquid glass over the blurred backdrop (`with_backdrop`) or the plain fallback tint.
+pub fn paint_background(p: &mut Painter, w: f32, h: f32, dpi: u32, a: &Appearance, with_backdrop: bool) {
+    paint_glass(p, RectF::new(0.0, 0.0, w, h), scale(a.corner_radius, dpi), with_backdrop);
 }
 
 /// Text vertically centered in a bar of height `h`.

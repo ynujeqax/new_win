@@ -2,9 +2,6 @@
 
 use crate::Color;
 
-/// Dark base under the glass overlay so white text stays readable over light app content.
-pub const TINT: Color = Color::rgba(18, 18, 20, 0.88);
-pub const BORDER: Color = Color::rgba(255, 255, 255, 0.08);
 pub const TEXT: Color = Color::rgba(0xec, 0xec, 0xec, 1.0);
 pub const TEXT_STRONG: Color = Color::rgba(0xff, 0xff, 0xff, 1.0);
 pub const TEXT_INACTIVE: Color = Color::rgba(0x9a, 0x9a, 0x9a, 1.0);
@@ -18,7 +15,6 @@ pub const PILL_RADIUS: f32 = 7.0;
 pub const PILL_PAD_X: f32 = 9.0;
 pub const ITEM_GAP: f32 = 2.0;
 
-pub const POPUP_BG: Color = Color::rgba(28, 28, 30, 0.78);
 pub const POPUP_RADIUS: f32 = 12.0;
 pub const POPUP_PAD: f32 = 6.0;
 pub const POPUP_ITEM_HEIGHT: f32 = 30.0;
