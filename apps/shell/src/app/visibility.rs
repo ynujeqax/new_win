@@ -15,6 +15,14 @@ use super::App;
 const VIS_TIMER: usize = 1;
 const HIDE_WINDOW_TIMER: usize = 2;
 
+/// After a mouse leave, the pointer still counts as in the hot zone only when it is inside the
+/// zone AND one of our windows is under it. A window on top of the bar (Screen Snipping, a toast)
+/// makes Windows report a leave while the pointer is still over the bar's rectangle; that is a
+/// real leave, or no further mouse message would ever come and the bar would stay shown.
+fn still_in_zone(inside_zone_rect: bool, ours_under_pointer: bool) -> bool {
+    inside_zone_rect && ours_under_pointer
+}
+
 fn contains(r: RECT, p: POINT) -> bool {
     p.x >= r.left && p.x < r.right && p.y >= r.top && p.y < r.bottom
 }
@@ -167,7 +175,9 @@ impl App {
                 return false;
             }
             let on_bar = IsWindowVisible(self.bar).as_bool() && contains(self.bar_rect, p);
-            on_bar || self.catcher_rect(self.catcher_mode).is_some_and(|r| contains(r, p))
+            let inside = on_bar || self.catcher_rect(self.catcher_mode).is_some_and(|r| contains(r, p));
+            let under = WindowFromPoint(p);
+            still_in_zone(inside, under == self.bar || under == self.catcher)
         }
     }
 
@@ -213,5 +223,19 @@ impl App {
             }
             AppBarNotify::Other => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::still_in_zone;
+
+    #[test]
+    fn a_window_covering_the_bar_counts_as_leaving() {
+        // Screen Snipping over the bar: pointer inside the zone rect, but not over our window.
+        assert!(!still_in_zone(true, false));
+        assert!(still_in_zone(true, true));
+        assert!(!still_in_zone(false, true));
+        assert!(!still_in_zone(false, false));
     }
 }
