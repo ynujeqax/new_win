@@ -10,6 +10,7 @@ pub mod items;
 pub mod layout;
 pub mod network;
 pub mod spotlight;
+pub mod steam;
 pub mod strings;
 pub mod text_edit;
 pub mod tray;

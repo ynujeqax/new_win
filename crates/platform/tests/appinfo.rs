@@ -114,3 +114,17 @@ fn session_processes_include_this_test() {
     // A SYSTEM process of our session that we may not open (like the NVIDIA container).
     assert!(procs.iter().any(|(_, exe)| exe.eq_ignore_ascii_case("csrss.exe")), "csrss.exe of this session");
 }
+
+#[test]
+fn a_steam_game_is_named_as_in_its_library_manifest() {
+    let lib = std::env::temp_dir().join(format!("newwin-steam-{}", std::process::id()));
+    let game = lib.join(r"steamapps\common\Counter-Strike Global Offensive\game\bin\win64");
+    std::fs::create_dir_all(&game).unwrap();
+    std::fs::write(lib.join(r"steamapps\appmanifest_730.acf"), "\"AppState\"\n{\n\t\"name\"\t\t\"Counter-Strike 2\"\n\t\"installdir\"\t\t\"Counter-Strike Global Offensive\"\n}\n").unwrap();
+    let exe = game.join("cs2.exe").to_string_lossy().to_lowercase();
+    assert_eq!(steam_game_name(&exe).as_deref(), Some("Counter-Strike 2"));
+    assert_eq!(resolve_name(&GroupKey::exe(&exe), None, None), "Counter-Strike 2");
+    let other = lib.join(r"steamapps\common\Terraria\Terraria.exe").to_string_lossy().into_owned();
+    assert_eq!(steam_game_name(&other), None);
+    let _ = std::fs::remove_dir_all(&lib);
+}

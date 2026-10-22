@@ -206,8 +206,20 @@ pub fn placeholder_name(key: &GroupKey, exe: Option<&str>) -> String {
     }
 }
 
+/// The store name of a Steam game exe, from its library's `appmanifest_*.acf`.
+pub fn steam_game_name(exe: &str) -> Option<String> {
+    let (steamapps, installdir) = newwin_core::steam::game_dir(exe)?;
+    std::fs::read_dir(steamapps).ok()?.flatten().find_map(|e| {
+        let file = e.file_name().to_string_lossy().to_ascii_lowercase();
+        if !(file.starts_with("appmanifest_") && file.ends_with(".acf")) {
+            return None;
+        }
+        newwin_core::steam::manifest_name(&std::fs::read_to_string(e.path()).ok()?, installdir)
+    })
+}
+
 /// Display name for a group: Start menu name, then (app ids only) the window's relaunch name,
-/// then the exe's FileDescription, then the placeholder.
+/// then a Steam game's store name, then the exe's FileDescription, then the placeholder.
 pub fn resolve_name(key: &GroupKey, exe: Option<&str>, relaunch_name: Option<&str>) -> String {
     let from_shell = match key {
         GroupKey::AppId(id) => appsfolder_display_name(id),
@@ -219,6 +231,7 @@ pub fn resolve_name(key: &GroupKey, exe: Option<&str>, relaunch_name: Option<&st
     };
     from_shell
         .or_else(|| relaunch_name.and_then(relaunch_display_name))
+        .or_else(|| exe_path.and_then(steam_game_name))
         .or_else(|| exe_path.and_then(file_description))
         .unwrap_or_else(|| placeholder_name(key, exe))
 }
