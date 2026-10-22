@@ -55,6 +55,12 @@ fn tint_only_layers_have_no_backdrop_visual() {
 }
 
 #[test]
+fn glass_rim_has_no_bright_top_glare() {
+    // The user rejected the 2010-style white glare along the top edge.
+    assert!(newwin_ui::theme::GLASS_RIM.iter().all(|(_, c)| c.a <= 0.16), "{:?}", newwin_ui::theme::GLASS_RIM);
+}
+
+#[test]
 fn glass_tint_depends_on_backdrop() {
     assert_eq!(glass_tint(true).a, 0.55);
     assert_eq!(glass_tint(false).a, 0.88);
