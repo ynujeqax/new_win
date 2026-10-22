@@ -37,11 +37,12 @@ mod glass_regions;
 mod menus;
 mod panels;
 mod right_view;
+mod tray_view;
 mod visibility;
 
 use apps_view::{BarItem, Button, Target};
 use menus::{MenuCtx, WM_APP_POPUP};
-use panels::ShellPanel;
+use panels::{ShellPanel, WM_APP_PANEL};
 use right_view::RightView;
 
 /// Not exported by the `windows` crate.
@@ -77,6 +78,10 @@ pub struct App {
     tray_host: Option<TrayHost>,
     reorder_watch: Option<WinEventHookGuard>,
     last_announce: Option<std::time::Instant>,
+    /// The icon behind each app row of the open tray panel.
+    tray_keys: Vec<newwin_core::tray::IconKey>,
+    /// Fallback row names by process id.
+    tray_names: std::collections::HashMap<u32, String>,
     ping: HWND,
     bar: HWND,
     bar_layer: Option<Layer>,
@@ -217,9 +222,6 @@ impl App {
         self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
     }
 
-    /// The tray model changed (`wParam` = `Change`); the tray panel arrives in Task 9.
-    fn on_tray_changed(&mut self, _change: usize) {}
-
     fn restore_taskbar(&mut self) {
         // Apps go back to explorer, and restoring talks to explorer directly.
         self.reorder_watch = None;
@@ -300,6 +302,10 @@ impl App {
             }
             WM_APP_POPUP => {
                 self.on_popup(wp, lp);
+                Some(LRESULT(0))
+            }
+            WM_APP_PANEL => {
+                self.on_panel(wp, lp);
                 Some(LRESULT(0))
             }
             WM_APP_APPBAR => {
@@ -418,6 +424,8 @@ fn start() -> Result<Rc<RefCell<App>>> {
         tray_host: None,
         reorder_watch: None,
         last_announce: None,
+        tray_keys: Vec::new(),
+        tray_names: std::collections::HashMap::new(),
         ping: HWND::default(),
         bar: HWND::default(),
         bar_layer: None,

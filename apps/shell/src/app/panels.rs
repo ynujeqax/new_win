@@ -1,23 +1,95 @@
 //! Glass panels hanging from the bar (spec: M2 §3); at most one is open, never with a menu.
 
 use newwin_core::visibility::VisInput;
+use newwin_platform::clock::now_ms;
 use newwin_ui::GlassWindow;
+use newwin_ui::panel::Panel;
+use newwin_ui::popup::{CLOSED, PICKED};
+use newwin_ui::tray_list::TrayList;
+use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+use windows::Win32::UI::WindowsAndMessaging::WM_APP;
 
 use super::App;
+use super::apps_view::Target;
 
-/// The open panel; variants arrive with their contents (tray, volume).
-pub(super) enum ShellPanel {}
+pub(super) const WM_APP_PANEL: u32 = WM_APP + 11;
+
+/// The open panel.
+pub(super) enum ShellPanel {
+    Tray(Panel<TrayList>),
+}
 
 impl ShellPanel {
     pub(super) fn glass(&self) -> &dyn GlassWindow {
-        match *self {}
+        match self {
+            ShellPanel::Tray(p) => p,
+        }
+    }
+
+    pub(super) fn hwnd(&self) -> HWND {
+        match self {
+            ShellPanel::Tray(p) => p.hwnd(),
+        }
+    }
+
+    /// The bar item the panel hangs from (a second click on it closes the panel).
+    pub(super) fn anchor(&self) -> Target {
+        match self {
+            ShellPanel::Tray(_) => Target::Tray,
+        }
+    }
+
+    fn close(&self) {
+        match self {
+            ShellPanel::Tray(p) => p.close(),
+        }
     }
 }
 
 impl App {
+    /// Drops the panel at once (another menu or panel replaces it).
     pub(super) fn close_panel(&mut self) {
-        if self.panel.take().is_some() {
-            self.feed(VisInput::OverlayClosed);
+        if let Some(p) = self.panel.take() {
+            self.panel_gone(p.anchor());
+        }
+    }
+
+    /// Plays the panel's closing animation; `CLOSED` follows and drops it.
+    pub(super) fn begin_close_panel(&mut self) {
+        let Some(p) = &self.panel else { return };
+        p.close();
+        if p.anchor() == Target::Tray {
+            self.right.chevron_turn.to(0.0, now_ms(), newwin_ui::theme::HOVER_GLIDE_MS);
+            self.paint();
+        }
+    }
+
+    fn panel_gone(&mut self, anchor: Target) {
+        self.feed(VisInput::OverlayClosed);
+        if anchor == Target::Tray {
+            self.right.chevron_turn.to(0.0, now_ms(), newwin_ui::theme::HOVER_GLIDE_MS);
+        }
+        self.sync_glass();
+        self.paint();
+    }
+
+    pub(super) fn open_panel(&mut self, p: ShellPanel) {
+        self.close_popup();
+        self.close_panel();
+        self.panel = Some(p);
+        self.feed(VisInput::OverlayOpened);
+        self.sync_glass();
+    }
+
+    pub(super) fn on_panel(&mut self, wp: WPARAM, lp: LPARAM) {
+        match lp.0 {
+            PICKED => {
+                if let Some(Target::Tray) = self.panel.as_ref().map(ShellPanel::anchor) {
+                    self.on_tray_action(wp.0 as u32);
+                }
+            }
+            CLOSED if self.panel.as_ref().map(|p| p.hwnd().0 as usize) == Some(wp.0) => self.close_panel(),
+            _ => {}
         }
     }
 

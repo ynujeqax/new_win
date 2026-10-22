@@ -222,3 +222,16 @@ pub fn resolve_name(key: &GroupKey, exe: Option<&str>, relaunch_name: Option<&st
         .or_else(|| exe_path.and_then(file_description))
         .unwrap_or_else(|| placeholder_name(key, exe))
 }
+
+/// A tray row's fallback name: the exe's `FileDescription`, else its file name without `.exe`.
+pub fn process_display_name(pid: u32) -> Option<String> {
+    if pid == 0 {
+        return None;
+    }
+    let path = process_image_path(pid)?;
+    file_description(&path).or_else(|| {
+        let file = path.rsplit(['\\', '/']).next()?;
+        let stem = file.strip_suffix(".exe").or_else(|| file.strip_suffix(".EXE")).unwrap_or(file);
+        (!stem.is_empty()).then(|| stem.to_string())
+    })
+}

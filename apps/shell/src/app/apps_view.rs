@@ -213,6 +213,14 @@ impl App {
         );
         // A click on the item whose menu is open just closes it (toggle).
         self.hide_tooltip();
+        // The bar never takes focus, so a click on it does not close a panel by itself.
+        if let Some(p) = &self.panel {
+            let same = target.map(|t| t.0) == Some(p.anchor());
+            self.begin_close_panel();
+            if same {
+                return;
+            }
+        }
         let toggled = self.popup.as_ref().is_some_and(|(_, ctx)| target.map(|t| t.0) == ctx.anchor_target() && button != Button::Middle);
         self.close_popup();
         if toggled {
@@ -224,6 +232,7 @@ impl App {
             (Some((Target::Group(g), rect)), Button::Right) => self.open_app_menu(g, rect),
             (Some((Target::Overflow, rect)), Button::Left | Button::Right) => self.open_overflow_menu(rect),
             (Some((Target::Right(item), _)), b) => self.on_right_click(item, b),
+            (Some((Target::Tray, _)), Button::Left) => self.open_tray(),
             (None, Button::Right) => self.open_bar_menu(p),
             _ => {}
         }

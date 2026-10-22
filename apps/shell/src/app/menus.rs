@@ -56,6 +56,8 @@ pub(super) enum MenuCtx {
     AppMenu { group: usize, key: GroupKey, windows: Vec<Hwnd> },
     Overflow { groups: Vec<usize> },
     BarMenu,
+    /// Right click on the NewWin row of the tray.
+    NewWinMenu,
 }
 
 impl MenuCtx {
@@ -64,7 +66,7 @@ impl MenuCtx {
         match self {
             MenuCtx::WindowList { group, .. } | MenuCtx::AppMenu { group, .. } => Some(Target::Group(*group)),
             MenuCtx::Overflow { .. } => Some(Target::Overflow),
-            MenuCtx::BarMenu => None,
+            MenuCtx::BarMenu | MenuCtx::NewWinMenu => None,
         }
     }
 }
@@ -168,6 +170,17 @@ impl App {
         self.open(items, self.anchor_below(at.x), MenuCtx::BarMenu);
     }
 
+    /// Settings… · Restart NewWin · Quit NewWin, at `at` (screen px).
+    pub(super) fn open_newwin_menu(&mut self, at: PointF) {
+        let s = self.strings;
+        let items = vec![
+            MenuItem::new(NEWWIN_SETTINGS, s.settings_ellipsis),
+            MenuItem::new(RESTART_NEWWIN, s.restart_newwin).separator(),
+            MenuItem::new(QUIT, s.quit),
+        ];
+        self.open(items, at, MenuCtx::NewWinMenu);
+    }
+
     pub(super) fn on_popup(&mut self, wp: WPARAM, lp: LPARAM) {
         match lp.0 {
             PICKED => self.on_pick(wp.0 as u32),
@@ -200,7 +213,8 @@ impl App {
                     self.run_click(action, rect);
                 }
             }
-            MenuCtx::BarMenu => match id {
+            MenuCtx::BarMenu | MenuCtx::NewWinMenu => match id {
+                NEWWIN_SETTINGS => self.open_settings_file(),
                 RESTART_NEWWIN => {
                     log::info!("restart requested from the menu");
                     unsafe { PostQuitMessage(APPS_EXIT_RESTART) };

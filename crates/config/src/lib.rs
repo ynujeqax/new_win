@@ -193,3 +193,16 @@ pub fn default_path() -> PathBuf {
     let base = std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
     base.join("NewWin").join("config.toml")
 }
+
+/// Writes the default settings to `path` unless a file is already there (to open it for
+/// editing before the settings window exists).
+pub fn write_default_if_missing(path: &Path) -> std::io::Result<()> {
+    if path.exists() {
+        return Ok(());
+    }
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let body = toml::to_string_pretty(&Config::default()).map_err(std::io::Error::other)?;
+    std::fs::write(path, format!("# NewWin settings: changes apply when NewWin restarts.\n\n{body}"))
+}

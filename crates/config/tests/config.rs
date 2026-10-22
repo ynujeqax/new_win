@@ -89,3 +89,16 @@ fn glass_flag_defaults_on_and_old_opacity_is_ignored() {
     assert!(old.appearance.glass);
     assert_eq!(old.appearance.height, 32);
 }
+
+#[test]
+fn write_default_if_missing_creates_once() {
+    let dir = std::env::temp_dir().join(format!("newwin-cfg-test-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let path = dir.join("sub").join("config.toml");
+    newwin_config::write_default_if_missing(&path).unwrap();
+    assert_eq!(newwin_config::load(&path).unwrap(), newwin_config::Config::default());
+    std::fs::write(&path, "[bar]\nmode = \"pinned\"\n").unwrap();
+    newwin_config::write_default_if_missing(&path).unwrap();
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), "[bar]\nmode = \"pinned\"\n", "an existing file is left alone");
+    let _ = std::fs::remove_dir_all(&dir);
+}

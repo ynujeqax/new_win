@@ -97,3 +97,10 @@ fn describe_own_window() {
     assert!(describe(hwnd.0 as u64, &mut names).is_none());
     let _ = HWND::default();
 }
+
+#[test]
+fn display_name_of_this_process() {
+    let name = newwin_platform::appinfo::process_display_name(std::process::id()).expect("a name");
+    assert!(!name.is_empty() && !name.ends_with(".exe"), "{name:?}");
+    assert_eq!(newwin_platform::appinfo::process_display_name(0), None);
+}

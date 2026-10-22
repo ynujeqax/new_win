@@ -31,6 +31,13 @@ pub struct Strings {
     pub newwin_settings: &'static str,
     pub restart_newwin: &'static str,
     pub quit: &'static str,
+    // Tray, volume and network (M2)
+    pub settings_ellipsis: &'static str,
+    pub no_background_apps: &'static str,
+    pub no_output_devices: &'static str,
+    pub sound_settings: &'static str,
+    pub not_connected: &'static str,
+    pub no_internet: &'static str,
 }
 
 static EN: Strings = Strings {
@@ -61,6 +68,12 @@ static EN: Strings = Strings {
     newwin_settings: "NewWin settings…",
     restart_newwin: "Restart NewWin",
     quit: "Quit NewWin",
+    settings_ellipsis: "Settings…",
+    no_background_apps: "No background apps",
+    no_output_devices: "No output devices",
+    sound_settings: "Sound settings…",
+    not_connected: "Not connected",
+    no_internet: "No internet",
 };
 
 static UK: Strings = Strings {
@@ -91,6 +104,12 @@ static UK: Strings = Strings {
     newwin_settings: "Налаштування NewWin…",
     restart_newwin: "Перезапустити NewWin",
     quit: "Вийти з NewWin",
+    settings_ellipsis: "Налаштування…",
+    no_background_apps: "Немає фонових програм",
+    no_output_devices: "Немає пристроїв виводу",
+    sound_settings: "Налаштування звуку…",
+    not_connected: "Немає підключення",
+    no_internet: "Без інтернету",
 };
 
 /// `lang_tag` is a BCP-47 tag such as `en-US` or `uk-UA`.
