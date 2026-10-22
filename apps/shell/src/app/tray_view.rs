@@ -1,6 +1,6 @@
 //! The tray panel under `⌃` (spec: M2 §3.1): NewWin, then the apps of our tray host.
 
-use newwin_core::tray::row_label;
+use newwin_core::tray::{is_bar_duplicate, row_label};
 use newwin_platform::appinfo::process_display_name;
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
@@ -22,7 +22,7 @@ impl App {
         let icons = self.tray_host.as_ref().map(|h| h.icons()).unwrap_or_default();
         let mut rows = vec![TrayRow { label: "NewWin".into(), header: true }];
         self.tray_keys.clear();
-        for icon in icons.iter().filter(|i| !i.hidden) {
+        for icon in icons.iter().filter(|i| !i.hidden && !is_bar_duplicate(&i.key)) {
             let name = self.tray_names.entry(icon.pid).or_insert_with(|| process_display_name(icon.pid).unwrap_or_default());
             let label = row_label(&icon.tip, name);
             if label.is_empty() {

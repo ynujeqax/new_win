@@ -331,16 +331,23 @@ fn makelparam(lo: u32, hi: u32) -> LPARAM {
 /// The callback messages explorer sends for a click, in order, as (wParam, lParam).
 /// Version 4: button down, button up, then `NIN_SELECT` / `WM_CONTEXTMENU` (event and icon id in
 /// lParam, the anchor point in wParam); a keyboard pick is `NIN_KEYSELECT` alone. Older versions:
-/// the plain button messages with the icon id in wParam.
-pub fn click_messages(version: u32, click: TrayClick, id: u32, at: POINT) -> Vec<(WPARAM, LPARAM)> {
+/// the plain button messages with the icon id in wParam (plus `WM_CONTEXTMENU` for a right click on
+/// an `adopted` icon, whose version is unknown).
+pub fn click_messages(version: u32, adopted: bool, click: TrayClick, id: u32, at: POINT) -> Vec<(WPARAM, LPARAM)> {
     let (down, up) = match click {
         TrayClick::Right => (WM_RBUTTONDOWN, WM_RBUTTONUP),
         TrayClick::Left | TrayClick::Key => (WM_LBUTTONDOWN, WM_LBUTTONUP),
     };
-    if version < 4 {
-        return vec![(WPARAM(id as usize), LPARAM(down as isize)), (WPARAM(id as usize), LPARAM(up as isize))];
-    }
     let wp = WPARAM(((at.x as u16 as u32) | ((at.y as u16 as u32) << 16)) as usize);
+    if version < 4 {
+        let mut out = vec![(WPARAM(id as usize), LPARAM(down as isize)), (WPARAM(id as usize), LPARAM(up as isize))];
+        // The version is unknown for an adopted icon: a version 4 app opens its menu on
+        // WM_CONTEXTMENU only. One left click is enough for both (two would toggle twice).
+        if adopted && matches!(click, TrayClick::Right) {
+            out.push((wp, makelparam(WM_CONTEXTMENU, id)));
+        }
+        return out;
+    }
     match click {
         TrayClick::Key => vec![(wp, makelparam(NIN_KEYSELECT, id))],
         TrayClick::Left => vec![(wp, makelparam(down, id)), (wp, makelparam(up, id)), (wp, makelparam(NIN_SELECT, id))],
@@ -361,7 +368,7 @@ pub fn send_click(icon: &TrayIcon, click: TrayClick, at: POINT) {
     }
     unsafe {
         let _ = windows::Win32::UI::WindowsAndMessaging::AllowSetForegroundWindow(icon.pid);
-        for (wp, lp) in click_messages(icon.version, click, id, at) {
+        for (wp, lp) in click_messages(icon.version, icon.adopted, click, id, at) {
             let _ = PostMessageW(Some(hwnd), cb, wp, lp);
         }
     }

@@ -157,3 +157,22 @@ fn match_ranges_are_utf16_and_case_insensitive() {
     assert_eq!(match_range("Steam", "x"), None);
     assert_eq!(match_range("😀 Discord", "dis"), Some((3, 3)));
 }
+
+/// Explorer registers its own volume and network icons; the bar already shows both.
+#[test]
+fn explorer_volume_and_network_icons_are_bar_duplicates() {
+    let volume: u128 = "207834616086241708723547713941425663603".parse().unwrap();
+    let safely_remove: u128 = "207834616086241708723547713941425663608".parse().unwrap();
+    assert!(is_bar_duplicate(&IconKey::Guid(volume)));
+    assert!(is_bar_duplicate(&IconKey::Guid(volume + 1)), "network is 7820AE74");
+    assert!(!is_bar_duplicate(&IconKey::Guid(safely_remove)));
+    assert!(!is_bar_duplicate(&IconKey::Id { hwnd: 1, id: 1 }));
+}
+
+#[test]
+fn icons_taken_from_an_update_are_marked_adopted() {
+    let mut m = TrayModel::default();
+    m.apply(&parse_notify(&nid(1, FULL, 9, 3, NIF_MESSAGE, 0x8001, "", (0, 0), 0, None)).unwrap(), 1);
+    add(&mut m, 2, 1, "B");
+    assert_eq!(m.icons().iter().map(|i| i.adopted).collect::<Vec<_>>(), [true, false]);
+}

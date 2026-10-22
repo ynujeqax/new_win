@@ -132,6 +132,9 @@ pub struct TrayIcon {
     pub tip: String,
     pub version: u32,
     pub hidden: bool,
+    /// Taken over from an update (`NIM_MODIFY`): its `NIM_SETVERSION` went to an earlier tray, so
+    /// the version is unknown.
+    pub adopted: bool,
     /// Order of addition.
     pub seq: u64,
 }
@@ -186,6 +189,7 @@ impl TrayModel {
                     tip: String::new(),
                     version: 0,
                     hidden: false,
+                    adopted: d.command == TrayCommand::Modify,
                     seq: self.next_seq,
                 };
                 icon.update(d);
@@ -254,4 +258,14 @@ pub fn match_range(label: &str, query: &str) -> Option<(usize, usize)> {
     let start = (0..=hay.len().checked_sub(needle.len())?).find(|&i| needle.iter().zip(&hay[i..]).all(|(&n, &h)| same(n, h)))?;
     let units = |cs: &[char]| cs.iter().map(|c| c.len_utf16()).sum::<usize>();
     Some((units(&hay[..start]), units(&hay[start..start + needle.len()])))
+}
+
+/// Explorer's own volume and network icons ({7820AE73-…} and {7820AE74-…}, as read from the
+/// message): the bar shows both itself, so the tray leaves them out.
+pub fn is_bar_duplicate(key: &IconKey) -> bool {
+    const TAIL: [u8; 12] = [0xe3, 0x23, 0x29, 0x42, 0x82, 0xc1, 0xe4, 0x1c, 0xb6, 0x7d, 0x5b, 0x9c];
+    let IconKey::Guid(g) = key else { return false };
+    let b = g.to_le_bytes();
+    let data1 = u32::from_le_bytes([b[0], b[1], b[2], b[3]]);
+    b[4..] == TAIL && matches!(data1, 0x7820_ae73 | 0x7820_ae74)
 }

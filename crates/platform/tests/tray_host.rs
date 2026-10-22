@@ -221,10 +221,22 @@ fn clicks_follow_explorers_sequence() {
     let at = POINT { x: 100, y: 50 };
     let xy = (50 << 16) | 100;
     let lp = |m: u32| ((7u32 << 16) | m) as isize;
-    let v4 = |c| click_messages(4, c, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect::<Vec<_>>();
+    let v4 = |c| click_messages(4, false, c, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect::<Vec<_>>();
     assert_eq!(v4(TrayClick::Left), vec![(xy, lp(WM_LBUTTONDOWN)), (xy, lp(WM_LBUTTONUP)), (xy, lp(WM_USER))]);
     assert_eq!(v4(TrayClick::Right), vec![(xy, lp(WM_RBUTTONDOWN)), (xy, lp(WM_RBUTTONUP)), (xy, lp(WM_CONTEXTMENU))]);
     assert_eq!(v4(TrayClick::Key), vec![(xy, lp(WM_USER + 1))]);
-    let old: Vec<(usize, isize)> = click_messages(0, TrayClick::Left, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect();
+    let old: Vec<(usize, isize)> = click_messages(0, false, TrayClick::Left, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect();
     assert_eq!(old, vec![(7, WM_LBUTTONDOWN as isize), (7, WM_LBUTTONUP as isize)]);
+}
+
+/// An icon taken over from an update has an unknown version: right click in both formats.
+#[test]
+fn adopted_icons_get_both_right_click_formats() {
+    use newwin_platform::tray_host::{TrayClick, click_messages};
+    use windows::Win32::Foundation::POINT;
+    let at = POINT { x: 100, y: 50 };
+    let got: Vec<(usize, isize)> = click_messages(0, true, TrayClick::Right, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect();
+    assert_eq!(got, vec![(7, WM_RBUTTONDOWN as isize), (7, WM_RBUTTONUP as isize), ((50 << 16) | 100, ((7 << 16) | WM_CONTEXTMENU) as isize)]);
+    let left: Vec<(usize, isize)> = click_messages(0, true, TrayClick::Left, 7, at).iter().map(|(w, l)| (w.0, l.0)).collect();
+    assert_eq!(left, vec![(7, WM_LBUTTONDOWN as isize), (7, WM_LBUTTONUP as isize)], "one left click, never two");
 }
