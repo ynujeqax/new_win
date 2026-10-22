@@ -86,6 +86,7 @@ impl App {
     }
 
     fn open(&mut self, items: Vec<MenuItem>, anchor: PointF, ctx: MenuCtx) {
+        self.close_panel();
         match Popup::show(&self.gfx, items, anchor, &self.popup_style(), self.bar, WM_APP_POPUP) {
             Ok(p) => {
                 self.popup = Some((p, ctx));

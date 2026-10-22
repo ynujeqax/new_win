@@ -11,8 +11,10 @@ pub mod icons;
 mod gfx;
 mod layer;
 mod paint;
+pub mod panel;
 pub mod popup;
 mod text;
+pub mod tooltip;
 pub mod theme;
 
 pub use anim::{ease_out_progress, fade, set_offset_opacity, slide_y, slide_y_both};
@@ -21,4 +23,5 @@ pub use glass::{glass_tint, paint_glass};
 pub use gfx::Gfx;
 pub use layer::{Backdrop, Layer};
 pub use paint::Painter;
+pub use panel::GlassWindow;
 pub use text::{TextCache, TextLayout, TextStyle};

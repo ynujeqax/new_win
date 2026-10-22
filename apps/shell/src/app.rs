@@ -20,6 +20,7 @@ use newwin_platform::windows_watch::{AppNames, WindowWatcher, enumerate_top_leve
 use newwin_platform::worker::{Worker, take_resolved};
 use newwin_ui::backdrop::{Backdrops, Region};
 use newwin_ui::popup::Popup;
+use newwin_ui::tooltip::Tooltip;
 use newwin_ui::{Backdrop, Gfx, Layer, PointF, TextCache, TextLayout};
 use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, FILETIME, GetLastError, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::System::SystemInformation::GetSystemTimePreciseAsFileTime;
@@ -34,10 +35,12 @@ mod apps_view;
 mod clock_view;
 mod glass_regions;
 mod menus;
+mod panels;
 mod visibility;
 
 use apps_view::{BarItem, Button, Target};
 use menus::{MenuCtx, WM_APP_POPUP};
+use panels::ShellPanel;
 
 /// Not exported by the `windows` crate.
 const WM_MOUSELEAVE: u32 = 0x02A3;
@@ -98,6 +101,8 @@ pub struct App {
     overflow_from: Option<usize>,
     hover: Option<Target>,
     popup: Option<(Popup, MenuCtx)>,
+    panel: Option<ShellPanel>,
+    tooltip: Option<Tooltip>,
     // Liquid glass
     backdrops: Option<Backdrops>,
     /// The regions last sent to the glass thread.
@@ -433,6 +438,8 @@ fn start() -> Result<Rc<RefCell<App>>> {
         overflow_from: None,
         hover: None,
         popup: None,
+        panel: None,
+        tooltip: None,
         backdrops: None,
         glass_sent: Vec::new(),
         bar_glass: false,

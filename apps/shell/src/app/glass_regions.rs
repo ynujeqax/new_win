@@ -4,7 +4,6 @@ use newwin_core::glass::PxRect;
 use newwin_core::visibility::VisInput;
 use newwin_platform::dpi::scale;
 use newwin_ui::backdrop::{FRAME, Region, UNAVAILABLE, take_frame};
-use newwin_ui::theme;
 use windows::Win32::Foundation::{HWND, LPARAM, RECT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{IsWindow, IsWindowVisible, SetTimer};
 
@@ -27,12 +26,8 @@ impl App {
         let Some(backdrops) = &self.backdrops else { return };
         // Under a full-screen app the bar is covered: no point reading the screen for it.
         let bar_visible = unsafe { IsWindowVisible(self.bar) }.as_bool() && !self.fullscreen;
-        let popup_radius = (theme::POPUP_RADIUS * self.dpi as f32 / 96.0).round();
-        let popups: Vec<(u64, PxRect, f32)> = self
-            .popup
-            .as_ref()
-            .map(|(p, _)| p.windows().into_iter().map(|(h, r)| (id(h), px(r), popup_radius)).collect())
-            .unwrap_or_default();
+        let popups: Vec<(u64, PxRect, f32)> =
+            self.glass_windows().into_iter().flat_map(|g| g.windows().into_iter().map(move |(h, r)| (id(h), px(r), g.radius()))).collect();
         let bar_radius = scale(self.config.appearance.corner_radius, self.dpi);
         // Frozen while a screenshot is taken: the glass is capturable then and must not see itself.
         let wanted = if self.snips.active() {
@@ -78,8 +73,8 @@ impl App {
         if let Some(layer) = self.bar_layer.as_ref() {
             layer.set_capturable(active);
         }
-        if let Some((p, _)) = &self.popup {
-            p.set_capturable(active);
+        for g in self.glass_windows() {
+            g.set_capturable(active);
         }
         if active {
             unsafe { SetTimer(Some(self.bar), SNIP_CHECK_TIMER, 1000, None) };
@@ -103,8 +98,11 @@ impl App {
                         self.bar_glass = true;
                         self.paint();
                     }
-                } else if let Some((p, _)) = &self.popup {
-                    p.set_backdrop(HWND(frame.id as usize as *mut _), &frame);
+                } else {
+                    let hwnd = HWND(frame.id as usize as *mut _);
+                    for g in self.glass_windows() {
+                        g.set_backdrop(hwnd, &frame);
+                    }
                 }
             }
             UNAVAILABLE => {
@@ -114,8 +112,8 @@ impl App {
                 }
                 self.bar_glass = false;
                 self.paint();
-                if let Some((p, _)) = &self.popup {
-                    p.set_glass_unavailable();
+                for g in self.glass_windows() {
+                    g.set_glass_unavailable();
                 }
             }
             _ => {}

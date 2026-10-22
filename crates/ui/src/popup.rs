@@ -308,6 +308,28 @@ impl Popup {
     pub fn close(self) {}
 }
 
+impl crate::GlassWindow for Popup {
+    fn windows(&self) -> Vec<(HWND, RECT)> {
+        Popup::windows(self)
+    }
+
+    fn radius(&self) -> f32 {
+        self.state.try_borrow().map_or(0.0, |s| (theme::POPUP_RADIUS * s.dpi as f32 / 96.0).round())
+    }
+
+    fn set_backdrop(&self, hwnd: HWND, frame: &Frame) {
+        Popup::set_backdrop(self, hwnd, frame);
+    }
+
+    fn set_capturable(&self, on: bool) {
+        Popup::set_capturable(self, on);
+    }
+
+    fn set_glass_unavailable(&self) {
+        Popup::set_glass_unavailable(self);
+    }
+}
+
 impl Drop for Popup {
     fn drop(&mut self) {
         if let Ok(mut s) = self.state.try_borrow_mut() {
