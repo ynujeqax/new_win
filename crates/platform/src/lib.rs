@@ -10,6 +10,7 @@ pub mod launch;
 pub mod log;
 pub mod paths;
 pub mod taskbar;
+pub mod tray_host;
 pub mod window;
 pub mod windows_watch;
 pub mod worker;

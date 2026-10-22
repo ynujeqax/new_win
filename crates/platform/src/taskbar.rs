@@ -173,7 +173,7 @@ static SHOW_NOTIFY: AtomicIsize = AtomicIsize::new(0);
 static SHOW_MSG: AtomicU32 = AtomicU32::new(0);
 
 /// Unhooks on drop.
-pub struct WinEventHookGuard(HWINEVENTHOOK);
+pub struct WinEventHookGuard(pub(crate) HWINEVENTHOOK);
 
 impl Drop for WinEventHookGuard {
     fn drop(&mut self) {
