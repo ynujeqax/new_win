@@ -71,3 +71,8 @@ fn glass_tint_depends_on_backdrop() {
     assert_eq!(glass_tint(true).a, 0.38);
     assert_eq!(glass_tint(false).a, 0.88);
 }
+
+#[test]
+fn the_active_app_pill_is_a_capsule_like_the_bar() {
+    assert_eq!(newwin_ui::theme::PILL_RADIUS * 2.0, newwin_ui::theme::PILL_HEIGHT);
+}
