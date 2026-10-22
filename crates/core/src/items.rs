@@ -5,6 +5,8 @@ pub enum RightItem {
     Layout,
     Network,
     Volume,
+    /// The magnifier: opens Spotlight.
+    Search,
     Date,
     Time,
 }
@@ -15,7 +17,7 @@ impl RightItem {
     }
 }
 
-/// `items.right` from the config; `search` (Spotlight, M3) and unknown names are skipped, and
+/// `items.right` from the config; unknown names are skipped, and
 /// the first occurrence of a name wins.
 pub fn parse_right(names: &[String]) -> Vec<RightItem> {
     let mut out = Vec::new();
@@ -24,6 +26,7 @@ pub fn parse_right(names: &[String]) -> Vec<RightItem> {
             "layout" => RightItem::Layout,
             "network" => RightItem::Network,
             "volume" => RightItem::Volume,
+            "search" => RightItem::Search,
             "date" => RightItem::Date,
             "time" => RightItem::Time,
             _ => continue,

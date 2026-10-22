@@ -6,8 +6,8 @@ fn names(v: &[&str]) -> Vec<String> {
 }
 
 #[test]
-fn parse_skips_search_unknown_and_duplicates() {
-    assert_eq!(parse_right(&names(&["layout", "network", "volume", "search", "date", "time"])), vec![Layout, Network, Volume, Date, Time]);
+fn parse_keeps_search_skips_unknown_and_duplicates() {
+    assert_eq!(parse_right(&names(&["layout", "network", "volume", "search", "date", "time"])), vec![Layout, Network, Volume, Search, Date, Time]);
     assert_eq!(parse_right(&names(&["Time", "bogus", "time", "DATE"])), vec![Time, Date]);
 }
 
@@ -31,4 +31,10 @@ fn no_separator_when_the_clock_comes_first() {
     let (xs, sep) = place_right(&[(Time, 40.0), (Volume, 26.0)], 1000.0, 2.0, 13.0);
     assert_eq!(xs, vec![(Time, 932.0), (Volume, 974.0)]);
     assert_eq!(sep, None);
+}
+
+#[test]
+fn search_is_a_status_item_before_the_separator() {
+    let (xs, sep) = place_right(&[(Volume, 26.0), (Search, 26.0), (Date, 80.0), (Time, 40.0)], 1000.0, 2.0, 13.0);
+    assert!(sep.is_some_and(|s| s > xs[1].1 + 26.0 && s < xs[2].1), "the separator sits between Search and the date: {xs:?} {sep:?}");
 }

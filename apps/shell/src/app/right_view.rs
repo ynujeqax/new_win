@@ -171,6 +171,9 @@ impl RightView {
                         }
                     }
                 }
+                RightItem::Search => {
+                    icons::magnifier(p, PointF { x: r.x + r.w / 2.0, y: h / 2.0 }, s(16.0), lit(Target::Right(RightItem::Search)), stroke);
+                }
                 RightItem::Network => {
                     if let Some(n) = &self.net {
                         n.paint(p, PointF { x: r.x + r.w / 2.0, y: h / 2.0 }, s(18.0), lit(Target::Right(RightItem::Network)), stroke, now);
@@ -201,6 +204,7 @@ impl App {
             RightItem::Time => self.right.time.as_ref().map(|t| t.width() + 2.0 * pad),
             RightItem::Volume => self.right.speaker.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Network => self.right.net.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
+            RightItem::Search => Some(scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Layout => self.right.lang.as_ref().and_then(|l| l.text.as_ref()).map(|t| t.width() + 2.0 * pad),
         }
     }
@@ -245,6 +249,7 @@ impl App {
             RightItem::Network => self.network_tooltip(),
             RightItem::Layout => self.layout_tooltip(),
             RightItem::Time => None,
+            RightItem::Search => Some(self.strings.search.to_string()),
         }
     }
 
@@ -305,6 +310,7 @@ impl App {
             (RightItem::Volume, Button::Left) => self.toggle_volume_panel(),
             (RightItem::Volume, Button::Middle) => self.toggle_mute(),
             (RightItem::Layout, Button::Left) => self.switch_layout(),
+            (RightItem::Search, Button::Left) => self.toggle_spotlight(),
             (RightItem::Network, Button::Left) => {
                 if let Err(e) = newwin_platform::launch::shell_execute("open", "ms-settings:network", "") {
                     log::error!("network settings: {e}");
