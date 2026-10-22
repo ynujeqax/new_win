@@ -186,3 +186,47 @@ fn refresh_rebuilds_the_capture_on_display_changes() {
     let frames = s.pump(Duration::from_secs(2));
     assert!(frames.iter().any(|f| near(center(f), [0, 255, 0])), "no green frame after refresh");
 }
+
+/// Spotlight opens with the bar hidden (no regions): building a D3D device takes 75–130 ms,
+/// longer than its show animation, so the device outlives an empty set and only the duplication
+/// is rebuilt.
+#[test]
+fn a_reopened_region_reuses_the_device() {
+    let s = Scene::new();
+    let b = Backdrops::spawn(s.notify, MSG_GLASS);
+    b.set_regions(vec![Scene::region()]);
+    assert!(s.first_frame(Duration::from_secs(3)).is_some());
+    b.set_regions(vec![]);
+    s.pump(Duration::from_millis(200));
+    b.set_regions(vec![Scene::region()]);
+    let reopened = Instant::now();
+    assert!(s.first_frame(Duration::from_secs(3)).is_some(), "a frame after reopening");
+    eprintln!("reopened frame after {} ms", reopened.elapsed().as_millis());
+    assert_eq!(b.devices_built(), 1);
+}
+
+#[test]
+fn warm_builds_the_device_ahead() {
+    let s = Scene::new();
+    let b = Backdrops::spawn(s.notify, MSG_GLASS);
+    assert_eq!(b.devices_built(), 0, "nothing is built while no glass is wanted");
+    b.warm();
+    s.pump(Duration::from_millis(400));
+    assert_eq!(b.devices_built(), 1, "built on warm, before any region");
+    b.set_regions(vec![Scene::region()]);
+    assert!(s.first_frame(Duration::from_secs(3)).is_some());
+    assert_eq!(b.devices_built(), 1, "the region reuses it");
+}
+
+#[test]
+fn an_idle_device_is_released() {
+    let s = Scene::new();
+    let b = Backdrops::spawn_with_keep(s.notify, MSG_GLASS, Duration::from_millis(300));
+    b.set_regions(vec![Scene::region()]);
+    assert!(s.first_frame(Duration::from_secs(3)).is_some());
+    b.set_regions(vec![]);
+    s.pump(Duration::from_millis(800));
+    b.set_regions(vec![Scene::region()]);
+    assert!(s.first_frame(Duration::from_secs(3)).is_some());
+    assert_eq!(b.devices_built(), 2, "released after the keep time, built again");
+}

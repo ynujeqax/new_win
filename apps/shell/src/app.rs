@@ -145,6 +145,13 @@ pub struct App {
     // Clock
     date_text: String,
     time_text: String,
+    // Spotlight (M3)
+    apps: Vec<newwin_core::spotlight::Candidate>,
+    /// System commands, then the indexed apps.
+    catalog: Rc<Vec<newwin_core::spotlight::Candidate>>,
+    usage: newwin_config::usage::Usage,
+    spotlight: Option<newwin_ui::panel::Panel<newwin_ui::spotlight::SpotlightView>>,
+    apps_watch: Option<newwin_platform::apps_index::AppsWatch>,
     // Tray button and right side (M2)
     right: RightView,
 }
@@ -274,8 +281,29 @@ impl App {
             self.on_foreground(HWND(wp.0 as *mut _));
             return Some(LRESULT(0));
         }
+        if msg == spotlight_view::WM_APP_APPS_CHANGED {
+            self.on_apps_changed();
+            return Some(LRESULT(0));
+        }
+        if msg == spotlight_view::WM_APP_APPS {
+            let r = unsafe { newwin_platform::worker::take_apps(lp) };
+            self.on_apps_indexed(*r);
+            return Some(LRESULT(0));
+        }
+        if msg == spotlight_view::WM_APP_LAUNCHED {
+            let key = unsafe { Box::from_raw(lp.0 as *mut String) };
+            self.on_launched(*key);
+            return Some(LRESULT(0));
+        }
         if msg == spotlight_view::WM_APP_SPOTLIGHT {
-            self.toggle_spotlight();
+            if wp.0 == newwin_platform::input_hook::SPOTLIGHT_PREWARM {
+                // Win went down: a tap may follow, and Spotlight then needs the glass device.
+                if let Some(b) = &self.backdrops {
+                    b.warm();
+                }
+            } else {
+                self.toggle_spotlight();
+            }
             return Some(LRESULT(0));
         }
         if msg == layout_view::WM_APP_LAYOUT {
@@ -354,6 +382,10 @@ impl App {
                 let screen = client_point(lp);
                 let p = PointF { x: screen.x - self.bar_rect.left as f32, y: screen.y - self.bar_rect.top as f32 };
                 self.on_wheel(delta, p);
+                Some(LRESULT(0))
+            }
+            spotlight_view::WM_APP_SPOTLIGHT_PANEL => {
+                self.on_spotlight_panel(wp, lp);
                 Some(LRESULT(0))
             }
             WM_APP_PANEL => {
@@ -516,6 +548,11 @@ fn start() -> Result<Rc<RefCell<App>>> {
         fullscreen: false,
         snips: SnipTracker::default(),
         right,
+        apps: Vec::new(),
+        catalog: Rc::new(Vec::new()),
+        usage: Default::default(),
+        spotlight: None,
+        apps_watch: None,
         date_text: String::new(),
         time_text: String::new(),
     }));
@@ -566,6 +603,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.start_audio();
         a.start_network();
         a.start_layout();
+        a.start_spotlight();
         a.tick_clock();
         a.reposition();
         a.start_visibility();

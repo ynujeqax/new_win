@@ -19,6 +19,10 @@ use windows::core::Result;
 pub const NEWWIN_INPUT_TAG: usize = 0x4E57_4E57;
 /// A key with no meaning: between Win down and up it makes Windows see a combination.
 const VK_NONAME: u16 = 0xFC;
+/// WPARAM of the Spotlight message: open or close it.
+pub const SPOTLIGHT_TOGGLE: usize = 0;
+/// WPARAM of the Spotlight message: Win went down, a tap may follow — get the glass ready.
+pub const SPOTLIGHT_PREWARM: usize = 1;
 
 static NOTIFY: AtomicIsize = AtomicIsize::new(0);
 static MSG_ID: AtomicU32 = AtomicU32::new(0);
@@ -43,9 +47,9 @@ pub fn send_tagged(keys: &[(u16, bool)]) {
     unsafe { SendInput(&inputs, size_of::<INPUT>() as i32) };
 }
 
-fn post(msg: u32) {
+fn post(msg: u32, wp: usize) {
     unsafe {
-        let _ = PostMessageW(Some(HWND(NOTIFY.load(Ordering::Relaxed) as *mut _)), msg, WPARAM(0), LPARAM(0));
+        let _ = PostMessageW(Some(HWND(NOTIFY.load(Ordering::Relaxed) as *mut _)), msg, WPARAM(wp), LPARAM(0));
     }
 }
 
@@ -59,22 +63,23 @@ unsafe extern "system" fn on_key(code: i32, wp: WPARAM, lp: LPARAM) -> LRESULT {
         let vk = k.vkCode as u16;
         let switched = HOTKEYS.with(|h| h.try_borrow_mut().is_ok_and(|mut h| h.key(vk, down)));
         if switched {
-            post(MSG_ID.load(Ordering::Relaxed));
+            post(MSG_ID.load(Ordering::Relaxed), 0);
         }
         let tap = TAP.with(|t| t.try_borrow_mut().map_or(TapAction::Pass, |mut t| t.key(vk, down)));
         match tap {
             TapAction::Pass => {}
+            TapAction::WinDown => post(SPOTLIGHT_MSG.load(Ordering::Relaxed), SPOTLIGHT_PREWARM),
             TapAction::WinTap => {
                 // Injected from inside the hook, these queue after the current event: so the
                 // real Win up is swallowed and replayed after the mask.
                 send_tagged(&[(VK_NONAME, false), (VK_NONAME, true), (vk, true)]);
-                post(SPOTLIGHT_MSG.load(Ordering::Relaxed));
+                post(SPOTLIGHT_MSG.load(Ordering::Relaxed), SPOTLIGHT_TOGGLE);
                 return LRESULT(1);
             }
             TapAction::CtrlEsc => {
                 // Our own input makes us the last input's source: Spotlight may take the foreground.
                 send_tagged(&[(VK_NONAME, false), (VK_NONAME, true)]);
-                post(SPOTLIGHT_MSG.load(Ordering::Relaxed));
+                post(SPOTLIGHT_MSG.load(Ordering::Relaxed), SPOTLIGHT_TOGGLE);
                 return LRESULT(1);
             }
             TapAction::Swallow => return LRESULT(1),

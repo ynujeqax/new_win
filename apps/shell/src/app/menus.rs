@@ -58,6 +58,8 @@ pub(super) enum MenuCtx {
     BarMenu,
     /// Right click on the NewWin row of the tray.
     NewWinMenu,
+    /// The row menu of a Spotlight result (`index` into the catalog it shows).
+    SpotlightRow { index: usize },
 }
 
 impl MenuCtx {
@@ -66,7 +68,7 @@ impl MenuCtx {
         match self {
             MenuCtx::WindowList { group, .. } | MenuCtx::AppMenu { group, .. } => Some(Target::Group(*group)),
             MenuCtx::Overflow { .. } => Some(Target::Overflow),
-            MenuCtx::BarMenu | MenuCtx::NewWinMenu => None,
+            MenuCtx::BarMenu | MenuCtx::NewWinMenu | MenuCtx::SpotlightRow { .. } => None,
         }
     }
 }
@@ -87,20 +89,26 @@ impl App {
         PointF { x: self.bar_rect.left as f32 + x_in_bar, y: self.bar_rect.bottom as f32 + scale(4.0, self.dpi).round() }
     }
 
-    fn open(&mut self, items: Vec<MenuItem>, anchor: PointF, ctx: MenuCtx) {
+    pub(super) fn open(&mut self, items: Vec<MenuItem>, anchor: PointF, ctx: MenuCtx) {
         self.close_panel();
         match Popup::show(&self.gfx, items, anchor, &self.popup_style(), self.bar, WM_APP_POPUP) {
             Ok(p) => {
+                // Spotlight's row menu is not over the bar: the bar stays hidden (OLED).
+                let over_bar = !matches!(ctx, MenuCtx::SpotlightRow { .. });
                 self.popup = Some((p, ctx));
-                self.feed(VisInput::OverlayOpened);
+                if over_bar {
+                    self.feed(VisInput::OverlayOpened);
+                }
             }
             Err(e) => log::error!("cannot open menu: {e}"),
         }
     }
 
     pub(super) fn close_popup(&mut self) {
-        if self.popup.take().is_some() {
-            self.feed(VisInput::OverlayClosed);
+        match self.popup.take() {
+            Some((_, MenuCtx::SpotlightRow { .. })) => self.spotlight_menu_closed(),
+            Some(_) => self.feed(VisInput::OverlayClosed),
+            None => {}
         }
     }
 
@@ -153,7 +161,7 @@ impl App {
             t(SystemTarget::Settings, s.settings),
             t(SystemTarget::FileExplorer, s.file_explorer),
             // Opens Spotlight, which arrives in milestone 3.
-            MenuItem::new(SEARCH, s.search).enabled(false),
+            MenuItem::new(SEARCH, s.search),
             t(SystemTarget::Run, s.run),
             MenuItem::new(0, s.shut_down_or_sign_out).separator().submenu(vec![
                 t(SystemTarget::SignOut, s.sign_out),
@@ -213,8 +221,10 @@ impl App {
                     self.run_click(action, rect);
                 }
             }
+            &MenuCtx::SpotlightRow { index } => self.on_spotlight_menu_pick(index, id),
             MenuCtx::BarMenu | MenuCtx::NewWinMenu => match id {
                 NEWWIN_SETTINGS => self.open_settings_file(),
+                SEARCH => self.toggle_spotlight(),
                 RESTART_NEWWIN => {
                     log::info!("restart requested from the menu");
                     unsafe { PostQuitMessage(APPS_EXIT_RESTART) };

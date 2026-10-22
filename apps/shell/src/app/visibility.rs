@@ -86,6 +86,8 @@ impl App {
             super::right_view::TOOLTIP_TIMER => self.show_tooltip(),
             super::network_view::NET_DEBOUNCE_TIMER => self.read_network(),
             super::layout_view::LAYOUT_RECHECK_TIMER => self.read_layout(),
+            super::spotlight_view::APPS_DEBOUNCE_TIMER => self.reindex_apps(),
+            super::spotlight_view::USAGE_SAVE_TIMER => self.save_usage(),
             HIDE_WINDOW_TIMER => unsafe {
                 log::debug!("hide timer: hiding the bar window");
                 self.hide_started = None;

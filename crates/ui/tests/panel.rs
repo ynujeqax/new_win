@@ -143,3 +143,28 @@ fn read_returns_content_state() {
     let (panel, _seen) = recorder_panel(Some(42));
     assert_eq!(panel.read(|c| c.wake), Some(Some(42)));
 }
+
+fn waiting_panel() -> Panel<Recorder> {
+    let gfx = Gfx::new().unwrap();
+    let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "notify-wait").unwrap();
+    let seen = std::rc::Rc::new(std::cell::RefCell::new(Seen::default()));
+    Panel::show_after_glass(&gfx, Recorder { seen, wake: None }, PointF { x: 300.0, y: 60.0 }, 96, notify, MSG).unwrap()
+}
+
+/// Spotlight must never show its fallback tint: it is on screen (and has focus, so no typed
+/// letter is lost) but clear until its glass arrives.
+#[test]
+fn a_glass_waiting_panel_stays_clear_until_its_glass() {
+    let p = waiting_panel();
+    assert!(unsafe { IsWindowVisible(p.hwnd()) }.as_bool(), "shown at once, to take the keyboard");
+    assert!(!p.revealed());
+    newwin_ui::GlassWindow::set_glass_unavailable(&p);
+    assert!(p.revealed(), "no glass coming: show the tint");
+}
+
+#[test]
+fn a_glass_waiting_panel_shows_anyway_after_a_while() {
+    let p = waiting_panel();
+    pump(400);
+    assert!(p.revealed());
+}

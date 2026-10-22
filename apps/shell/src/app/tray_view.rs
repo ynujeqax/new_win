@@ -36,7 +36,7 @@ impl App {
         rows
     }
 
-    fn popup_style_px(&self) -> PopupStyle {
+    pub(super) fn popup_style_px(&self) -> PopupStyle {
         let a = &self.config.appearance;
         PopupStyle { font_family: a.font_family.clone(), font_size_px: scale(a.font_size, self.dpi), dpi: self.dpi }
     }

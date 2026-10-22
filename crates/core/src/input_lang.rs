@@ -103,6 +103,8 @@ impl LayoutHotkeys {
 pub enum TapAction {
     /// Let it through.
     Pass,
+    /// The first press of Win: let it through, and warm the glass up (a tap may follow).
+    WinDown,
     /// Win was pressed and released alone: swallow this Win up, replay it masked, open Spotlight.
     WinTap,
     /// `Ctrl+Esc`: swallow the Esc, open Spotlight.
@@ -132,11 +134,12 @@ impl WinKeyTap {
         const ESC: u16 = 0x1B;
         match (classify(vk), down) {
             (Key::Win, true) => {
-                if !self.win {
+                let first = !self.win;
+                if first {
                     self.spoiled = false;
                 }
                 self.win = true;
-                return TapAction::Pass;
+                return if first { TapAction::WinDown } else { TapAction::Pass };
             }
             (Key::Win, false) => {
                 let tap = self.win && !self.spoiled;

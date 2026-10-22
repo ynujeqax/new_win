@@ -38,6 +38,11 @@ impl AppNames {
         Self { names: HashMap::new(), pending: HashSet::new(), exe_by_pid: ExeCache::default(), worker: None }
     }
 
+    /// The background thread, for other slow work (the Spotlight index).
+    pub fn worker(&self) -> Option<&Worker> {
+        self.worker.as_ref()
+    }
+
     /// The resolved name, or a placeholder while the worker resolves it. `relaunch_name` is read
     /// only when a lookup is submitted.
     pub fn name_or_placeholder(

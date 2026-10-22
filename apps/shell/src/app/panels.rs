@@ -110,6 +110,9 @@ impl App {
         if let Some(p) = &self.panel {
             out.push(p.glass());
         }
+        if let Some(s) = &self.spotlight {
+            out.push(s);
+        }
         if let Some(t) = &self.tooltip {
             out.push(t);
         }

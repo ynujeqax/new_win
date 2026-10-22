@@ -1,9 +1,14 @@
 //! The `newwin-glass` thread: reads the screen under glass windows with DXGI Desktop Duplication
 //! and posts small blurred images to the UI thread (spec: liquid glass §3).
 //!
-//! The hardware D3D11 device exists only while at least one region is registered; with no
+//! The duplication exists only while at least one region is registered; the hardware D3D11
+//! device outlives an empty set (it takes 75–130 ms to build, longer than a panel's show
+//! animation), and is built ahead on [`Backdrops::warm`]; it is released after [`DEVICE_KEEP`]
+//! without glass windows, so idle memory stays low. With no
 //! regions the thread blocks on its channel and never wakes.
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, TryRecvError};
 use std::time::{Duration, Instant};
 
@@ -43,33 +48,70 @@ enum Cmd {
     Regions(Vec<Region>),
     Refresh,
     SimulateLost,
+    Warm,
 }
+
+/// How long the device outlives the last glass window.
+pub const DEVICE_KEEP: Duration = Duration::from_secs(60);
 
 pub struct Backdrops {
     tx: Sender<Cmd>,
+    devices: Arc<AtomicU32>,
 }
 
 impl Backdrops {
     pub fn spawn(notify: HWND, msg: u32) -> Backdrops {
+        Self::spawn_with_keep(notify, msg, DEVICE_KEEP)
+    }
+
+    /// Like [`Self::spawn`], keeping an idle device for `keep` (tests use a short one).
+    pub fn spawn_with_keep(notify: HWND, msg: u32, keep: Duration) -> Backdrops {
         let (tx, rx) = mpsc::channel();
+        let devices = Arc::new(AtomicU32::new(0));
+        let counter = devices.clone();
         let notify = notify.0 as isize;
         std::thread::Builder::new()
             .name("newwin-glass".into())
             .spawn(move || {
-                Thread { rx, notify, msg, slots: Vec::new(), capture: None, failures: 0, retry_at: None, unavailable_posted: false }.run()
+                Thread {
+                    rx,
+                    notify,
+                    msg,
+                    slots: Vec::new(),
+                    capture: None,
+                    failures: 0,
+                    retry_at: None,
+                    unavailable_posted: false,
+                    devices: counter,
+                    keep,
+                    release_at: None,
+                }
+                .run()
             })
             .expect("cannot spawn the glass thread");
-        Backdrops { tx }
+        Backdrops { tx, devices }
     }
 
-    /// Replaces the set of regions; an empty set releases the capture device.
+    /// Replaces the set of regions; an empty set releases the duplication at once and the device
+    /// after [`DEVICE_KEEP`].
     pub fn set_regions(&self, regions: Vec<Region>) {
         let _ = self.tx.send(Cmd::Regions(regions));
+    }
+
+    /// A glass window may open soon (Win went down): build the device now, it takes 75–130 ms.
+    pub fn warm(&self) {
+        let _ = self.tx.send(Cmd::Warm);
     }
 
     /// The display changed (resolution, monitors, DPI): rebuild the capture with fresh bounds.
     pub fn refresh(&self) {
         let _ = self.tx.send(Cmd::Refresh);
+    }
+
+    /// How many D3D devices the thread has built (for tests).
+    #[doc(hidden)]
+    pub fn devices_built(&self) -> u32 {
+        self.devices.load(Ordering::Relaxed)
     }
 
     /// Test hook: behaves exactly as a `DXGI_ERROR_ACCESS_LOST` from the duplication.
@@ -102,7 +144,9 @@ struct Capture {
     ctx: ID3D11DeviceContext,
     /// The output's desktop rectangle, read when the capture was built.
     bounds: PxRect,
-    dup: IDXGIOutputDuplication,
+    output: IDXGIOutput1,
+    /// Released while no region is registered; the device stays (it takes 75–130 ms to build).
+    dup: Option<IDXGIOutputDuplication>,
 }
 
 struct Thread {
@@ -117,15 +161,50 @@ struct Thread {
     retry_at: Option<Instant>,
     /// UNAVAILABLE was posted for the current failure streak.
     unavailable_posted: bool,
+    devices: Arc<AtomicU32>,
+    keep: Duration,
+    /// When an idle device (no regions) is released.
+    release_at: Option<Instant>,
 }
 
 impl Thread {
+    /// Builds the device ahead, without a duplication: the first glass window (Spotlight with the
+    /// bar hidden) must not wait 75–130 ms for it.
+    fn warm(&mut self) {
+        if self.slots.is_empty() {
+            self.release_at = Some(Instant::now() + self.keep);
+        }
+        if self.capture.is_some() {
+            return;
+        }
+        match Capture::new(0, 0) {
+            Ok(mut c) => {
+                c.dup = None;
+                self.devices.fetch_add(1, Ordering::Relaxed);
+                self.capture = Some(c);
+            }
+            Err(e) => log::warn!("glass device not built ahead: {e}"),
+        }
+    }
+
     fn run(mut self) {
         loop {
             let first = if self.slots.is_empty() {
-                match self.rx.recv() {
+                // Idle: sleep until a command, or until the kept device is due for release.
+                let wait = self.release_at.filter(|_| self.capture.is_some()).map(|t| t.saturating_duration_since(Instant::now()));
+                let got = match wait {
+                    Some(w) => self.rx.recv_timeout(w),
+                    None => self.rx.recv().map_err(|_| RecvTimeoutError::Disconnected),
+                };
+                match got {
                     Ok(c) => Some(c),
-                    Err(_) => return,
+                    Err(RecvTimeoutError::Timeout) => {
+                        log::debug!("glass device released after {} s idle", self.keep.as_secs());
+                        self.capture = None;
+                        self.release_at = None;
+                        continue;
+                    }
+                    Err(RecvTimeoutError::Disconnected) => return,
                 }
             } else if let Some(wait) = self.retry_wait() {
                 match self.rx.recv_timeout(wait) {
@@ -195,9 +274,16 @@ impl Thread {
                     self.slots.push(slot);
                 }
                 if self.slots.is_empty() {
-                    self.capture = None;
+                    if let Some(c) = self.capture.as_mut() {
+                        c.dup = None;
+                    }
+                    // The device stays a while: the next glass window gets it at once.
+                    self.release_at = Some(Instant::now() + self.keep);
                     self.retry_at = None;
-                } else if let Some(c) = &self.capture {
+                    return;
+                }
+                self.release_at = None;
+                if let Some(c) = &self.capture {
                     let bounds = c.bounds;
                     self.place(bounds);
                 } else {
@@ -209,7 +295,9 @@ impl Thread {
                 self.capture = None;
                 self.retry_at = None;
                 self.failures = 0;
+                self.release_at = None;
             }
+            Cmd::Warm => self.warm(),
             Cmd::SimulateLost => {
                 if self.capture.is_some() {
                     self.lose(Error::from(DXGI_ERROR_ACCESS_LOST));
@@ -237,6 +325,7 @@ impl Thread {
     fn step(&mut self) -> Result<()> {
         if self.capture.is_none() {
             let center = self.slots[0].region.window;
+            let t0 = Instant::now();
             let c = match Capture::new((center.left + center.right) / 2, (center.top + center.bottom) / 2) {
                 Ok(c) => c,
                 Err(e) => {
@@ -247,7 +336,9 @@ impl Thread {
                     return Err(e);
                 }
             };
+            self.devices.fetch_add(1, Ordering::Relaxed);
             let bounds = c.bounds;
+            log::debug!("glass capture built in {} ms", t0.elapsed().as_millis());
             self.capture = Some(c);
             // Staging textures belong to the old device.
             for s in &mut self.slots {
@@ -257,9 +348,21 @@ impl Thread {
             self.place(bounds);
         }
 
+        if let Some(cap) = self.capture.as_mut()
+            && cap.dup.is_none()
+        {
+            let t0 = Instant::now();
+            cap.dup = Some(unsafe { cap.output.DuplicateOutput(&cap.device)? });
+            log::debug!("glass duplication rebuilt in {} ms", t0.elapsed().as_millis());
+            // The new duplication's first frame is a full one: copy every slot from it.
+            for s in &mut self.slots {
+                s.fresh = true;
+            }
+        }
+
         let timeout = self.next_wake_ms();
         let cap = self.capture.as_ref().expect("capture exists");
-        let dup = cap.dup.clone();
+        let dup = cap.dup.clone().expect("duplication exists");
         let mut info = DXGI_OUTDUPL_FRAME_INFO::default();
         let mut res = None;
         match unsafe { dup.AcquireNextFrame(timeout, &mut info, &mut res) } {
@@ -434,9 +537,9 @@ impl Capture {
             D3D11CreateDevice(&adapter, D3D_DRIVER_TYPE_UNKNOWN, Default::default(), D3D11_CREATE_DEVICE_FLAG(0), None, D3D11_SDK_VERSION, Some(&mut device), None, Some(&mut ctx))?;
             let device = device.expect("D3D11CreateDevice returned no device");
             let output: IDXGIOutput1 = output.cast()?;
-            let dup = output.DuplicateOutput(&device)?;
+            let dup = Some(output.DuplicateOutput(&device)?);
             let ctx = ctx.ok_or_else(|| Error::from(DXGI_ERROR_INVALID_CALL))?;
-            Ok(Capture { device, ctx, bounds, dup })
+            Ok(Capture { device, ctx, bounds, output, dup })
         }
     }
 }

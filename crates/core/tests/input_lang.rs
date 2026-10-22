@@ -72,15 +72,16 @@ const E: u16 = 0x45;
 #[test]
 fn lone_win_is_a_tap() {
     let mut t = WinKeyTap::new(true);
-    assert_eq!(t.key(WIN, true), TapAction::Pass);
+    assert_eq!(t.key(WIN, true), TapAction::WinDown);
     assert_eq!(t.key(WIN, false), TapAction::WinTap);
 }
 
 #[test]
 fn held_win_with_autorepeat_is_one_tap() {
     let mut t = WinKeyTap::new(true);
-    for _ in 0..5 {
-        assert_eq!(t.key(WIN, true), TapAction::Pass);
+    assert_eq!(t.key(WIN, true), TapAction::WinDown, "the first press warms the glass up");
+    for _ in 0..4 {
+        assert_eq!(t.key(WIN, true), TapAction::Pass, "auto-repeat");
     }
     assert_eq!(t.key(WIN, false), TapAction::WinTap);
     assert_eq!(t.key(WIN, false), TapAction::Pass, "a stray second up is not a tap");
@@ -138,7 +139,7 @@ fn win_ctrl_esc_is_not_ctrl_esc() {
 #[test]
 fn disabled_passes_everything() {
     let mut t = WinKeyTap::new(false);
-    t.key(WIN, true);
+    assert_eq!(t.key(WIN, true), TapAction::Pass, "disabled: no warm-up either");
     assert_eq!(t.key(WIN, false), TapAction::Pass);
     t.key(CTRL, true);
     assert_eq!(t.key(ESC, true), TapAction::Pass);
