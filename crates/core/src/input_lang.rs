@@ -119,12 +119,23 @@ pub struct WinKeyTap {
     win: bool,
     spoiled: bool,
     ctrl: bool,
+    shift: bool,
+    alt: bool,
     eat_esc_up: bool,
 }
 
 impl WinKeyTap {
     pub fn new(enabled: bool) -> Self {
-        Self { enabled, win: false, spoiled: false, ctrl: false, eat_esc_up: false }
+        Self { enabled, win: false, spoiled: false, ctrl: false, shift: false, alt: false, eat_esc_up: false }
+    }
+
+    /// The keys' real state before the next event (`GetAsyncKeyState` in the hook): corrects ups
+    /// the hook never saw, sent to the secure desktop (Ctrl+Alt+Del, Win+L).
+    pub fn sync(&mut self, ctrl: bool, shift: bool, alt: bool, win: bool) {
+        (self.ctrl, self.shift, self.alt) = (ctrl, shift, alt);
+        if !win {
+            self.win = false;
+        }
     }
 
     pub fn key(&mut self, vk: u16, down: bool) -> TapAction {
@@ -147,13 +158,16 @@ impl WinKeyTap {
                 return if tap { TapAction::WinTap } else { TapAction::Pass };
             }
             (Key::Ctrl, d) => self.ctrl = d,
+            (Key::Shift, d) => self.shift = d,
+            (Key::Alt, d) => self.alt = d,
             _ => {}
         }
         if down && self.win {
             self.spoiled = true;
             return TapAction::Pass;
         }
-        if vk == ESC && down && self.ctrl {
+        // Ctrl alone: Ctrl+Shift+Esc is Task Manager.
+        if vk == ESC && down && self.ctrl && !self.shift && !self.alt {
             self.eat_esc_up = true;
             return TapAction::CtrlEsc;
         }

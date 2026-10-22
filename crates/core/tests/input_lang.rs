@@ -144,3 +144,36 @@ fn disabled_passes_everything() {
     t.key(CTRL, true);
     assert_eq!(t.key(ESC, true), TapAction::Pass);
 }
+
+const SHIFT_R: u16 = 0xA1;
+
+#[test]
+fn ctrl_shift_esc_and_ctrl_alt_esc_pass() {
+    let mut t = WinKeyTap::new(true);
+    t.key(CTRL, true);
+    t.key(SHIFT_R, true);
+    assert_eq!(t.key(ESC, true), TapAction::Pass, "Task Manager");
+    t.key(ESC, false);
+    t.key(SHIFT_R, false);
+    t.key(ALT, true);
+    assert_eq!(t.key(ESC, true), TapAction::Pass);
+}
+
+/// The hook sees nothing while the secure desktop (Ctrl+Alt+Del, Win+L) is up: the keys' real
+/// state before each event corrects what it missed.
+#[test]
+fn missed_key_ups_are_corrected_from_the_real_state() {
+    let mut t = WinKeyTap::new(true);
+    t.key(CTRL, true);
+    t.key(ALT, true);
+    // Ctrl+Alt+Del: the ups go to the secure desktop.
+    t.sync(false, false, false, false);
+    assert_eq!(t.key(ESC, true), TapAction::Pass, "a plain Esc later is not Ctrl+Esc");
+    t.key(ESC, false);
+    // Win+L: L is seen, the Win up is not.
+    t.key(WIN, true);
+    t.key(0x4C, true);
+    t.sync(false, false, false, false);
+    assert_eq!(t.key(WIN, true), TapAction::WinDown, "a fresh press, not a repeat");
+    assert_eq!(t.key(WIN, false), TapAction::WinTap);
+}

@@ -11,7 +11,9 @@ use newwin_core::input_lang::{LayoutHotkeys, TapAction, WinKeyTap};
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Threading::GetCurrentThreadId;
-use windows::Win32::UI::Input::KeyboardAndMouse::{INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, SendInput, VIRTUAL_KEY};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+    GetAsyncKeyState, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, SendInput, VIRTUAL_KEY, VK_CONTROL, VK_LWIN, VK_MENU, VK_RWIN, VK_SHIFT,
+};
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
@@ -33,8 +35,8 @@ thread_local! {
     static TAP: RefCell<WinKeyTap> = RefCell::new(WinKeyTap::new(false));
 }
 
-/// Injects `(vk, key up)` events tagged as NewWin's own.
-pub fn send_tagged(keys: &[(u16, bool)]) {
+/// Injects `(vk, key up)` events tagged as NewWin's own; returns how many went in.
+pub fn send_tagged(keys: &[(u16, bool)]) -> u32 {
     let inputs: Vec<INPUT> = keys
         .iter()
         .map(|&(vk, up)| INPUT {
@@ -44,7 +46,7 @@ pub fn send_tagged(keys: &[(u16, bool)]) {
             },
         })
         .collect();
-    unsafe { SendInput(&inputs, size_of::<INPUT>() as i32) };
+    unsafe { SendInput(&inputs, size_of::<INPUT>() as i32) }
 }
 
 fn post(msg: u32, wp: usize) {
@@ -65,16 +67,27 @@ unsafe extern "system" fn on_key(code: i32, wp: WPARAM, lp: LPARAM) -> LRESULT {
         if switched {
             post(MSG_ID.load(Ordering::Relaxed), 0);
         }
-        let tap = TAP.with(|t| t.try_borrow_mut().map_or(TapAction::Pass, |mut t| t.key(vk, down)));
+        let held = |k: VIRTUAL_KEY| unsafe { GetAsyncKeyState(i32::from(k.0)) } < 0;
+        // Before this event: corrects ups the hook missed while the secure desktop was up.
+        let real = (held(VK_CONTROL), held(VK_SHIFT), held(VK_MENU), held(VK_LWIN) || held(VK_RWIN));
+        let tap = TAP.with(|t| {
+            t.try_borrow_mut().map_or(TapAction::Pass, |mut t| {
+                t.sync(real.0, real.1, real.2, real.3);
+                t.key(vk, down)
+            })
+        });
         match tap {
             TapAction::Pass => {}
             TapAction::WinDown => post(SPOTLIGHT_MSG.load(Ordering::Relaxed), SPOTLIGHT_PREWARM),
             TapAction::WinTap => {
                 // Injected from inside the hook, these queue after the current event: so the
                 // real Win up is swallowed and replayed after the mask.
-                send_tagged(&[(VK_NONAME, false), (VK_NONAME, true), (vk, true)]);
-                post(SPOTLIGHT_MSG.load(Ordering::Relaxed), SPOTLIGHT_TOGGLE);
-                return LRESULT(1);
+                // If the replay did not all go in, let the real Win up through: native Start at
+                // worst, never a Win key left held down.
+                if send_tagged(&[(VK_NONAME, false), (VK_NONAME, true), (vk, true)]) == 3 {
+                    post(SPOTLIGHT_MSG.load(Ordering::Relaxed), SPOTLIGHT_TOGGLE);
+                    return LRESULT(1);
+                }
             }
             TapAction::CtrlEsc => {
                 // Our own input makes us the last input's source: Spotlight may take the foreground.

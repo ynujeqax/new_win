@@ -104,7 +104,7 @@ pub fn run(t: SystemTarget) -> Result<()> {
 pub fn open_notification_center() {
     const VK_LWIN: u16 = 0x5B;
     const VK_N: u16 = 0x4E;
-    crate::input_hook::send_tagged(&[(VK_LWIN, false), (VK_N, false), (VK_N, true), (VK_LWIN, true)]);
+    let _ = crate::input_hook::send_tagged(&[(VK_LWIN, false), (VK_N, false), (VK_N, true), (VK_LWIN, true)]);
 }
 
 /// `shell:AppsFolder\<id>`: how the Start menu itself launches an app, classic or packaged.
