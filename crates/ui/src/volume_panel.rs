@@ -383,7 +383,7 @@ impl PanelContent for VolumePanel {
                 };
                 self.level_to(target, now, true)
             }
-            PanelInput::Press(_) | PanelInput::RightRelease(_) | PanelInput::Char(_) => PanelReply::default(),
+            PanelInput::Press(_) | PanelInput::RightRelease(_) | PanelInput::Char(_) | PanelInput::CtrlKey(_) | PanelInput::ContextMenu(_) => PanelReply::default(),
         }
     }
 

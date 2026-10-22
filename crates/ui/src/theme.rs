@@ -53,3 +53,18 @@ pub const HOVER_GLIDE_MS: u32 = 140;
 pub const ICON_STROKE: f32 = 1.35;
 pub const TOOLTIP_DELAY_MS: u32 = 500;
 pub const TOOLTIP_TEXT: f32 = 12.0;
+
+// M3 Spotlight (spec: M3 §5)
+pub const SPOTLIGHT_WIDTH: f32 = 560.0;
+pub const SPOTLIGHT_FIELD_H: f32 = 52.0;
+pub const SPOTLIGHT_ROW_H: f32 = 34.0;
+pub const SPOTLIGHT_HINTS_H: f32 = 28.0;
+pub const SPOTLIGHT_PAD: f32 = 8.0;
+pub const SPOTLIGHT_QUERY_TEXT: f32 = 20.0;
+pub const SPOTLIGHT_HINT_TEXT: f32 = 11.0;
+/// The window's top edge, as a share of the work area's height.
+pub const SPOTLIGHT_TOP: f32 = 0.22;
+/// Darkens the glass under Spotlight so its text reads over any window.
+pub const SPOTLIGHT_SHADE: Color = Color::rgba(0, 0, 0, 0.22);
+pub const CARET_W: f32 = 1.35;
+pub const ROW_FADE_MS: u32 = 120;

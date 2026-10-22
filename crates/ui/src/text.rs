@@ -20,6 +20,8 @@ pub struct TextLayout {
     pub(crate) layout: IDWriteTextLayout,
     width: f32,
     height: f32,
+    /// UTF-16 units.
+    len: usize,
 }
 
 impl TextLayout {
@@ -29,6 +31,16 @@ impl TextLayout {
 
     pub fn height(&self) -> f32 {
         self.height
+    }
+
+    /// The x of a caret before UTF-16 position `pos` (clamped to the end).
+    pub fn caret_x(&self, pos: usize) -> f32 {
+        let (mut x, mut y) = (0.0, 0.0);
+        let mut m = DWRITE_HIT_TEST_METRICS::default();
+        match unsafe { self.layout.HitTestTextPosition(pos.min(self.len) as u32, false, &mut x, &mut y, &mut m) } {
+            Ok(()) => x,
+            Err(_) => 0.0,
+        }
     }
 }
 
@@ -70,24 +82,23 @@ impl TextCache {
 
     /// Lays out one line; text wider than `max_width` ends with "…". `width()` is the drawn width.
     pub fn layout(&mut self, s: &str, style: &TextStyle, max_width: f32) -> Result<TextLayout> {
-        let format = self.format(style)?;
-        let wide: Vec<u16> = s.encode_utf16().collect();
-        unsafe {
-            let layout = self.gfx.dwrite().CreateTextLayout(&wide, &format, max_width.max(0.0), style.size * 2.0)?;
-            let mut m = DWRITE_TEXT_METRICS::default();
-            layout.GetMetrics(&mut m)?;
-            Ok(TextLayout { layout, width: m.width.min(max_width), height: m.height })
-        }
+        self.layout_ranges(s, style, max_width, &[])
     }
 
     /// Like [`Self::layout`], with the UTF-16 range `bold` = (start, len) in semibold (a search
     /// match). A range past the end is clamped.
     pub fn layout_emphasis(&mut self, s: &str, style: &TextStyle, max_width: f32, bold: Option<(usize, usize)>) -> Result<TextLayout> {
+        self.layout_ranges(s, style, max_width, bold.as_slice())
+    }
+
+    /// Like [`Self::layout`], with every UTF-16 range in `bold` = (start, len) in semibold.
+    /// Ranges past the end are clamped.
+    pub fn layout_ranges(&mut self, s: &str, style: &TextStyle, max_width: f32, bold: &[(usize, usize)]) -> Result<TextLayout> {
         let format = self.format(style)?;
         let wide: Vec<u16> = s.encode_utf16().collect();
         unsafe {
             let layout = self.gfx.dwrite().CreateTextLayout(&wide, &format, max_width.max(0.0), style.size * 2.0)?;
-            if let Some((start, len)) = bold {
+            for &(start, len) in bold {
                 let start = start.min(wide.len());
                 let len = len.min(wide.len() - start);
                 if len > 0 {
@@ -97,7 +108,7 @@ impl TextCache {
             }
             let mut m = DWRITE_TEXT_METRICS::default();
             layout.GetMetrics(&mut m)?;
-            Ok(TextLayout { layout, width: m.width.min(max_width), height: m.height })
+            Ok(TextLayout { layout, width: m.width.min(max_width), height: m.height, len: wide.len() })
         }
     }
 

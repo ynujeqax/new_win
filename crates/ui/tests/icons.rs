@@ -23,6 +23,17 @@ fn icons_draw() {
             icons::wifi(p, c(65.0), s, 1.5, col, w);
             icons::speaker(p, c(91.0), s, 2.3, 0.4, col, w);
             icons::slash(p, c(117.0), s, 1.0, col.with_alpha(0.5), w);
+            icons::magnifier(p, c(143.0), s, col, w);
         })
         .unwrap();
+}
+
+#[test]
+fn magnifier_stays_in_box() {
+    let (c, s) = (PointF { x: 50.0, y: 50.0 }, 16.0);
+    let m = icons::magnifier_geometry(c, s);
+    let inside = |p: PointF| (p.x - c.x).abs() <= s / 2.0 && (p.y - c.y).abs() <= s / 2.0;
+    assert!(inside(PointF { x: m.lens.x - m.radius, y: m.lens.y - m.radius }) && inside(PointF { x: m.lens.x + m.radius, y: m.lens.y + m.radius }));
+    assert!(inside(m.handle.0) && inside(m.handle.1));
+    assert!(m.handle.1.x > m.lens.x && m.handle.1.y > m.lens.y, "the handle points down right");
 }

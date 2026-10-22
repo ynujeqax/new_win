@@ -112,3 +112,26 @@ mod tests {
         assert!((down[1].x - c.x).abs() < 1e-4);
     }
 }
+
+/// Where the magnifier's parts go: the lens (centre, radius) and the handle (from, to).
+pub struct MagnifierGeometry {
+    pub lens: PointF,
+    pub radius: f32,
+    pub handle: (PointF, PointF),
+}
+
+pub fn magnifier_geometry(c: PointF, s: f32) -> MagnifierGeometry {
+    let lens = at(c, -0.1 * s, -0.1 * s);
+    let radius = 0.31 * s;
+    // The handle starts on the lens rim, at 45° down right.
+    let rim = radius * std::f32::consts::FRAC_1_SQRT_2;
+    MagnifierGeometry { lens, radius, handle: (at(lens, rim, rim), at(c, 0.38 * s, 0.38 * s)) }
+}
+
+/// Spotlight's button on the bar, and the icon in its field.
+pub fn magnifier(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    let m = magnifier_geometry(c, s);
+    let d = 2.0 * m.radius;
+    p.stroke_round_rect(RectF::new(m.lens.x - m.radius, m.lens.y - m.radius, d, d), m.radius, color, w);
+    p.line(m.handle.0, m.handle.1, color, w);
+}

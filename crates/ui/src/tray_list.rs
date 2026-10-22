@@ -337,7 +337,7 @@ impl PanelContent for TrayList {
                 self.query.push(c);
                 self.query_changed(now)
             }
-            PanelInput::Press(_) | PanelInput::Key(_) => PanelReply::default(),
+            PanelInput::Press(_) | PanelInput::Key(_) | PanelInput::CtrlKey(_) | PanelInput::ContextMenu(_) => PanelReply::default(),
         }
     }
 

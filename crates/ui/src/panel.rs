@@ -10,8 +10,9 @@ use std::rc::Rc;
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::primary_monitor;
 use newwin_platform::window::{Handler, WindowSpec, create_window};
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
-use windows::Win32::UI::Input::KeyboardAndMouse::{ReleaseCapture, SetCapture, TME_LEAVE, TRACKMOUSEEVENT, TrackMouseEvent, VK_ESCAPE};
+use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
+use windows::Win32::Graphics::Gdi::ScreenToClient;
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, ReleaseCapture, SetCapture, TME_LEAVE, TRACKMOUSEEVENT, TrackMouseEvent, VK_CONTROL, VK_ESCAPE};
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
@@ -23,6 +24,7 @@ use crate::{Backdrop, Gfx, Layer, Painter, PointF, RectF, fade, paint_glass, sli
 const WM_MOUSELEAVE: u32 = 0x02A3;
 const FRAME_TIMER: usize = 1;
 const CLOSE_TIMER: usize = 2;
+const WAKE_TIMER: usize = 3;
 const FRAME_MS: u32 = 16;
 
 /// A glass window whose backdrop the shell's capture feeds (bar menus, panels, tooltips).
@@ -45,6 +47,10 @@ pub enum PanelInput {
     RightRelease(PointF),
     Wheel(i16),
     Key(u16),
+    /// A key pressed while Ctrl is held (instead of `Key`).
+    CtrlKey(u16),
+    /// `WM_CONTEXTMENU`: the menu key or `Shift+F10` (`None`), or a right click at a client point.
+    ContextMenu(Option<PointF>),
     Char(char),
 }
 
@@ -63,6 +69,10 @@ pub trait PanelContent {
     fn input(&mut self, ev: PanelInput, now_ms: u64) -> PanelReply;
     /// True while a drawn animation runs; the panel repaints every frame until it ends.
     fn animating(&self, now_ms: u64) -> bool;
+    /// When the content next changes on its own (a caret blink), if ever: the panel repaints then.
+    fn wake_at(&self, _now_ms: u64) -> Option<u64> {
+        None
+    }
 }
 
 /// The panel's screen rectangle: centred under `anchor`, kept inside `monitor`.
@@ -179,6 +189,11 @@ impl<C: PanelContent + 'static> Panel<C> {
         }
     }
 
+    /// Reads the content (`None` while the panel is busy with it).
+    pub fn read<R>(&self, f: impl FnOnce(&C) -> R) -> Option<R> {
+        self.state.try_borrow().ok().map(|s| f(&s.content))
+    }
+
     pub fn is_closing(&self) -> bool {
         self.state.try_borrow().map_or(true, |s| s.closing)
     }
@@ -290,6 +305,15 @@ impl<C: PanelContent> State<C> {
             }
         }
         self.animating = want;
+        // A one-shot wake for changes without a tween (the caret blink): no frame timer meanwhile.
+        match self.content.wake_at(now).filter(|_| !want && !self.closing) {
+            Some(at) => unsafe {
+                SetTimer(Some(self.hwnd), WAKE_TIMER, at.saturating_sub(now).clamp(1, u64::from(u32::MAX)) as u32, None);
+            },
+            None => unsafe {
+                let _ = KillTimer(Some(self.hwnd), WAKE_TIMER);
+            },
+        }
     }
 
     fn post(&self, wp: usize, what: isize) {
@@ -397,9 +421,28 @@ impl<C: PanelContent> Handler for State<C> {
                 let vk = wp.0 as u16;
                 if vk == VK_ESCAPE.0 {
                     self.begin_close();
+                } else if unsafe { GetKeyState(i32::from(VK_CONTROL.0)) } < 0 {
+                    self.feed(PanelInput::CtrlKey(vk));
                 } else {
                     self.feed(PanelInput::Key(vk));
                 }
+            }
+            WM_CONTEXTMENU => {
+                // -1: from the keyboard (the menu key, Shift+F10); else a screen point.
+                let at = (lp.0 != -1).then(|| {
+                    let mut pt = POINT { x: (lp.0 & 0xFFFF) as i16 as i32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as i32 };
+                    unsafe {
+                        let _ = ScreenToClient(self.hwnd, &mut pt);
+                    }
+                    PointF { x: pt.x as f32, y: pt.y as f32 }
+                });
+                self.feed(PanelInput::ContextMenu(at));
+            }
+            WM_TIMER if wp.0 == WAKE_TIMER => {
+                unsafe {
+                    let _ = KillTimer(Some(self.hwnd), WAKE_TIMER);
+                }
+                self.paint();
             }
             WM_CHAR => {
                 if let Some(c) = char::from_u32(wp.0 as u32).filter(|c| !c.is_control()) {
