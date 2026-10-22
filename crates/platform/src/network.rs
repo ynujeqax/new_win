@@ -2,8 +2,9 @@
 //! IP Helper and WLAN call back on their own threads; the callbacks only post a message.
 
 use std::ffi::c_void;
+use std::sync::atomic::{AtomicU8, Ordering};
 
-use newwin_core::network::{NetInfo, NetKind};
+use newwin_core::network::{NetIcon, NetInfo, NetKind, WlanEvent, icon_for, wlan_wakes};
 use windows::Win32::Foundation::{HANDLE, HWND, LPARAM, WPARAM};
 use windows::Win32::NetworkManagement::IpHelper::*;
 use windows::Win32::NetworkManagement::WiFi::*;
@@ -18,6 +19,8 @@ const ROUTE_PROBE: [u8; 4] = [1, 1, 1, 1];
 struct Target {
     notify: isize,
     msg: u32,
+    /// Wi-Fi arcs on the bar now; WLAN signal changes that keep them are ignored.
+    bars: AtomicU8,
 }
 
 fn post(ctx: *const c_void) {
@@ -35,8 +38,24 @@ unsafe extern "system" fn on_hint(ctx: *const c_void, _: NL_NETWORK_CONNECTIVITY
     post(ctx);
 }
 
-unsafe extern "system" fn on_wlan(_: *mut L2_NOTIFICATION_DATA, ctx: *mut c_void) {
-    post(ctx);
+unsafe extern "system" fn on_wlan(data: *mut L2_NOTIFICATION_DATA, ctx: *mut c_void) {
+    let (Some(d), Some(t)) = (unsafe { data.as_ref() }, unsafe { (ctx as *const Target).as_ref() }) else { return };
+    let ev = if d.NotificationSource != WLAN_NOTIFICATION_SOURCE_MSM {
+        WlanEvent::Other
+    } else if d.NotificationCode == wlan_notification_msm_signal_quality_change.0 as u32 && d.dwDataSize >= 4 && !d.pData.is_null() {
+        WlanEvent::SignalQuality(unsafe { *(d.pData as *const u32) })
+    } else if d.NotificationCode == wlan_notification_msm_connected.0 as u32 {
+        WlanEvent::Connected
+    } else if d.NotificationCode == wlan_notification_msm_disconnected.0 as u32 {
+        WlanEvent::Disconnected
+    } else {
+        WlanEvent::Other
+    };
+    let mut bars = t.bars.load(Ordering::Relaxed);
+    if wlan_wakes(ev, &mut bars) {
+        t.bars.store(bars, Ordering::Relaxed);
+        post(ctx);
+    }
 }
 
 /// Event subscriptions; dropping it cancels them.
@@ -50,7 +69,7 @@ pub struct NetworkWatch {
 impl NetworkWatch {
     /// Posts `msg` to `notify` on any interface or connectivity change (the caller debounces).
     pub fn start(notify: HWND, msg: u32) -> Result<NetworkWatch> {
-        let target = Box::new(Target { notify: notify.0 as isize, msg });
+        let target = Box::new(Target { notify: notify.0 as isize, msg, bars: AtomicU8::new(0) });
         let ctx = &*target as *const Target as *const c_void;
         let mut w = NetworkWatch { target, interface: HANDLE::default(), hint: HANDLE::default(), wlan: None };
         unsafe {
@@ -62,8 +81,12 @@ impl NetworkWatch {
         Ok(w)
     }
 
-    /// Signal strength changes are only watched while Wi-Fi is the connection.
-    pub fn follow_wifi(&mut self, on: bool) {
+    /// Signal strength changes are only watched while Wi-Fi is the connection (`info`).
+    pub fn follow_wifi(&mut self, info: &NetInfo) {
+        if let NetIcon::WiFi { bars, .. } = icon_for(info) {
+            self.target.bars.store(bars, Ordering::Relaxed);
+        }
+        let on = matches!(info.kind, NetKind::WiFi { .. });
         match (on, self.wlan) {
             (true, None) => unsafe {
                 let mut version = 0;
@@ -98,7 +121,9 @@ impl Drop for NetworkWatch {
                 let _ = CancelMibChangeNotify2(self.hint);
             }
         }
-        self.follow_wifi(false);
+        if let Some(h) = self.wlan.take() {
+            unsafe { WlanCloseHandle(h, None) };
+        }
     }
 }
 

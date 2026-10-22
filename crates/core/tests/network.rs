@@ -20,3 +20,16 @@ fn tooltips() {
     assert_eq!(tooltip(&info(NetKind::Ethernet, false, Some("10.0.0.2")), "Not connected", "No internet"), "Ethernet · No internet");
     assert_eq!(tooltip(&info(NetKind::None, false, None), "Not connected", "No internet"), "Not connected");
 }
+
+#[test]
+fn wifi_signal_wakes_the_bar_only_when_the_bars_change() {
+    let mut bars = 2;
+    assert!(!wlan_wakes(WlanEvent::SignalQuality(50), &mut bars), "still 2 bars");
+    assert!(!wlan_wakes(WlanEvent::SignalQuality(60), &mut bars));
+    assert!(wlan_wakes(WlanEvent::SignalQuality(80), &mut bars), "3 bars now");
+    assert_eq!(bars, 3);
+    assert!(!wlan_wakes(WlanEvent::SignalQuality(250), &mut bars), "out-of-range quality is clamped to 100");
+    assert!(wlan_wakes(WlanEvent::Disconnected, &mut bars));
+    assert!(wlan_wakes(WlanEvent::Connected, &mut bars));
+    assert!(!wlan_wakes(WlanEvent::Other, &mut bars));
+}

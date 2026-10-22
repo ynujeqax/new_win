@@ -75,7 +75,7 @@ impl App {
         let info = current();
         log::debug!("network {info:?}");
         if let Some(w) = self.network.as_mut() {
-            w.follow_wifi(matches!(info.kind, newwin_core::network::NetKind::WiFi { .. }));
+            w.follow_wifi(&info);
         }
         let icon = icon_for(&info);
         self.net_info = Some(info);
