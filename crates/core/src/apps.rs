@@ -48,6 +48,36 @@ pub fn is_taskbar_window(w: &WindowInfo) -> bool {
         && (w.app_window || (!w.has_owner && !w.tool_window && !w.no_activate))
 }
 
+/// A window of Screen Snipping (Win+Shift+S / PrtScn), cloaked or not: its overlay is created
+/// cloaked and the screenshot is taken before it is shown.
+pub fn is_screen_snip(w: &WindowInfo) -> bool {
+    matches!(&w.group_key, GroupKey::AppId(id) if id.ends_with("!ScreenClipping"))
+}
+
+/// Tracks the windows of a running screen snip; reports when the first appears and the last goes.
+#[derive(Default)]
+pub struct SnipTracker {
+    windows: std::collections::HashSet<Hwnd>,
+}
+
+impl SnipTracker {
+    /// `is_snip`: whether `hwnd` (still exists and) is a snip window. Returns `Some(true)` when a
+    /// snip starts, `Some(false)` when it ends.
+    pub fn update(&mut self, hwnd: Hwnd, is_snip: bool) -> Option<bool> {
+        let was = self.active();
+        if is_snip {
+            self.windows.insert(hwnd);
+        } else {
+            self.windows.remove(&hwnd);
+        }
+        (was != self.active()).then_some(self.active())
+    }
+
+    pub fn active(&self) -> bool {
+        !self.windows.is_empty()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct AppGroup {
     pub key: GroupKey,

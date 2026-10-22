@@ -122,3 +122,27 @@ fn window_moving_to_another_group_leaves_the_old_one() {
     assert_eq!(m.groups().len(), 1);
     assert_eq!(m.groups()[0].key, key("b"));
 }
+
+const SNIP: &str = "MicrosoftWindows.Client.Core_cw5n1h2txyewy!ScreenClipping";
+
+#[test]
+fn screen_snipping_windows_are_recognized_even_while_cloaked() {
+    // The overlay is created cloaked and shown ~200 ms later; the screenshot is taken in between.
+    let mut w = win(1, SNIP, "Screen Snipping");
+    w.cloaked = true;
+    w.shell_ui = true;
+    assert!(is_screen_snip(&w));
+    assert!(!is_screen_snip(&win(2, "Claude_pzs8sxrjxfjjc!Claude", "Claude")));
+}
+
+#[test]
+fn snip_tracker_reports_start_and_end_once() {
+    let mut t = SnipTracker::default();
+    assert_eq!(t.update(1, true), Some(true));
+    assert_eq!(t.update(2, true), None); // its IME helper window
+    assert_eq!(t.update(1, true), None);
+    assert_eq!(t.update(9, false), None); // unrelated window
+    assert_eq!(t.update(1, false), None);
+    assert_eq!(t.update(2, false), Some(false));
+    assert!(!t.active());
+}

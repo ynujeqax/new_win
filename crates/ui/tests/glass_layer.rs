@@ -76,3 +76,20 @@ fn glass_tint_depends_on_backdrop() {
 fn the_active_app_pill_is_a_capsule_like_the_bar() {
     assert_eq!(newwin_ui::theme::PILL_RADIUS * 2.0, newwin_ui::theme::PILL_HEIGHT);
 }
+
+#[test]
+fn glass_can_be_captured_while_a_screenshot_is_taken() {
+    let gfx = Gfx::new().unwrap();
+    let hwnd = glass_window();
+    let layer = Layer::new(&gfx, hwnd, Backdrop::Glass, 200, 30).unwrap();
+    let affinity = || {
+        let mut a = 0u32;
+        unsafe { GetWindowDisplayAffinity(hwnd, &mut a).unwrap() };
+        a
+    };
+    layer.set_capturable(true);
+    assert_eq!(affinity(), WDA_NONE.0);
+    layer.set_capturable(false);
+    assert_eq!(affinity(), WDA_EXCLUDEFROMCAPTURE.0);
+    unsafe { DestroyWindow(hwnd).unwrap() };
+}

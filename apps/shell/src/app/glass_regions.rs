@@ -1,6 +1,7 @@
 //! Which glass windows want a backdrop right now (spec: liquid glass §3, "when capture is on").
 
 use newwin_core::glass::PxRect;
+use newwin_core::visibility::VisInput;
 use newwin_platform::dpi::scale;
 use newwin_ui::backdrop::{FRAME, Region, UNAVAILABLE, take_frame};
 use newwin_ui::theme;
@@ -30,12 +31,33 @@ impl App {
             .map(|(p, _)| p.windows().into_iter().map(|(h, r)| (id(h), px(r), popup_radius)).collect())
             .unwrap_or_default();
         let bar_radius = scale(self.config.appearance.corner_radius, self.dpi);
-        let wanted = wanted_regions(Some((id(self.bar), px(self.bar_rect), bar_radius)), bar_visible, self.in_zone, &popups);
+        // Frozen while a screenshot is taken: the glass is capturable then and must not see itself.
+        let wanted = if self.snips.active() {
+            Vec::new()
+        } else {
+            wanted_regions(Some((id(self.bar), px(self.bar_rect), bar_radius)), bar_visible, self.in_zone, &popups)
+        };
         if wanted != self.glass_sent {
             log::debug!("glass regions {wanted:?}");
             backdrops.set_regions(wanted.clone());
             self.glass_sent = wanted;
         }
+    }
+
+    /// Screen Snipping takes its screenshot right after its overlay window appears. While it is
+    /// open the bar acts as if a menu of ours were open (it stays as it is, even though the overlay
+    /// covers it), and the glass shows up in the screenshot with its backdrop frozen, so it cannot
+    /// blur itself.
+    pub(super) fn track_snip(&mut self, h: u64, is_snip: bool) {
+        let Some(active) = self.snips.update(h, is_snip) else { return };
+        log::info!("screen snip {}", if active { "started" } else { "ended" });
+        if let Some(layer) = self.bar_layer.as_ref() {
+            layer.set_capturable(active);
+        }
+        if let Some((p, _)) = &self.popup {
+            p.set_capturable(active);
+        }
+        self.feed(if active { VisInput::OverlayOpened } else { VisInput::OverlayClosed });
     }
 
     pub(super) fn on_glass(&mut self, wp: WPARAM, lp: LPARAM) {

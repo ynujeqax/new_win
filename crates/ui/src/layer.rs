@@ -20,7 +20,7 @@ use windows::Win32::Graphics::DirectComposition::{
     IDCompositionVirtualSurface, IDCompositionVisual2,
 };
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_ALPHA_MODE_PREMULTIPLIED, DXGI_FORMAT_B8G8R8A8_UNORM};
-use windows::Win32::UI::WindowsAndMessaging::{SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE};
+use windows::Win32::UI::WindowsAndMessaging::{SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE};
 use windows::core::{IUnknown, Result};
 use windows_numerics::Matrix3x2;
 
@@ -233,6 +233,18 @@ impl Layer {
             g.image = None;
         }
         self.gfx.commit()
+    }
+
+    /// Glass windows are normally hidden from screen capture so they never blur themselves; while
+    /// a screenshot is taken (the backdrop is frozen then) they must show up in it.
+    pub fn set_capturable(&self, capturable: bool) {
+        if self.kind != Backdrop::Glass {
+            return;
+        }
+        let affinity = if capturable { WDA_NONE } else { WDA_EXCLUDEFROMCAPTURE };
+        if let Err(e) = unsafe { SetWindowDisplayAffinity(self.hwnd, affinity) } {
+            log::warn!("display affinity for {:?}: {e}", self.hwnd);
+        }
     }
 
     pub fn has_backdrop(&self) -> bool {

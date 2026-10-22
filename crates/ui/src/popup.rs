@@ -279,6 +279,17 @@ impl Popup {
         }
     }
 
+    /// See [`Layer::set_capturable`]; applies to this popup and its submenu.
+    pub fn set_capturable(&self, capturable: bool) {
+        let Ok(s) = self.state.try_borrow() else { return };
+        if let Some(layer) = s.layer.as_ref() {
+            layer.set_capturable(capturable);
+        }
+        if let Some((_, child)) = &s.child {
+            child.set_capturable(capturable);
+        }
+    }
+
     /// The screen cannot be captured: fallback look for this popup and its submenu.
     pub fn set_glass_unavailable(&self) {
         let Ok(mut s) = self.state.try_borrow_mut() else { return };

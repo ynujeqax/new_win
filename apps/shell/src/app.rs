@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use newwin_config::Config;
-use newwin_core::apps::AppModel;
+use newwin_core::apps::{AppModel, SnipTracker};
 use newwin_core::strings::{Strings, strings_for};
 use newwin_core::visibility::{Catcher, Visibility};
 use newwin_core::watchdog::EXIT_RESTART;
@@ -92,6 +92,8 @@ pub struct App {
     bar_glass: bool,
     /// A full-screen app covers the bar.
     fullscreen: bool,
+    /// Screen Snipping is open: glass is capturable and its backdrop frozen.
+    snips: SnipTracker,
     // Clock
     date_text: String,
     time_text: String,
@@ -355,6 +357,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         glass_sent: Vec::new(),
         bar_glass: false,
         fullscreen: false,
+        snips: SnipTracker::default(),
         date_text: String::new(),
         time_text: String::new(),
         date_layout: None,

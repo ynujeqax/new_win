@@ -1,6 +1,6 @@
 //! Running apps on the bar: model updates, layout, painting, hit testing, clicks.
 
-use newwin_core::apps::{ClickAction, WindowInfo, left_click, middle_click};
+use newwin_core::apps::{ClickAction, WindowInfo, is_screen_snip, left_click, middle_click};
 use newwin_core::layout::fit_labels;
 use newwin_platform::activate;
 use newwin_platform::dpi::scale;
@@ -34,8 +34,14 @@ impl App {
     fn refresh_window(&mut self, h: u64) -> bool {
         let Some(names) = self.names.as_mut() else { return false };
         match describe(h, names) {
-            Some(w) => self.model.upsert(w),
-            None => self.model.remove(h),
+            Some(w) => {
+                self.track_snip(h, is_screen_snip(&w));
+                self.model.upsert(w)
+            }
+            None => {
+                self.track_snip(h, false);
+                self.model.remove(h)
+            }
         }
     }
 
@@ -53,6 +59,7 @@ impl App {
                 self.refresh_window(h);
             }
             WindowEvent::Destroyed(h) => {
+                self.track_snip(h, false);
                 self.model.remove(h);
             }
             WindowEvent::Activated(h) => {
