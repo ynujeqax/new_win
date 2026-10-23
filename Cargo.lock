@@ -60,6 +60,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "newwin-settings"
+version = "0.1.0"
+dependencies = [
+ "embed-manifest",
+ "log",
+ "newwin-config",
+ "newwin-core",
+ "newwin-platform",
+ "newwin-ui",
+ "windows",
+]
+
+[[package]]
 name = "newwin-shell"
 version = "0.1.0"
 dependencies = [

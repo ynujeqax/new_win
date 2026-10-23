@@ -9,7 +9,8 @@
 //! Content is painted over the whole window in physical px, under the caption it draws nothing it
 //! needs to see: the top [`CAPTION_H`] logical px are non-client (`WM_NCHITTEST`), so mouse input
 //! there never reaches the content. `PanelReply::action` has no owner to go to and is ignored;
-//! `resize` repaints (the size is fixed); `close` closes the window.
+//! `resize` repaints (the size is fixed); `close` closes the window. The content hears its own
+//! posted messages, timers and the window's activation through [`AppContent::message`].
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -62,7 +63,22 @@ pub trait AppContent {
     /// The window's DPI: called once before the first paint and whenever the window moves to a
     /// monitor with another DPI. Sizes are physical px, so content scales its layout here.
     fn dpi_changed(&mut self, _dpi: u32) {}
+    /// Window messages for the content itself: posted messages from [`CONTENT_MSG_MIN`] to
+    /// [`CONTENT_MSG_MAX`] (a directory watch), `WM_TIMER` for timers the content set on the
+    /// window with ids from [`CONTENT_TIMER_MIN`] up, and `WM_ACTIVATE` after the window handled
+    /// it. The reply is acted on like an input reply.
+    fn message(&mut self, _msg: u32, _wp: WPARAM, _lp: LPARAM, _now_ms: u64) -> PanelReply {
+        PanelReply::default()
+    }
 }
+
+/// The first `WM_APP` message the window hands to [`AppContent::message`]; the ones below are
+/// the window's own ([`GLASS_MSG`]).
+pub const CONTENT_MSG_MIN: u32 = WM_APP + 16;
+/// The last message for [`AppContent::message`] (the end of the `WM_APP` range).
+pub const CONTENT_MSG_MAX: u32 = 0xBFFF;
+/// The first timer id the content may set on the window; the ones below are the window's own.
+pub const CONTENT_TIMER_MIN: usize = 16;
 
 /// What a point in the window is: `p` in physical client px, `size` the window size in logical px.
 /// The top [`CAPTION_H`] px drag the window (`HTCAPTION`) except the two [`BUTTON_W`]-wide boxes at
@@ -413,6 +429,11 @@ impl<C: AppContent> State<C> {
         }
     }
 
+    fn message(&mut self, msg: u32, wp: WPARAM, lp: LPARAM) {
+        let reply = self.content.message(msg, wp, lp, now_ms());
+        self.after(reply);
+    }
+
     fn feed(&mut self, ev: PanelInput) {
         let reply = self.content.input(ev, now_ms());
         self.after(reply);
@@ -543,6 +564,7 @@ impl<C: AppContent> Handler for State<C> {
             }
             WM_CONTEXTMENU if lp.0 != -1 && self.hit(lp) != HTCLIENT => return None, // the system menu
             WM_TIMER if wp.0 == REVEAL_TIMER => self.reveal(),
+            WM_TIMER if wp.0 >= CONTENT_TIMER_MIN => self.message(msg, wp, lp),
             WM_TIMER => {
                 if !Frames::on_timer(self.hwnd, wp.0) {
                     return None;
@@ -550,6 +572,7 @@ impl<C: AppContent> Handler for State<C> {
                 self.paint();
             }
             m if m == GLASS_MSG => self.on_glass(wp, lp),
+            m if (CONTENT_MSG_MIN..=CONTENT_MSG_MAX).contains(&m) => self.message(msg, wp, lp),
             WM_WINDOWPOSCHANGED => {
                 self.sync_glass();
                 return None;
@@ -561,6 +584,7 @@ impl<C: AppContent> Handler for State<C> {
                     self.paint();
                 }
                 self.sync_glass();
+                self.message(msg, wp, lp);
                 return None;
             }
             WM_DPICHANGED => {

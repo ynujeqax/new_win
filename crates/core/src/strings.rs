@@ -49,6 +49,22 @@ pub struct Strings {
     pub press_again_shut_down: &'static str,
     pub press_again_restart: &'static str,
     pub spotlight_keys: &'static str,
+    // Settings window (M4)
+    pub section_bar: &'static str,
+    pub section_appearance: &'static str,
+    pub section_items: &'static str,
+    pub section_spotlight: &'static str,
+    pub section_tray: &'static str,
+    pub section_about: &'static str,
+    /// `{line}` is the 1-based line number.
+    pub banner_parse_error_line: &'static str,
+    /// When the parser cannot say which line.
+    pub banner_parse_error: &'static str,
+    /// `{reason}` is the error, without a final full stop.
+    pub banner_save_failed: &'static str,
+    pub banner_not_running: &'static str,
+    pub open_file: &'static str,
+    pub start_newwin: &'static str,
 }
 
 static EN: Strings = Strings {
@@ -95,6 +111,18 @@ static EN: Strings = Strings {
     press_again_shut_down: "Press ↵ again to shut down",
     press_again_restart: "Press ↵ again to restart",
     spotlight_keys: "↑↓ select · ↵ open · Ctrl ↵ run as administrator · Esc close",
+    section_bar: "Bar",
+    section_appearance: "Appearance",
+    section_items: "Items",
+    section_spotlight: "Spotlight",
+    section_tray: "Tray",
+    section_about: "About",
+    banner_parse_error_line: "config.toml has an error on line {line}. The bar uses the last good settings.",
+    banner_parse_error: "config.toml has an error. The bar uses the last good settings.",
+    banner_save_failed: "Couldn't save settings: {reason}.",
+    banner_not_running: "NewWin is not running. Changes apply when it starts.",
+    open_file: "Open file",
+    start_newwin: "Start NewWin",
 };
 
 static UK: Strings = Strings {
@@ -141,6 +169,18 @@ static UK: Strings = Strings {
     press_again_shut_down: "Натисніть ↵ ще раз, щоб завершити роботу",
     press_again_restart: "Натисніть ↵ ще раз, щоб перезавантажити",
     spotlight_keys: "↑↓ вибір · ↵ відкрити · Ctrl ↵ від імені адміністратора · Esc закрити",
+    section_bar: "Панель",
+    section_appearance: "Вигляд",
+    section_items: "Елементи",
+    section_spotlight: "Spotlight",
+    section_tray: "Трей",
+    section_about: "Про програму",
+    banner_parse_error_line: "У config.toml помилка в рядку {line}. Панель використовує останні правильні налаштування.",
+    banner_parse_error: "У config.toml помилка. Панель використовує останні правильні налаштування.",
+    banner_save_failed: "Не вдалося зберегти налаштування: {reason}.",
+    banner_not_running: "NewWin не запущено. Зміни застосуються, коли він запуститься.",
+    open_file: "Відкрити файл",
+    start_newwin: "Запустити NewWin",
 };
 
 /// `lang_tag` is a BCP-47 tag such as `en-US` or `uk-UA`.

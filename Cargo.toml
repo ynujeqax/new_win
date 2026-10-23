@@ -6,6 +6,7 @@ members = [
     "crates/platform",
     "crates/ui",
     "apps/shell",
+    "apps/settings",
 ]
 
 [workspace.package]

@@ -158,3 +158,46 @@ fn the_minimize_button_minimizes_after_the_handler_returns() {
     pump(Duration::from_millis(100));
     assert!(unsafe { IsIconic(w.hwnd()) }.as_bool());
 }
+
+/// Records the messages routed to the content.
+struct MsgProbe {
+    seen: std::rc::Rc<std::cell::RefCell<Vec<(u32, usize)>>>,
+}
+
+impl AppContent for MsgProbe {
+    fn paint(&mut self, _: &mut Painter, _: u64) {}
+    fn input(&mut self, _: PanelInput, _: u64) -> PanelReply {
+        PanelReply::default()
+    }
+    fn animating(&self, _: u64) -> bool {
+        false
+    }
+    fn message(&mut self, msg: u32, wp: WPARAM, _: LPARAM, _: u64) -> PanelReply {
+        self.seen.borrow_mut().push((msg, wp.0));
+        PanelReply::default()
+    }
+}
+
+#[test]
+fn content_hears_its_own_messages_timers_and_activation() {
+    use newwin_ui::app_window::{CONTENT_MSG_MIN, CONTENT_TIMER_MIN, GLASS_MSG};
+    let gfx = Gfx::new().unwrap();
+    let seen = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+    let w = AppWindow::create(&gfx, MsgProbe { seen: seen.clone() }, "NewWin.AppWindowTest", "NewWin", (760.0, 560.0)).unwrap();
+    pump(Duration::from_millis(30));
+    seen.borrow_mut().clear();
+    unsafe {
+        PostMessageW(Some(w.hwnd()), CONTENT_MSG_MIN + 3, WPARAM(7), LPARAM(0)).unwrap();
+        SetTimer(Some(w.hwnd()), CONTENT_TIMER_MIN + 1, 10, None);
+        SendMessageW(w.hwnd(), WM_ACTIVATE, Some(WPARAM(WA_ACTIVE as usize)), Some(LPARAM(0)));
+    }
+    pump(Duration::from_millis(60));
+    unsafe {
+        let _ = KillTimer(Some(w.hwnd()), CONTENT_TIMER_MIN + 1);
+    }
+    let seen = seen.borrow();
+    assert!(seen.contains(&(CONTENT_MSG_MIN + 3, 7)));
+    assert!(seen.contains(&(WM_TIMER, CONTENT_TIMER_MIN + 1)));
+    assert!(seen.contains(&(WM_ACTIVATE, WA_ACTIVE as usize)));
+    assert!(!seen.iter().any(|&(m, _)| m == GLASS_MSG), "the window's own glass frames stay its own");
+}

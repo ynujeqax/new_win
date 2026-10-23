@@ -1,4 +1,5 @@
-﻿//! File logger behind the `log` facade: `newwin.log`, rotated at 1 MB, 3 files kept.
+﻿//! File logger behind the `log` facade: `newwin.log` (the settings app: `settings.log`),
+//! rotated at 1 MB, 3 files kept.
 
 use std::fs::{File, OpenOptions};
 use std::io::Write;
@@ -12,12 +13,15 @@ const KEEP: usize = 3;
 
 struct FileLogger {
     dir: PathBuf,
+    /// File name without `.log`.
+    stem: &'static str,
     file: Mutex<Option<File>>,
 }
 
 impl FileLogger {
     fn path(&self, n: usize) -> PathBuf {
-        if n == 0 { self.dir.join("newwin.log") } else { self.dir.join(format!("newwin.{n}.log")) }
+        let stem = self.stem;
+        if n == 0 { self.dir.join(format!("{stem}.log")) } else { self.dir.join(format!("{stem}.{n}.log")) }
     }
 
     fn rotate(&self) {
@@ -76,8 +80,14 @@ impl ::log::Log for FileLogger {
     }
 }
 
+/// The shell and watchdog log: `newwin.log`.
 pub fn init_logging() -> std::io::Result<()> {
-    let logger = FileLogger { dir: crate::paths::log_dir(), file: Mutex::new(None) };
+    init_logging_to("newwin")
+}
+
+/// Logs to `<stem>.log` in the logs directory.
+pub fn init_logging_to(stem: &'static str) -> std::io::Result<()> {
+    let logger = FileLogger { dir: crate::paths::log_dir(), stem, file: Mutex::new(None) };
     ::log::set_boxed_logger(Box::new(logger)).map_err(std::io::Error::other)?;
     // NEWWIN_DEBUG=1 adds a detailed event trace for diagnosing problems.
     let debug = std::env::var_os("NEWWIN_DEBUG").is_some_and(|v| v == "1");
