@@ -58,3 +58,39 @@ fn messages_posted_during_a_nested_loop_are_not_lost() {
     assert_eq!(*seen.borrow(), vec![FIRST, SECOND]);
     unsafe { DestroyWindow(hwnd).unwrap() };
 }
+
+struct DpiRecorder {
+    lparams: Rc<RefCell<Vec<isize>>>,
+}
+
+impl Handler for DpiRecorder {
+    fn on_message(&mut self, hwnd: HWND, msg: u32, _: WPARAM, lp: LPARAM) -> Option<LRESULT> {
+        match msg {
+            FIRST => {
+                // Sent while this handler runs: queued, and its RECT pointer dies with this frame.
+                let suggested = RECT { left: 1, top: 2, right: 3, bottom: 4 };
+                unsafe { SendMessageW(hwnd, WM_DPICHANGED, Some(WPARAM(0x0090_0090)), Some(LPARAM(&suggested as *const RECT as isize))) };
+                Some(LRESULT(0))
+            }
+            WM_DPICHANGED => {
+                self.lparams.borrow_mut().push(lp.0);
+                Some(LRESULT(0))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[test]
+fn a_queued_dpi_change_carries_no_dangling_rect() {
+    let lparams = Rc::new(RefCell::new(Vec::new()));
+    let hwnd = create_window(
+        &WindowSpec { class: "NewWin.ReentrancyDpiTest", ex_style: WS_EX_TOOLWINDOW, style: WS_POPUP, rect: RECT::default(), layered_alpha: None },
+        Rc::new(RefCell::new(DpiRecorder { lparams: lparams.clone() })),
+    )
+    .unwrap();
+    unsafe { PostMessageW(Some(hwnd), FIRST, WPARAM(0), LPARAM(0)).unwrap() };
+    pump(100);
+    assert_eq!(*lparams.borrow(), vec![0]);
+    unsafe { DestroyWindow(hwnd).unwrap() };
+}

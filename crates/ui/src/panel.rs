@@ -11,25 +11,17 @@ use std::rc::Rc;
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::primary_monitor;
 use newwin_platform::window::{Handler, WindowSpec, create_window};
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
-use windows::Win32::Graphics::Gdi::ScreenToClient;
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, ReleaseCapture, SetCapture, TME_LEAVE, TRACKMOUSEEVENT, TrackMouseEvent, VK_CONTROL, VK_ESCAPE};
+use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
+use windows::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE;
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
 use crate::backdrop::Frame;
 use crate::popup::{CLOSED, PICKED, REGIONS};
-use crate::{Backdrop, Gfx, Layer, Painter, PointF, RectF, fade, paint_glass, set_offset_opacity, slide_y_both, theme};
+use crate::win_loop::{Frames, Mouse, REVEAL_TIMER, end_clear, start_clear};
+use crate::{Backdrop, Gfx, Layer, Painter, PointF, RectF, fade, paint_glass, slide_y_both, theme};
 
-/// Not exported by the `windows` crate.
-const WM_MOUSELEAVE: u32 = 0x02A3;
-const FRAME_TIMER: usize = 1;
 const CLOSE_TIMER: usize = 2;
-const WAKE_TIMER: usize = 3;
-const REVEAL_TIMER: usize = 4;
-/// The longest a glass-waiting panel stays clear.
-const REVEAL_MAX_MS: u32 = 250;
-const FRAME_MS: u32 = 16;
 
 /// A glass window whose backdrop the shell's capture feeds (bar menus, panels, tooltips).
 pub trait GlassWindow {
@@ -102,12 +94,11 @@ struct State<C> {
     dpi: u32,
     notify: HWND,
     msg: u32,
-    tracking: bool,
-    capturing: bool,
+    mouse: Mouse,
     closing: bool,
     closed: bool,
     glass: bool,
-    animating: bool,
+    frames: Frames,
     /// Stays open while it loses focus once (an app's own menu opened from it).
     held: bool,
     shown: std::time::Instant,
@@ -127,7 +118,7 @@ impl<C: PanelContent + 'static> Panel<C> {
     }
 
     /// Like [`Self::show`], but stays clear (while already taking the keyboard) until its first
-    /// glass frame, so its fallback tint never flashes; at most [`REVEAL_MAX_MS`].
+    /// glass frame, so its fallback tint never flashes; at most 250 ms.
     pub fn show_after_glass(gfx: &Rc<Gfx>, content: C, anchor: PointF, dpi: u32, notify: HWND, msg: u32) -> Result<Panel<C>> {
         Self::create(gfx, content, anchor, dpi, notify, msg, true)
     }
@@ -146,12 +137,11 @@ impl<C: PanelContent + 'static> Panel<C> {
             dpi,
             notify,
             msg,
-            tracking: false,
-            capturing: false,
+            mouse: Mouse::default(),
             closing: false,
             closed: false,
             glass: false,
-            animating: false,
+            frames: Frames::default(),
             held: false,
             shown: started,
             waiting: wait_glass,
@@ -319,12 +309,10 @@ impl<C: PanelContent> State<C> {
     fn hide_until_glass(&mut self) {
         let drop = -(theme::PANEL_DROP_PX * self.dpi as f32 / 96.0).round();
         if let Some(layer) = self.layer.as_mut()
-            && let (Ok(root), Ok(inner)) = (layer.visual(), layer.backdrop_visual())
-            && let Err(e) = set_offset_opacity(&self.gfx, &root, inner.as_ref(), drop, 0.0)
+            && let Err(e) = start_clear(&self.gfx, layer, self.hwnd, drop)
         {
             log::warn!("panel cannot start clear: {e}");
         }
-        unsafe { SetTimer(Some(self.hwnd), REVEAL_TIMER, REVEAL_MAX_MS, None) };
     }
 
     /// The glass came (or will not): play the show animation.
@@ -333,9 +321,7 @@ impl<C: PanelContent> State<C> {
             return;
         }
         self.waiting = false;
-        unsafe {
-            let _ = KillTimer(Some(self.hwnd), REVEAL_TIMER);
-        }
+        end_clear(self.hwnd);
         if !self.closing {
             self.animate(true);
         }
@@ -354,23 +340,8 @@ impl<C: PanelContent> State<C> {
 
     fn keep_animating(&mut self, now: u64) {
         let want = !self.closing && self.content.animating(now);
-        if want {
-            unsafe { SetTimer(Some(self.hwnd), FRAME_TIMER, FRAME_MS, None) };
-        } else if self.animating {
-            unsafe {
-                let _ = KillTimer(Some(self.hwnd), FRAME_TIMER);
-            }
-        }
-        self.animating = want;
-        // A one-shot wake for changes without a tween (the caret blink): no frame timer meanwhile.
-        match self.content.wake_at(now).filter(|_| !want && !self.closing) {
-            Some(at) => unsafe {
-                SetTimer(Some(self.hwnd), WAKE_TIMER, at.saturating_sub(now).clamp(1, u64::from(u32::MAX)) as u32, None);
-            },
-            None => unsafe {
-                let _ = KillTimer(Some(self.hwnd), WAKE_TIMER);
-            },
-        }
+        let wake = self.content.wake_at(now).filter(|_| !self.closing);
+        self.frames.schedule(self.hwnd, want, wake, now);
     }
 
     fn post(&self, wp: usize, what: isize) {
@@ -384,12 +355,7 @@ impl<C: PanelContent> State<C> {
             return;
         }
         self.closing = true;
-        if self.capturing {
-            self.capturing = false;
-            unsafe {
-                let _ = ReleaseCapture();
-            }
-        }
+        self.mouse.release();
         self.animate(false);
         unsafe { SetTimer(Some(self.hwnd), CLOSE_TIMER, theme::PANEL_HIDE_MS, None) };
     }
@@ -442,73 +408,10 @@ impl<C: PanelContent> State<C> {
     }
 }
 
-fn point(lp: LPARAM) -> PointF {
-    PointF { x: (lp.0 & 0xFFFF) as i16 as f32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as f32 }
-}
-
 impl<C: PanelContent> Handler for State<C> {
     fn on_message(&mut self, _hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
         match msg {
-            WM_MOUSEMOVE => {
-                if !self.tracking {
-                    let mut tme = TRACKMOUSEEVENT { cbSize: size_of::<TRACKMOUSEEVENT>() as u32, dwFlags: TME_LEAVE, hwndTrack: self.hwnd, dwHoverTime: 0 };
-                    self.tracking = unsafe { TrackMouseEvent(&mut tme) }.is_ok();
-                }
-                self.feed(PanelInput::Move(point(lp)));
-            }
-            WM_MOUSELEAVE => {
-                self.tracking = false;
-                self.feed(PanelInput::Leave);
-            }
-            WM_LBUTTONDOWN => {
-                unsafe { SetCapture(self.hwnd) };
-                self.capturing = true;
-                self.feed(PanelInput::Press(point(lp)));
-            }
-            WM_LBUTTONUP => {
-                if self.capturing {
-                    self.capturing = false;
-                    unsafe {
-                        let _ = ReleaseCapture();
-                    }
-                }
-                self.feed(PanelInput::Release(point(lp)));
-            }
-            WM_RBUTTONUP => self.feed(PanelInput::RightRelease(point(lp))),
-            WM_MOUSEWHEEL => self.feed(PanelInput::Wheel(((wp.0 >> 16) & 0xFFFF) as i16)),
-            WM_KEYDOWN => {
-                let vk = wp.0 as u16;
-                if vk == VK_ESCAPE.0 {
-                    self.begin_close();
-                } else if unsafe { GetKeyState(i32::from(VK_CONTROL.0)) } < 0 {
-                    self.feed(PanelInput::CtrlKey(vk));
-                } else {
-                    self.feed(PanelInput::Key(vk));
-                }
-            }
-            WM_CONTEXTMENU => {
-                // -1: from the keyboard (the menu key, Shift+F10); else a screen point.
-                let at = (lp.0 != -1).then(|| {
-                    let mut pt = POINT { x: (lp.0 & 0xFFFF) as i16 as i32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as i32 };
-                    unsafe {
-                        let _ = ScreenToClient(self.hwnd, &mut pt);
-                    }
-                    PointF { x: pt.x as f32, y: pt.y as f32 }
-                });
-                self.feed(PanelInput::ContextMenu(at));
-            }
-            WM_TIMER if wp.0 == WAKE_TIMER => {
-                unsafe {
-                    let _ = KillTimer(Some(self.hwnd), WAKE_TIMER);
-                }
-                self.paint();
-            }
-            WM_CHAR => {
-                if let Some(c) = char::from_u32(wp.0 as u32).filter(|c| !c.is_control()) {
-                    self.feed(PanelInput::Char(c));
-                }
-            }
-            WM_TIMER if wp.0 == FRAME_TIMER => self.paint(),
+            WM_KEYDOWN if wp.0 as u16 == VK_ESCAPE.0 => self.begin_close(),
             WM_TIMER if wp.0 == REVEAL_TIMER => self.reveal(),
             WM_TIMER if wp.0 == CLOSE_TIMER => {
                 unsafe {
@@ -526,7 +429,17 @@ impl<C: PanelContent> Handler for State<C> {
                 }
             }
             WM_ACTIVATE => self.held = false,
-            _ => return None,
+            WM_TIMER => {
+                if !Frames::on_timer(self.hwnd, wp.0) {
+                    return None;
+                }
+                self.paint();
+            }
+            _ => {
+                if let Some(ev) = self.mouse.translate(self.hwnd, msg, wp, lp)? {
+                    self.feed(ev);
+                }
+            }
         }
         Some(LRESULT(0))
     }

@@ -4,7 +4,7 @@ use newwin_platform::dpi::{primary_monitor, scale};
 use newwin_ui::app_window::{AppContent, AppWindow, caption_hit};
 use newwin_ui::panel::{PanelInput, PanelReply};
 use newwin_ui::{Gfx, Painter, PointF};
-use windows::Win32::Foundation::RECT;
+use windows::Win32::Foundation::{LPARAM, RECT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::*;
 
 struct Blank;
@@ -96,4 +96,65 @@ fn moving_the_window_resends_its_glass_region() {
     }
     pump(Duration::from_millis(50));
     assert_eq!(w.last_regions().len(), 1);
+}
+
+/// Records the DPIs it is told about.
+struct DpiProbe {
+    seen: std::rc::Rc<std::cell::RefCell<Vec<u32>>>,
+}
+
+impl AppContent for DpiProbe {
+    fn paint(&mut self, _: &mut Painter, _: u64) {}
+    fn input(&mut self, _: PanelInput, _: u64) -> PanelReply {
+        PanelReply::default()
+    }
+    fn animating(&self, _: u64) -> bool {
+        false
+    }
+    fn dpi_changed(&mut self, dpi: u32) {
+        self.seen.borrow_mut().push(dpi);
+    }
+}
+
+#[test]
+fn content_learns_the_dpi_and_the_window_takes_the_suggested_rect() {
+    let gfx = Gfx::new().unwrap();
+    let seen = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+    let w = AppWindow::create(&gfx, DpiProbe { seen: seen.clone() }, "NewWin.AppWindowTest", "NewWin", (760.0, 560.0)).unwrap();
+    let (_, dpi) = primary_monitor();
+    assert_eq!(*seen.borrow(), vec![dpi]);
+    assert_eq!(w.dpi(), dpi);
+
+    let new_dpi = if dpi == 192 { 144 } else { 192 };
+    let (pw, ph) = (scale(760.0, new_dpi).round() as i32, scale(560.0, new_dpi).round() as i32);
+    let suggested = RECT { left: 40, top: 30, right: 40 + pw, bottom: 30 + ph };
+    unsafe {
+        SendMessageW(
+            w.hwnd(),
+            WM_DPICHANGED,
+            Some(WPARAM(((new_dpi << 16) | new_dpi) as usize)),
+            Some(LPARAM(&suggested as *const RECT as isize)),
+        )
+    };
+    pump(Duration::from_millis(50));
+    assert_eq!(*seen.borrow(), vec![dpi, new_dpi]);
+    assert_eq!(w.dpi(), new_dpi);
+    let mut r = RECT::default();
+    unsafe { GetWindowRect(w.hwnd(), &mut r).unwrap() };
+    assert_eq!(r, suggested);
+}
+
+#[test]
+fn the_minimize_button_minimizes_after_the_handler_returns() {
+    let gfx = Gfx::new().unwrap();
+    let w = AppWindow::create(&gfx, Blank, "NewWin.AppWindowTest", "NewWin", (760.0, 560.0)).unwrap();
+    pump(Duration::from_millis(30));
+    unsafe {
+        SendMessageW(w.hwnd(), WM_NCLBUTTONDOWN, Some(WPARAM(HTMINBUTTON as usize)), Some(LPARAM(0)));
+        SendMessageW(w.hwnd(), WM_NCLBUTTONUP, Some(WPARAM(HTMINBUTTON as usize)), Some(LPARAM(0)));
+        // Posted, not run inside the handler.
+        assert!(!IsIconic(w.hwnd()).as_bool());
+    }
+    pump(Duration::from_millis(100));
+    assert!(unsafe { IsIconic(w.hwnd()) }.as_bool());
 }

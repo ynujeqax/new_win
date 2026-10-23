@@ -21,6 +21,7 @@ pub mod segmented;
 pub mod slider;
 pub mod spotlight;
 mod text;
+mod win_loop;
 pub mod tooltip;
 pub mod tray_list;
 pub mod volume_panel;

@@ -98,6 +98,9 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
                     }
                 }
                 Err(_) if can_defer(msg) => {
+                    // WM_DPICHANGED's lParam points at the sender's RECT, gone by delivery time:
+                    // a queued one carries 0 (no suggested rect).
+                    let lp = if msg == WM_DPICHANGED { LPARAM(0) } else { lp };
                     DEFERRED.with(|q| q.borrow_mut().push_back((hwnd, msg, wp, lp)));
                     return LRESULT(0);
                 }

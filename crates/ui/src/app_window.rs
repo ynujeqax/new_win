@@ -11,26 +11,24 @@
 //! there never reaches the content. `PanelReply::action` has no owner to go to and is ignored;
 //! `resize` repaints (the size is fixed); `close` closes the window.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use newwin_core::glass::PxRect;
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::{primary_monitor, scale};
 use newwin_platform::window::{Handler, WindowSpec, create_window};
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
-use windows::Win32::Graphics::Gdi::ScreenToClient;
-use windows::Win32::UI::Input::KeyboardAndMouse::{
-    GetKeyState, ReleaseCapture, SetCapture, TME_LEAVE, TME_NONCLIENT, TRACKMOUSEEVENT, TrackMouseEvent, VK_CONTROL,
-};
+use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
+use windows::Win32::UI::Input::KeyboardAndMouse::{TME_LEAVE, TME_NONCLIENT, TRACKMOUSEEVENT, TrackMouseEvent};
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::{HSTRING, Result};
 
 use crate::backdrop::{Backdrops, FRAME, Region, UNAVAILABLE, take_frame};
 use crate::panel::{PanelInput, PanelReply};
+use crate::win_loop::{Frames, Mouse, REVEAL_TIMER, end_clear, point, start_clear};
 use crate::{
     Backdrop, Color, Gfx, Layer, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, ease_out_progress, fade, paint_glass,
-    set_offset_opacity, theme,
+    theme,
 };
 
 /// Height of the caption strip, logical px.
@@ -43,14 +41,7 @@ pub const RADIUS: f32 = theme::PANEL_RADIUS;
 pub const GLASS_MSG: u32 = WM_APP + 1;
 
 /// Not exported by the `windows` crate.
-const WM_MOUSELEAVE: u32 = 0x02A3;
 const WM_NCMOUSELEAVE: u32 = 0x02A2;
-const FRAME_TIMER: usize = 1;
-const WAKE_TIMER: usize = 3;
-const REVEAL_TIMER: usize = 4;
-const FRAME_MS: u32 = 16;
-/// The longest the window stays clear waiting for its first glass frame.
-const REVEAL_MAX_MS: u32 = 250;
 /// Caption button hover fade.
 const HOVER_MS: f32 = 120.0;
 const TITLE_SIZE: f32 = 12.0;
@@ -68,6 +59,9 @@ pub trait AppContent {
     fn wake_at(&self, _now_ms: u64) -> Option<u64> {
         None
     }
+    /// The window's DPI: called once before the first paint and whenever the window moves to a
+    /// monitor with another DPI. Sizes are physical px, so content scales its layout here.
+    fn dpi_changed(&mut self, _dpi: u32) {}
 }
 
 /// What a point in the window is: `p` in physical client px, `size` the window size in logical px.
@@ -134,17 +128,17 @@ struct State<C> {
     content: C,
     /// Logical px.
     size: (f32, f32),
-    dpi: u32,
+    /// Shared with [`AppWindow::dpi`], readable while the window is busy.
+    dpi: Rc<Cell<u32>>,
     title: String,
     text: TextCache,
     title_layout: Option<TextLayout>,
     active: bool,
     glass: bool,
     waiting: bool,
-    animating: bool,
-    tracking: bool,
+    frames: Frames,
+    mouse: Mouse,
     nc_tracking: bool,
-    capturing: bool,
     /// The caption button under the mouse (`HTMINBUTTON` / `HTCLOSE`), or 0.
     hover: u32,
     /// The caption button the left button went down on, or 0.
@@ -156,15 +150,18 @@ struct State<C> {
 pub struct AppWindow<C: AppContent + 'static> {
     state: Rc<RefCell<State<C>>>,
     hwnd: HWND,
+    dpi: Rc<Cell<u32>>,
 }
 
 impl<C: AppContent + 'static> AppWindow<C> {
     /// Creates, shows and activates the window, `size_logical` big, centred on the primary
     /// monitor's work area. `title` is the caption text and the name on the bar and in Alt+Tab.
-    pub fn create(gfx: &Rc<Gfx>, content: C, class: &'static str, title: &str, size_logical: (f32, f32)) -> Result<AppWindow<C>> {
+    pub fn create(gfx: &Rc<Gfx>, mut content: C, class: &'static str, title: &str, size_logical: (f32, f32)) -> Result<AppWindow<C>> {
         let started = std::time::Instant::now();
         let (_, dpi) = primary_monitor();
         let px = phys(size_logical, dpi);
+        content.dpi_changed(dpi);
+        let dpi_cell = Rc::new(Cell::new(dpi));
         let state = Rc::new(RefCell::new(State {
             gfx: gfx.clone(),
             hwnd: HWND::default(),
@@ -173,17 +170,16 @@ impl<C: AppContent + 'static> AppWindow<C> {
             sent: Vec::new(),
             content,
             size: size_logical,
-            dpi,
+            dpi: dpi_cell.clone(),
             title: title.to_owned(),
             text: TextCache::new(gfx),
             title_layout: None,
             active: true,
             glass: false,
             waiting: true,
-            animating: false,
-            tracking: false,
+            frames: Frames::default(),
+            mouse: Mouse::default(),
             nc_tracking: false,
-            capturing: false,
             hover: 0,
             pressed: 0,
             min_fade: Fade::default(),
@@ -200,7 +196,7 @@ impl<C: AppContent + 'static> AppWindow<C> {
             state.clone(),
         )?;
         // From here on the window must not leak if a later step fails.
-        let win = AppWindow { state, hwnd };
+        let win = AppWindow { state, hwnd, dpi: dpi_cell };
         unsafe { SetWindowTextW(hwnd, &HSTRING::from(title))? };
         {
             let mut s = win.state.borrow_mut();
@@ -230,7 +226,7 @@ impl<C: AppContent + 'static> AppWindow<C> {
 
     /// The window's current DPI (it follows the monitor it is on).
     pub fn dpi(&self) -> u32 {
-        self.state.try_borrow().map_or(primary_monitor().1, |s| s.dpi)
+        self.dpi.get()
     }
 
     /// Changes the content, then repaints.
@@ -266,10 +262,6 @@ fn phys(size: (f32, f32), dpi: u32) -> (i32, i32) {
     (scale(size.0, dpi).round() as i32, scale(size.1, dpi).round() as i32)
 }
 
-fn point(lp: LPARAM) -> PointF {
-    PointF { x: (lp.0 & 0xFFFF) as i16 as f32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as f32 }
-}
-
 fn with_alpha(c: Color, a: f32) -> Color {
     Color { a: c.a * a, ..c }
 }
@@ -292,7 +284,7 @@ impl<C: AppContent> State<C> {
             vec![Region {
                 id: self.hwnd.0 as usize as u64,
                 window: PxRect { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
-                radius: scale(RADIUS, self.dpi).round(),
+                radius: scale(RADIUS, self.dpi.get()).round(),
             }]
         } else {
             Vec::new()
@@ -338,15 +330,16 @@ impl<C: AppContent> State<C> {
     }
 
     fn layout_title(&mut self) {
-        let style = TextStyle { family: FONT.into(), size: scale(TITLE_SIZE, self.dpi), weight: theme::WEIGHT_SEMIBOLD };
-        let max = scale(self.size.0 - 2.0 * BUTTON_W - TITLE_PAD_X, self.dpi);
+        let style = TextStyle { family: FONT.into(), size: scale(TITLE_SIZE, self.dpi.get()), weight: theme::WEIGHT_SEMIBOLD };
+        let max = scale(self.size.0 - 2.0 * BUTTON_W - TITLE_PAD_X, self.dpi.get());
         self.title_layout = self.text.layout(&self.title, &style, max).ok();
     }
 
     fn paint(&mut self) {
         let now = now_ms();
-        let (w, h) = (scale(self.size.0, self.dpi).round(), scale(self.size.1, self.dpi).round());
-        let s = self.dpi as f32 / 96.0;
+        let dpi = self.dpi.get();
+        let (w, h) = (scale(self.size.0, dpi).round(), scale(self.size.1, dpi).round());
+        let s = dpi as f32 / 96.0;
         let radius = (RADIUS * s).round();
         let glass = self.glass;
         let text_color = if self.active { theme::TEXT } else { theme::TEXT_INACTIVE };
@@ -369,36 +362,18 @@ impl<C: AppContent> State<C> {
 
     fn keep_animating(&mut self, now: u64) {
         let want = self.content.animating(now) || self.min_fade.running(now) || self.close_fade.running(now);
-        if want {
-            unsafe { SetTimer(Some(self.hwnd), FRAME_TIMER, FRAME_MS, None) };
-        } else if self.animating {
-            unsafe {
-                let _ = KillTimer(Some(self.hwnd), FRAME_TIMER);
-            }
-        }
-        self.animating = want;
-        match self.content.wake_at(now).filter(|_| !want) {
-            Some(at) => unsafe {
-                SetTimer(Some(self.hwnd), WAKE_TIMER, at.saturating_sub(now).clamp(1, u64::from(u32::MAX)) as u32, None);
-            },
-            None => unsafe {
-                let _ = KillTimer(Some(self.hwnd), WAKE_TIMER);
-            },
-        }
+        let wake = self.content.wake_at(now);
+        self.frames.schedule(self.hwnd, want, wake, now);
     }
 
-    /// Clear until the first glass frame (at most [`REVEAL_MAX_MS`]), so the solid fallback tint
-    /// never flashes before the glass.
+    /// Clear until the first glass frame (at most 250 ms), so the solid fallback tint never
+    /// flashes before the glass.
     fn hide_until_glass(&mut self) {
         if let Some(layer) = self.layer.as_mut()
-            && let (Ok(root), Ok(inner)) = (layer.visual(), layer.backdrop_visual())
-            && let Err(e) = set_offset_opacity(&self.gfx, &root, inner.as_ref(), 0.0, 0.0)
+            && let Err(e) = start_clear(&self.gfx, layer, self.hwnd, 0.0)
         {
             log::warn!("app window cannot start clear: {e}");
-            self.waiting = false;
-            return;
         }
-        unsafe { SetTimer(Some(self.hwnd), REVEAL_TIMER, REVEAL_MAX_MS, None) };
     }
 
     fn reveal(&mut self) {
@@ -406,9 +381,7 @@ impl<C: AppContent> State<C> {
             return;
         }
         self.waiting = false;
-        unsafe {
-            let _ = KillTimer(Some(self.hwnd), REVEAL_TIMER);
-        }
+        end_clear(self.hwnd);
         let Some(layer) = self.layer.as_mut() else { return };
         let r = layer.visual().and_then(|root| fade(&self.gfx, &root, 0.0, 1.0, theme::REVEAL_MS));
         if let Err(e) = r {
@@ -445,28 +418,44 @@ impl<C: AppContent> State<C> {
         self.after(reply);
     }
 
+    /// Client mouse and keyboard messages for the content; `None` for anything else.
+    fn input(&mut self, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
+        let ev = self.mouse.translate(self.hwnd, msg, wp, lp)?;
+        if let Some(ev) = ev {
+            self.feed(ev);
+        }
+        Some(LRESULT(0))
+    }
+
     fn hit(&self, lp: LPARAM) -> u32 {
         let r = self.window_rect();
         let p = point(lp);
-        caption_hit(PointF { x: p.x - r.left as f32, y: p.y - r.top as f32 }, self.size, self.dpi)
+        caption_hit(PointF { x: p.x - r.left as f32, y: p.y - r.top as f32 }, self.size, self.dpi.get())
     }
 
-    fn on_dpi(&mut self, dpi: u32) {
-        if dpi == self.dpi || dpi == 0 {
+    /// Moves to `dpi`: the window takes `suggested` (WM_DPICHANGED's rect) or, without one, keeps
+    /// its centre; the content hears of it before the repaint.
+    fn on_dpi(&mut self, dpi: u32, suggested: Option<RECT>) {
+        if dpi == self.dpi.get() || dpi == 0 {
             return;
         }
-        self.dpi = dpi;
-        // Keep the centre; the suggested rect in lParam may be stale if this message was queued.
-        let r = self.window_rect();
+        self.dpi.set(dpi);
         let (w, h) = phys(self.size, dpi);
-        let (cx, cy) = ((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+        let r = suggested.filter(|r| r.right > r.left && r.bottom > r.top).unwrap_or_else(|| {
+            let r = self.window_rect();
+            let (cx, cy) = ((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+            RECT { left: cx - w / 2, top: cy - h / 2, right: cx - w / 2 + w, bottom: cy - h / 2 + h }
+        });
+        // Inside the handler: the messages SetWindowPos sends are queued by the platform (answered
+        // 0, which is what a frameless popup wants) and WM_WINDOWPOSCHANGED re-sends the glass.
         unsafe {
-            let _ = SetWindowPos(self.hwnd, None, cx - w / 2, cy - h / 2, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+            let _ = SetWindowPos(self.hwnd, None, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE);
         }
         if let Some(layer) = self.layer.as_mut() {
-            let _ = layer.resize(w as u32, h as u32);
+            let _ = layer.resize((r.right - r.left) as u32, (r.bottom - r.top) as u32);
             let _ = layer.set_corner_radius(scale(RADIUS, dpi).round());
         }
+        self.content.dpi_changed(dpi);
         self.layout_title();
         self.paint();
         self.sync_glass();
@@ -529,8 +518,9 @@ impl<C: AppContent> Handler for State<C> {
                 self.paint();
                 if was == hit {
                     if hit == HTMINBUTTON {
+                        // Posted: minimizing sends messages (WM_NCACTIVATE) that need this handler free.
                         unsafe {
-                            let _ = ShowWindow(self.hwnd, SW_MINIMIZE);
+                            let _ = PostMessageW(Some(self.hwnd), WM_SYSCOMMAND, WPARAM(SC_MINIMIZE as usize), LPARAM(0));
                         }
                     } else {
                         unsafe {
@@ -546,71 +536,19 @@ impl<C: AppContent> Handler for State<C> {
                 }
                 return None;
             }
-            WM_MOUSEMOVE => {
-                if !self.tracking {
-                    let mut tme = TRACKMOUSEEVENT { cbSize: size_of::<TRACKMOUSEEVENT>() as u32, dwFlags: TME_LEAVE, hwndTrack: self.hwnd, dwHoverTime: 0 };
-                    self.tracking = unsafe { TrackMouseEvent(&mut tme) }.is_ok();
-                }
-                if self.hover != 0 {
-                    self.set_hover(0);
-                }
-                self.feed(PanelInput::Move(point(lp)));
+            WM_MOUSEMOVE if self.hover != 0 => {
+                // Off the caption buttons into the client area.
+                self.set_hover(0);
+                return self.input(msg, wp, lp);
             }
-            WM_MOUSELEAVE => {
-                self.tracking = false;
-                self.feed(PanelInput::Leave);
-            }
-            WM_LBUTTONDOWN => {
-                unsafe { SetCapture(self.hwnd) };
-                self.capturing = true;
-                self.feed(PanelInput::Press(point(lp)));
-            }
-            WM_LBUTTONUP => {
-                if self.capturing {
-                    self.capturing = false;
-                    unsafe {
-                        let _ = ReleaseCapture();
-                    }
-                }
-                self.feed(PanelInput::Release(point(lp)));
-            }
-            WM_RBUTTONUP => self.feed(PanelInput::RightRelease(point(lp))),
-            WM_MOUSEWHEEL => self.feed(PanelInput::Wheel(((wp.0 >> 16) & 0xFFFF) as i16)),
-            WM_KEYDOWN => {
-                let vk = wp.0 as u16;
-                if unsafe { GetKeyState(i32::from(VK_CONTROL.0)) } < 0 {
-                    self.feed(PanelInput::CtrlKey(vk));
-                } else {
-                    self.feed(PanelInput::Key(vk));
-                }
-            }
-            WM_CHAR => {
-                if let Some(c) = char::from_u32(wp.0 as u32).filter(|c| !c.is_control()) {
-                    self.feed(PanelInput::Char(c));
-                }
-            }
-            WM_CONTEXTMENU => {
-                // -1: from the keyboard; else a screen point (the caption's menu is the system menu).
-                if lp.0 != -1 && self.hit(lp) != HTCLIENT {
+            WM_CONTEXTMENU if lp.0 != -1 && self.hit(lp) != HTCLIENT => return None, // the system menu
+            WM_TIMER if wp.0 == REVEAL_TIMER => self.reveal(),
+            WM_TIMER => {
+                if !Frames::on_timer(self.hwnd, wp.0) {
                     return None;
-                }
-                let at = (lp.0 != -1).then(|| {
-                    let mut pt = POINT { x: (lp.0 & 0xFFFF) as i16 as i32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as i32 };
-                    unsafe {
-                        let _ = ScreenToClient(self.hwnd, &mut pt);
-                    }
-                    PointF { x: pt.x as f32, y: pt.y as f32 }
-                });
-                self.feed(PanelInput::ContextMenu(at));
-            }
-            WM_TIMER if wp.0 == FRAME_TIMER => self.paint(),
-            WM_TIMER if wp.0 == WAKE_TIMER => {
-                unsafe {
-                    let _ = KillTimer(Some(self.hwnd), WAKE_TIMER);
                 }
                 self.paint();
             }
-            WM_TIMER if wp.0 == REVEAL_TIMER => self.reveal(),
             m if m == GLASS_MSG => self.on_glass(wp, lp),
             WM_WINDOWPOSCHANGED => {
                 self.sync_glass();
@@ -625,7 +563,11 @@ impl<C: AppContent> Handler for State<C> {
                 self.sync_glass();
                 return None;
             }
-            WM_DPICHANGED => self.on_dpi((wp.0 & 0xFFFF) as u32),
+            WM_DPICHANGED => {
+                // The platform zeroes lParam when it had to queue the message (the RECT is gone).
+                let suggested = (lp.0 != 0).then(|| unsafe { *(lp.0 as *const RECT) });
+                self.on_dpi((wp.0 & 0xFFFF) as u32, suggested);
+            }
             WM_DISPLAYCHANGE => {
                 if let Some(b) = self.backdrops.as_ref() {
                     b.refresh();
@@ -643,7 +585,7 @@ impl<C: AppContent> Handler for State<C> {
                 self.sent.clear();
                 unsafe { PostQuitMessage(0) };
             }
-            _ => return None,
+            _ => return self.input(msg, wp, lp),
         }
         Some(LRESULT(0))
     }
