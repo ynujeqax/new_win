@@ -23,34 +23,35 @@ use super::panels::{ShellPanel, WM_APP_PANEL};
 pub(super) const WM_APP_FOREGROUND: u32 = WM_APP + 13;
 
 impl App {
-    /// Apps that had a tray icon before: read once at startup.
+    /// Apps that had a tray icon before: read once at startup, then brought up to date.
     pub(super) fn load_tray_seen(&mut self) {
         let (seen, err) = TraySeen::load(&tray_seen_path());
         if let Some(e) = err {
             log::warn!("tray_seen.toml unreadable, starting empty: {e}");
         }
         self.tray_seen = seen;
+        self.note_seen_icons();
     }
 
-    /// NewWin, then the shown icons as configured (`tray.order` first, `tray.hidden` left out, the
-    /// rest in order of addition); `tray_keys[i]` belongs to row `i + 1`.
-    fn tray_rows(&mut self) -> Vec<TrayRow> {
+    /// The exe file name of an icon's process, read once per pid; empty when unreadable.
+    fn tray_exe(&mut self, pid: u32) -> String {
+        self.tray_exes.entry(pid).or_insert_with(|| exe_file_name(pid)).clone()
+    }
+
+    /// Records every icon's app in `tray_seen.toml` (the name is the row label); saved on the
+    /// worker only when something changed. Runs on every tray-host change, panel open or not.
+    pub(super) fn note_seen_icons(&mut self) {
         let icons = self.tray_host.as_ref().map(|h| h.icons()).unwrap_or_default();
         let own = unsafe { GetCurrentProcessId() };
-        let mut pending = Vec::new();
         let mut changed = false;
         for icon in icons.iter().filter(|i| !i.hidden && !is_bar_duplicate(&i.key)) {
             let name = self.tray_names.entry(icon.pid).or_insert_with(|| process_display_name(icon.pid).unwrap_or_default());
             let label = row_label(&icon.tip, name);
-            if label.is_empty() {
+            let exe = self.tray_exe(icon.pid);
+            if label.is_empty() || !is_noted(&exe, icon.pid, own) {
                 continue;
             }
-            let exe = if icon.pid == own { String::new() } else { exe_file_name(icon.pid) };
-            if !exe.is_empty() && !exe.eq_ignore_ascii_case("explorer.exe") {
-                let app = if name.is_empty() { exe.as_str() } else { name.as_str() };
-                changed |= self.tray_seen.note(&exe, app);
-            }
-            pending.push((exe, (TrayRow { label, header: false }, icon.key)));
+            changed |= self.tray_seen.note(&exe, &label);
         }
         if changed {
             let text = self.tray_seen.to_toml();
@@ -59,6 +60,22 @@ impl App {
                     log::warn!("cannot write tray_seen.toml: {e}");
                 }
             })));
+        }
+    }
+
+    /// NewWin, then the shown icons as configured (`tray.order` first, `tray.hidden` left out, the
+    /// rest in order of addition); `tray_keys[i]` belongs to row `i + 1`.
+    fn tray_rows(&mut self) -> Vec<TrayRow> {
+        let icons = self.tray_host.as_ref().map(|h| h.icons()).unwrap_or_default();
+        let mut pending = Vec::new();
+        for icon in icons.iter().filter(|i| !i.hidden && !is_bar_duplicate(&i.key)) {
+            let name = self.tray_names.entry(icon.pid).or_insert_with(|| process_display_name(icon.pid).unwrap_or_default());
+            let label = row_label(&icon.tip, name);
+            if label.is_empty() {
+                continue;
+            }
+            let exe = self.tray_exe(icon.pid);
+            pending.push((exe, (TrayRow { label, header: false }, icon.key)));
         }
         let tray = &self.config.tray;
         let mut rows = vec![TrayRow { label: "NewWin".into(), header: true }];
@@ -108,6 +125,7 @@ impl App {
 
     /// The tray host's model changed: an open tray follows.
     pub(super) fn on_tray_changed(&mut self, _change: usize) {
+        self.note_seen_icons();
         if !matches!(self.panel, Some(ShellPanel::Tray(_))) {
             return;
         }
@@ -193,6 +211,12 @@ impl App {
     }
 }
 
+/// Whether an icon's app goes into `tray_seen.toml`: its exe is known, and it is neither
+/// explorer's own icon nor ours.
+fn is_noted(exe: &str, pid: u32, own_pid: u32) -> bool {
+    !exe.is_empty() && pid != own_pid && !exe.eq_ignore_ascii_case("explorer.exe")
+}
+
 /// The exe file name of a process, empty when it cannot be read (gone, denied).
 fn exe_file_name(pid: u32) -> String {
     process_image_path(pid).and_then(|p| p.rsplit(['\\', '/']).next().map(str::to_string)).unwrap_or_default()
@@ -247,5 +271,13 @@ mod tests {
         // tool window (topmost popup), as menus are.
         let steam_menu = ForegroundChange { is_panel: false, visible: true, same_app: false, captioned: true, tool: true };
         assert!(!held_tray_closes(steam_menu), "a helper process's menu");
+    }
+
+    #[test]
+    fn explorer_ourselves_and_unknown_exes_are_not_noted() {
+        assert!(is_noted("Discord.exe", 10, 99));
+        assert!(!is_noted("", 10, 99), "process gone or denied");
+        assert!(!is_noted("Explorer.EXE", 10, 99));
+        assert!(!is_noted("NewWin.exe", 99, 99), "our own icon");
     }
 }

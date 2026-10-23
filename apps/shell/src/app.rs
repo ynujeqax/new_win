@@ -90,6 +90,8 @@ pub struct App {
     tray_keys: Vec<newwin_core::tray::IconKey>,
     /// Fallback row names by process id.
     tray_names: std::collections::HashMap<u32, String>,
+    /// Exe file name per pid (empty: unreadable), like `tray_names`.
+    tray_exes: std::collections::HashMap<u32, String>,
     /// While the tray is held open under an app's menu: that app, and a foreground watch.
     held_pid: u32,
     foreground_watch: Option<WinEventHookGuard>,
@@ -518,6 +520,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         reorder_watch: None,
         tray_keys: Vec::new(),
         tray_names: std::collections::HashMap::new(),
+        tray_exes: std::collections::HashMap::new(),
         held_pid: 0,
         foreground_watch: None,
         audio: None,
