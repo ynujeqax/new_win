@@ -12,7 +12,10 @@ mod gfx;
 mod layer;
 mod paint;
 pub mod panel;
+pub mod nav;
 pub mod popup;
+pub mod reorder_list;
+pub mod scroll;
 pub mod segmented;
 pub mod slider;
 pub mod spotlight;
@@ -20,6 +23,7 @@ mod text;
 pub mod tooltip;
 pub mod tray_list;
 pub mod volume_panel;
+pub mod text_field;
 pub mod theme;
 pub mod toggle;
 

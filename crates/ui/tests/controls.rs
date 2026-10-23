@@ -1,3 +1,8 @@
+use newwin_ui::nav::Nav;
+use newwin_ui::panel::PanelInput;
+use newwin_ui::reorder_list::{ReorderList, ReorderRow};
+use newwin_ui::scroll::Scroll;
+use newwin_ui::text_field::TextField;
 use newwin_ui::segmented::Segmented;
 use newwin_ui::slider::{Range, level_at, thumb_x, thumb_x_for, value_at};
 use newwin_ui::toggle::Toggle;
@@ -77,4 +82,142 @@ fn volume_slider_levels_are_unchanged() {
     assert_eq!(level_at(-5.0, track), 0);
     assert_eq!(thumb_x(50, track), 200.0);
     assert_eq!(thumb_x(100, track), 300.0);
+}
+
+#[test]
+fn scroll_clamps_and_hides_thumb_when_content_fits() {
+    let view = RectF::new(0.0, 0.0, 300.0, 400.0);
+    let mut s = Scroll { offset: 0.0, content_h: 300.0, view_h: 400.0 };
+    assert_eq!(s.thumb_rect(view), None);
+    s.wheel(-120);
+    assert_eq!(s.offset, 0.0);
+    let mut s = Scroll { offset: 0.0, content_h: 900.0, view_h: 400.0 };
+    s.wheel(-120);
+    assert_eq!(s.offset, 48.0);
+    s.wheel(120);
+    s.wheel(120);
+    assert_eq!(s.offset, 0.0);
+    for _ in 0..50 {
+        s.wheel(-120);
+    }
+    assert_eq!(s.offset, 500.0);
+    let t = s.thumb_rect(view).unwrap();
+    assert!((t.bottom() - 400.0).abs() < 0.01 && t.h > 0.0 && t.h < 400.0);
+    let mut nan = Scroll { offset: f32::NAN, content_h: f32::NAN, view_h: 0.0 };
+    nan.clamp();
+    assert_eq!(nan.offset, 0.0);
+    assert_eq!(nan.thumb_rect(RectF::new(0.0, 0.0, 10.0, 0.0)), None);
+}
+
+#[test]
+fn scroll_thumb_drag_maps_pointer_to_offset() {
+    let view = RectF::new(0.0, 0.0, 300.0, 400.0);
+    let mut s = Scroll { offset: 0.0, content_h: 900.0, view_h: 400.0 };
+    let t = s.thumb_rect(view).unwrap();
+    s.drag_thumb(view, 400.0, t.h / 2.0);
+    assert_eq!(s.offset, 500.0);
+    s.drag_thumb(view, -100.0, t.h / 2.0);
+    assert_eq!(s.offset, 0.0);
+}
+
+fn rows(n: usize) -> Vec<ReorderRow> {
+    (0..n).map(|i| ReorderRow { label: format!("r{i}"), detail: None, on: Toggle::new(true) }).collect()
+}
+
+#[test]
+fn reorder_list_drag_reports_from_and_to() {
+    let mut l = ReorderList::new(rows(4));
+    l.set_layout(PointF { x: 0.0, y: 0.0 }, 300.0, 30.0, 96);
+    assert!(l.press(PointF { x: 20.0, y: 15.0 }));
+    l.drag_to(PointF { x: 20.0, y: 85.0 });
+    assert_eq!(l.release(), Some((0, 2)));
+    assert!(l.drag.is_none());
+    assert_eq!(l.release(), None);
+    // a click without moving is not a reorder
+    assert!(l.press(PointF { x: 20.0, y: 45.0 }));
+    assert_eq!(l.release(), None);
+    // far outside the list clamps
+    assert!(l.press(PointF { x: 20.0, y: 15.0 }));
+    l.drag_to(PointF { x: 900.0, y: 9000.0 });
+    assert_eq!(l.release(), Some((0, 3)));
+}
+
+#[test]
+fn reorder_list_never_panics_on_degenerate_input() {
+    let mut l = ReorderList::new(Vec::new());
+    l.set_layout(PointF::default(), 0.0, 0.0, 96);
+    assert!(!l.press(PointF { x: 1.0, y: 1.0 }));
+    l.drag_to(PointF { x: f32::NAN, y: f32::NAN });
+    assert_eq!(l.release(), None);
+    let mut l = ReorderList::new(rows(2));
+    l.set_layout(PointF::default(), 300.0, 0.0, 96);
+    assert!(!l.press(PointF { x: 1.0, y: 1.0 }));
+}
+
+#[test]
+fn reorder_list_commit_moves_rows_and_glides_150_ms() {
+    let mut l = ReorderList::new(rows(3));
+    l.set_layout(PointF::default(), 300.0, 30.0, 96);
+    l.press(PointF { x: 20.0, y: 15.0 });
+    l.drag_to(PointF { x: 20.0, y: 85.0 });
+    let (from, to) = l.release().unwrap();
+    l.commit(from, to, 0);
+    assert_eq!(l.rows[2].label, "r0");
+    assert_eq!(l.rows[0].label, "r1");
+    assert!(l.animating(100));
+    assert!(!l.animating(151));
+}
+
+#[test]
+fn reorder_list_press_on_the_toggle_does_not_drag() {
+    let mut l = ReorderList::new(rows(2));
+    l.set_layout(PointF::default(), 300.0, 30.0, 96);
+    let t = l.toggle_rect(0);
+    assert_eq!(l.toggle_hit(PointF { x: t.x + 2.0, y: t.y + 2.0 }), Some(0));
+    assert!(!l.press(PointF { x: t.x + 2.0, y: t.y + 2.0 }));
+}
+
+#[test]
+fn nav_hit_selects_the_row() {
+    let items: Vec<String> = (0..6).map(|i| format!("Item {i}")).collect();
+    let mut n = Nav::new(items, 0);
+    let layout = n.layout(PointF { x: 10.0, y: 10.0 }, 160.0, 96);
+    assert_eq!(layout.len(), 6);
+    let third = PointF { x: layout[2].x + 5.0, y: layout[2].y + layout[2].h / 2.0 };
+    assert_eq!(n.hit(&layout, third), Some(2));
+    assert_eq!(n.hit(&layout, PointF { x: 0.0, y: 0.0 }), None);
+    n.select(2, 0);
+    assert_eq!(n.selected, 2);
+    assert!(n.animating(100));
+    assert!(!n.animating(200));
+    n.select(99, 300);
+    assert_eq!(n.selected, 2);
+    assert!(Nav::new(Vec::new(), 4).layout(PointF::default(), 100.0, 96).is_empty());
+}
+
+#[test]
+fn text_field_edits_only_when_focused() {
+    let mut f = TextField::default();
+    assert!(!f.input(PanelInput::Char('a')));
+    f.focused = true;
+    assert!(f.input(PanelInput::Char('a')));
+    assert!(f.input(PanelInput::Char('b')));
+    assert_eq!(f.edit.text(), "ab");
+    assert!(!f.input(PanelInput::Key(0x25)), "Left moves the caret only");
+    assert!(f.input(PanelInput::Key(0x08)));
+    assert_eq!(f.edit.text(), "b");
+    assert!(!f.input(PanelInput::Key(0x23)), "End");
+    assert!(f.input(PanelInput::CtrlKey(0x08)));
+    assert_eq!(f.edit.text(), "");
+    assert!(!f.input(PanelInput::Wheel(1)));
+}
+
+#[test]
+fn text_field_caret_blinks_and_restarts_on_edit() {
+    let mut f = TextField { focused: true, ..Default::default() };
+    assert!(f.caret_on(0, Some(500)));
+    assert!(!f.caret_on(500, Some(500)));
+    f.input_at(PanelInput::Char('x'), 700);
+    assert!(f.caret_on(900, Some(500)));
+    assert!(f.caret_on(10_000, None));
 }

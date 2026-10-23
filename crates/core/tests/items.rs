@@ -38,3 +38,29 @@ fn search_is_a_status_item_before_the_separator() {
     let (xs, sep) = place_right(&[(Volume, 26.0), (Search, 26.0), (Date, 80.0), (Time, 40.0)], 1000.0, 2.0, 13.0);
     assert!(sep.is_some_and(|s| s > xs[1].1 + 26.0 && s < xs[2].1), "the separator sits between Search and the date: {xs:?} {sep:?}");
 }
+
+#[test]
+fn reorder_moves_one_item() {
+    let mut v = vec![1, 2, 3, 4];
+    reorder(&mut v, 0, 2);
+    assert_eq!(v, [2, 3, 1, 4]);
+    reorder(&mut v, 9, 0);
+    assert_eq!(v, [2, 3, 1, 4]);
+    reorder(&mut v, 2, 0);
+    assert_eq!(v, [1, 2, 3, 4]);
+    reorder(&mut v, 1, 9);
+    assert_eq!(v, [1, 2, 3, 4]);
+    let mut e: Vec<i32> = Vec::new();
+    reorder(&mut e, 0, 0);
+    assert!(e.is_empty());
+}
+
+#[test]
+fn drop_index_uses_row_midpoints() {
+    assert_eq!(drop_index(&[0.0, 30.0, 60.0], 30.0, 44.0), 1);
+    assert_eq!(drop_index(&[0.0, 30.0, 60.0], 30.0, 46.0), 2);
+    assert_eq!(drop_index(&[0.0, 30.0, 60.0], 30.0, 200.0), 2);
+    assert_eq!(drop_index(&[0.0, 30.0, 60.0], 30.0, -50.0), 0);
+    assert_eq!(drop_index(&[], 30.0, 10.0), 0);
+    assert_eq!(drop_index(&[0.0, 30.0], 30.0, f32::NAN), 0);
+}

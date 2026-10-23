@@ -62,3 +62,20 @@ pub fn place_right(items: &[(RightItem, f32)], right_edge: f32, gap: f32, separa
     }
     (xs, sep)
 }
+
+/// Moves the item at `from` so it ends up at index `to` (both into the current list);
+/// an out-of-range index does nothing.
+pub fn reorder<T>(v: &mut Vec<T>, from: usize, to: usize) {
+    if from >= v.len() || to >= v.len() || from == to {
+        return;
+    }
+    let item = v.remove(from);
+    v.insert(to, item);
+}
+
+/// The slot a dragged row lands in when its centre is at `y`: the number of rows whose midpoint
+/// lies above `y`, clamped to the last row (0 for no rows, a NaN `y` or a negative one).
+pub fn drop_index(row_tops: &[f32], row_h: f32, y: f32) -> usize {
+    let above = row_tops.iter().filter(|&&t| t + row_h / 2.0 < y).count();
+    above.min(row_tops.len().saturating_sub(1))
+}
