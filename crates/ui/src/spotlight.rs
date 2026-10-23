@@ -8,10 +8,11 @@ use std::rc::Rc;
 use newwin_core::anim::Tween;
 use newwin_core::spotlight::{Candidate, Confirm, Hit, Kind, SystemCommand, rank};
 use newwin_core::text_edit::{Edit, TextEdit};
-use windows::Win32::UI::Input::KeyboardAndMouse::{VK_BACK, VK_DELETE, VK_DOWN, VK_END, VK_HOME, VK_LEFT, VK_RETURN, VK_RIGHT, VK_UP};
+use windows::Win32::UI::Input::KeyboardAndMouse::{VK_DOWN, VK_RETURN, VK_UP};
 
 use crate::panel::{PanelContent, PanelInput, PanelReply, radius_for};
 use crate::popup::PopupStyle;
+use crate::text_field::{caret_visible, edit_for, next_flip};
 use crate::{Gfx, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, icons, theme};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -365,10 +366,7 @@ impl SpotlightView {
     }
 
     fn caret_on(&self, now: u64) -> bool {
-        match self.blink_ms {
-            Some(b) if b > 0 => (now.saturating_sub(self.blink_from) / u64::from(b)).is_multiple_of(2),
-            _ => true,
-        }
+        caret_visible(self.blink_from, now, self.blink_ms)
     }
 }
 
@@ -455,28 +453,19 @@ impl PanelContent for SpotlightView {
     }
 
     fn input(&mut self, ev: PanelInput, now: u64) -> PanelReply {
+        if let Some(e) = edit_for(&ev) {
+            return self.edit(e, now);
+        }
         match ev {
-            PanelInput::Char(c) => self.edit(Edit::Insert(c.to_string()), now),
+            PanelInput::Char(_) => PanelReply::default(),
             PanelInput::Key(vk) => match vk {
-                k if k == VK_BACK.0 => self.edit(Edit::Backspace, now),
-                k if k == VK_DELETE.0 => self.edit(Edit::Delete, now),
-                k if k == VK_LEFT.0 => self.edit(Edit::Left, now),
-                k if k == VK_RIGHT.0 => self.edit(Edit::Right, now),
-                k if k == VK_HOME.0 => self.edit(Edit::Home, now),
-                k if k == VK_END.0 => self.edit(Edit::End, now),
                 k if k == VK_UP.0 => self.step(false, now),
                 k if k == VK_DOWN.0 => self.step(true, now),
                 k if k == VK_RETURN.0 => self.activate(now),
                 _ => PanelReply::default(),
             },
             PanelInput::CtrlKey(vk) => match vk {
-                k if k == VK_BACK.0 => self.edit(Edit::BackspaceWord, now),
                 k if k == VK_RETURN.0 => self.admin(),
-                0x41 => self.edit(Edit::SelectAll, now),
-                0x56 => match newwin_platform::clipboard::text() {
-                    Some(t) => self.edit(Edit::Insert(t), now),
-                    None => PanelReply::default(),
-                },
                 _ => PanelReply::default(),
             },
             PanelInput::ContextMenu(at) => {
@@ -510,10 +499,7 @@ impl PanelContent for SpotlightView {
     }
 
     fn wake_at(&self, now: u64) -> Option<u64> {
-        let blink = self.blink_ms.filter(|&b| b > 0).map(|b| {
-            let b = u64::from(b);
-            self.blink_from + (now.saturating_sub(self.blink_from) / b + 1) * b
-        });
+        let blink = next_flip(self.blink_from, now, self.blink_ms);
         let confirm = self.confirm.expires_at().filter(|&at| at > now);
         match (blink, confirm) {
             (Some(a), Some(b)) => Some(a.min(b)),

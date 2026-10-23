@@ -62,16 +62,12 @@ impl TextField {
     }
 
     pub fn caret_on(&self, now: u64, blink_ms: Option<u32>) -> bool {
-        match blink_ms {
-            Some(b) if b > 0 => (now.saturating_sub(self.blink_from) / u64::from(b)).is_multiple_of(2),
-            _ => true,
-        }
+        caret_visible(self.blink_from, now, blink_ms)
     }
 
     /// The next moment the caret flips, when focused and blinking.
     pub fn next_blink(&self, now: u64, blink_ms: Option<u32>) -> Option<u64> {
-        let b = u64::from(blink_ms.filter(|&b| b > 0)?);
-        self.focused.then(|| self.blink_from + (now.saturating_sub(self.blink_from) / b + 1) * b)
+        self.focused.then(|| next_flip(self.blink_from, now, blink_ms)).flatten()
     }
 
     /// `text` is the laid-out content, `hint` the placeholder shown while empty, `clock` the
@@ -109,4 +105,18 @@ impl TextField {
         let half = (text_h * 0.42).round();
         p.line(PointF { x, y: mid - half }, PointF { x, y: mid + half }, theme::TEXT_STRONG, newwin_platform::dpi::scale(theme::CARET_W, dpi).max(1.0));
     }
+}
+
+/// Whether a caret that restarted its blink at `from` is shown at `now` (`None`/0 = never blinks).
+pub fn caret_visible(from: u64, now: u64, blink_ms: Option<u32>) -> bool {
+    match blink_ms {
+        Some(b) if b > 0 => (now.saturating_sub(from) / u64::from(b)).is_multiple_of(2),
+        _ => true,
+    }
+}
+
+/// The next moment after `now` the caret flips (`None` when it does not blink).
+pub fn next_flip(from: u64, now: u64, blink_ms: Option<u32>) -> Option<u64> {
+    let b = u64::from(blink_ms.filter(|&b| b > 0)?);
+    Some(from + (now.saturating_sub(from) / b + 1) * b)
 }
