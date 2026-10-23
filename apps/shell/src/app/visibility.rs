@@ -28,7 +28,7 @@ fn contains(r: RECT, p: POINT) -> bool {
 }
 
 impl App {
-    fn mode(&self) -> Mode {
+    pub(super) fn mode(&self) -> Mode {
         match self.config.bar.mode {
             BarMode::Pinned => Mode::Pinned,
             BarMode::AutoHide => Mode::AutoHide,
@@ -55,7 +55,7 @@ impl App {
         self.exec(cmds);
     }
 
-    fn exec(&mut self, cmds: Vec<VisCmd>) {
+    pub(super) fn exec(&mut self, cmds: Vec<VisCmd>) {
         for c in cmds {
             match c {
                 VisCmd::StartTimer(ms) => unsafe {
@@ -88,6 +88,7 @@ impl App {
             super::layout_view::LAYOUT_RECHECK_TIMER => self.read_layout(),
             super::spotlight_view::APPS_DEBOUNCE_TIMER => self.reindex_apps(),
             super::spotlight_view::USAGE_SAVE_TIMER => self.save_usage(),
+            super::config_view::CONFIG_DEBOUNCE_TIMER => self.reload_config(),
             HIDE_WINDOW_TIMER => unsafe {
                 log::debug!("hide timer: hiding the bar window");
                 self.hide_started = None;

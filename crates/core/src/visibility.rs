@@ -182,6 +182,18 @@ impl Visibility {
         }
     }
 
+    /// New settings, live: the state is kept; delays apply to the next timer, a mode switch goes
+    /// through [`Self::set_mode`], and a hidden bar's strip follows a new `ignore_fullscreen`.
+    pub fn set_config(&mut self, cfg: VisConfig) -> Vec<VisCmd> {
+        let was_blocked = self.trigger_blocked();
+        self.cfg = VisConfig { mode: self.cfg.mode, ..cfg };
+        let cmds = self.set_mode(cfg.mode);
+        if cmds.is_empty() && self.cfg.mode == Mode::AutoHide && self.state == VisState::Hidden && was_blocked != self.trigger_blocked() {
+            return vec![VisCmd::SetCatcher(self.rest_catcher())];
+        }
+        cmds
+    }
+
     pub fn set_mode(&mut self, mode: Mode) -> Vec<VisCmd> {
         use VisCmd::*;
         if self.cfg.mode == mode {

@@ -3,7 +3,7 @@
 //! never blocks; it swallows only a lone Win up (replayed masked) and the Esc of `Ctrl+Esc`.
 
 use std::cell::RefCell;
-use std::sync::atomic::{AtomicIsize, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering};
 use std::sync::mpsc;
 use std::thread::JoinHandle;
 
@@ -29,10 +29,12 @@ pub const SPOTLIGHT_PREWARM: usize = 1;
 static NOTIFY: AtomicIsize = AtomicIsize::new(0);
 static MSG_ID: AtomicU32 = AtomicU32::new(0);
 static SPOTLIGHT_MSG: AtomicU32 = AtomicU32::new(0);
+/// `spotlight.win_key`, changed live by the UI thread (`InputHook::set_win_key`).
+static WIN_KEY: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     static HOTKEYS: RefCell<LayoutHotkeys> = RefCell::new(LayoutHotkeys::default());
-    static TAP: RefCell<WinKeyTap> = RefCell::new(WinKeyTap::new(false));
+    static TAP: RefCell<WinKeyTap> = RefCell::new(WinKeyTap::new(true));
 }
 
 /// Injects `(vk, key up)` events tagged as NewWin's own; returns how many went in.
@@ -73,7 +75,10 @@ unsafe extern "system" fn on_key(code: i32, wp: WPARAM, lp: LPARAM) -> LRESULT {
         let tap = TAP.with(|t| {
             t.try_borrow_mut().map_or(TapAction::Pass, |mut t| {
                 t.sync(real.0, real.1, real.2, real.3);
-                t.key(vk, down)
+                // Off: the tap still tracks the keys (so turning it on mid-press stays sane) but
+                // nothing is swallowed or posted.
+                let action = t.key(vk, down);
+                if WIN_KEY.load(Ordering::Relaxed) { action } else { TapAction::Pass }
             })
         });
         match tap {
@@ -113,11 +118,11 @@ impl InputHook {
         NOTIFY.store(notify.0 as isize, Ordering::Relaxed);
         MSG_ID.store(layout_msg, Ordering::Relaxed);
         SPOTLIGHT_MSG.store(spotlight_msg, Ordering::Relaxed);
+        WIN_KEY.store(win_key, Ordering::Relaxed);
         let (tx, rx) = mpsc::channel::<Result<u32>>();
         let thread = std::thread::Builder::new()
             .name("newwin-input".into())
             .spawn(move || {
-                TAP.with(|t| *t.borrow_mut() = WinKeyTap::new(win_key));
                 let hook = unsafe { GetModuleHandleW(None).and_then(|m| SetWindowsHookExW(WH_KEYBOARD_LL, Some(on_key), Some(m.into()), 0)) };
                 let hook = match hook {
                     Ok(h) => h,
@@ -138,6 +143,11 @@ impl InputHook {
             .expect("cannot spawn the input thread");
         let thread_id = rx.recv().map_err(|_| windows::core::Error::from_thread())??;
         Ok(InputHook { thread_id, thread: Some(thread) })
+    }
+
+    /// Turns the lone-Win tap and `Ctrl+Esc` on or off without reinstalling the hook.
+    pub fn set_win_key(&self, on: bool) {
+        WIN_KEY.store(on, Ordering::Relaxed);
     }
 }
 

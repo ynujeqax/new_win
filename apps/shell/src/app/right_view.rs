@@ -84,6 +84,12 @@ impl RightView {
         }
     }
 
+    /// A new set or order of items (config change). Everything else stays: the icons keep their
+    /// state and the next layout moves the items to their new slots.
+    pub(super) fn set_items(&mut self, names: &[String]) {
+        self.items = parse_right(names);
+    }
+
     pub(super) fn slot(&self, item: RightItem) -> Option<RectF> {
         self.slots.iter().find(|s| s.item == item).map(|s| s.rect)
     }

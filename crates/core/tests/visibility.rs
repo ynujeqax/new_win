@@ -108,3 +108,30 @@ fn switching_modes() {
     assert_eq!(v.handle(VisInput::ZoneLeave), vec![]);
     assert_eq!(v.set_mode(Mode::AutoHide), vec![VisCmd::SetCatcher(Catcher::Zone), VisCmd::StartTimer(400)]);
 }
+
+#[test]
+fn new_delays_apply_to_the_next_timer() {
+    let (mut v, _) = Visibility::new(cfg(Mode::AutoHide));
+    assert_eq!(v.set_config(VisConfig { show_delay_ms: 0, ..cfg(Mode::AutoHide) }), vec![]);
+    assert_eq!(v.handle(VisInput::ZoneEnter), vec![VisCmd::StartTimer(0)]);
+    v.handle(VisInput::Timer);
+    v.set_config(VisConfig { hide_delay_ms: 1200, ..cfg(Mode::AutoHide) });
+    assert_eq!(v.handle(VisInput::ZoneLeave), vec![VisCmd::StartTimer(1200)]);
+}
+
+#[test]
+fn switching_to_pinned_shows_and_stops_the_catcher() {
+    let (mut v, _) = Visibility::new(cfg(Mode::AutoHide));
+    // Through set_mode: the bar was hidden, so it comes in; no timer may be left running.
+    assert_eq!(v.set_config(cfg(Mode::Pinned)), vec![VisCmd::CancelTimer, VisCmd::SetCatcher(Catcher::Off), VisCmd::AnimateIn]);
+    assert_eq!(v.state(), VisState::Shown);
+    assert_eq!(v.set_config(cfg(Mode::Pinned)), vec![], "an unchanged mode does nothing");
+}
+
+#[test]
+fn turning_ignore_fullscreen_off_while_hidden_brings_the_strip_back() {
+    let (mut v, _) = Visibility::new(cfg(Mode::AutoHide));
+    assert_eq!(v.handle(VisInput::Fullscreen(true)), vec![VisCmd::SetCatcher(Catcher::Off)]);
+    assert_eq!(v.set_config(VisConfig { ignore_fullscreen: false, ..cfg(Mode::AutoHide) }), vec![VisCmd::SetCatcher(Catcher::Strip)]);
+    assert_eq!(v.handle(VisInput::ZoneEnter), vec![VisCmd::StartTimer(150)]);
+}

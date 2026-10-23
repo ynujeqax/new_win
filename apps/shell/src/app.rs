@@ -33,6 +33,7 @@ use crate::watchdog::PING_WINDOW_CLASS;
 
 mod apps_view;
 mod clock_view;
+mod config_view;
 mod glass_regions;
 mod layout_view;
 mod menus;
@@ -154,6 +155,8 @@ pub struct App {
     apps_watch: Option<newwin_platform::apps_index::AppsWatch>,
     // Tray button and right side (M2)
     right: RightView,
+    // Live config (M4)
+    config_watch: Option<newwin_platform::dir_watch::DirWatch>,
 }
 
 fn ms_since_process_start() -> u64 {
@@ -328,6 +331,10 @@ impl App {
             }
             return Some(LRESULT(0));
         }
+        if msg == config_view::WM_APP_CONFIG {
+            self.on_config_dir_changed();
+            return Some(LRESULT(0));
+        }
         if msg == WM_APP_GLASS {
             self.on_glass(wp, lp);
             return Some(LRESULT(0));
@@ -495,7 +502,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         Config::default()
     });
 
-    let right = RightView::new(&config.items.right);
+    let right = RightView::new(&config_view::visible_items(&config.items));
     let gfx = Gfx::new()?;
     let app = Rc::new(RefCell::new(App {
         text: TextCache::new(&gfx),
@@ -548,6 +555,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         fullscreen: false,
         snips: SnipTracker::default(),
         right,
+        config_watch: None,
         apps: Vec::new(),
         catalog: Rc::new(Vec::new()),
         usage: Default::default(),
@@ -607,6 +615,9 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.tick_clock();
         a.reposition();
         a.start_visibility();
+        // After the bar is up: a change from now on applies live.
+        a.start_config_watch();
+        config_view::sync_autostart(a.config.system.start_with_windows);
     }
     log::info!("first-frame-ms={}", ms_since_process_start());
     Ok(app)
