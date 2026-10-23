@@ -4,7 +4,7 @@
 use std::ffi::c_void;
 use std::sync::atomic::{AtomicU8, Ordering};
 
-use newwin_core::network::{NetIcon, NetInfo, NetKind, WlanEvent, icon_for, wlan_wakes};
+use newwin_core::network::{NetIcon, NetInfo, NetKind, WlanEvent, icon_for, quality_from_bars, wlan_wakes};
 use windows::Win32::Foundation::{HANDLE, HWND, LPARAM, WPARAM};
 use windows::Win32::NetworkManagement::IpHelper::*;
 use windows::Win32::NetworkManagement::WiFi::*;
@@ -138,9 +138,35 @@ fn has_internet() -> bool {
     unsafe { GetNetworkConnectivityHint(&mut hint) }.is_ok() && hint.ConnectivityLevel == NetworkConnectivityLevelHintInternetAccess
 }
 
+/// (SSID, signal quality) from WinRT, which works while Location is denied (the WLAN API then
+/// refuses). Only when the internet profile runs over the adapter `guid`.
+fn winrt_wifi_details(guid: &GUID) -> Option<(String, u8)> {
+    use windows::Networking::Connectivity::NetworkInformation;
+    let profile = NetworkInformation::GetInternetConnectionProfile().ok()?;
+    if !profile.IsWlanConnectionProfile().ok()? {
+        return None;
+    }
+    if profile.NetworkAdapter().ok()?.NetworkAdapterId().ok()? != *guid {
+        return None;
+    }
+    let bars = profile.GetSignalBars().ok()?.Value().ok()?;
+    let ssid = profile
+        .WlanConnectionProfileDetails()
+        .and_then(|d| d.GetConnectedSsid())
+        .map(|s| s.to_string())
+        .ok()
+        .filter(|s| !s.is_empty())
+        .or_else(|| profile.ProfileName().ok().map(|s| s.to_string()))
+        .unwrap_or_default();
+    Some((ssid, quality_from_bars(bars)))
+}
+
 /// (SSID, signal quality) of the Wi-Fi interface named `adapter` ("{GUID}").
 fn wifi_details(adapter: &str) -> Option<(String, u8)> {
     let guid = GUID::try_from(adapter.trim_matches(['{', '}'])).ok()?;
+    if let Some(d) = winrt_wifi_details(&guid) {
+        return Some(d);
+    }
     unsafe {
         let mut version = 0;
         let mut h = HANDLE::default();

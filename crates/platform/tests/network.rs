@@ -28,3 +28,13 @@ fn watch_starts_and_stops() {
     let w = NetworkWatch::start(notify, WM_APP + 9).unwrap();
     drop(w);
 }
+
+/// Runs on a PC with Wi-Fi connected and Location denied; elsewhere it holds trivially.
+#[test]
+fn wifi_signal_is_known_without_location() {
+    let info = current();
+    if let NetKind::WiFi { signal } = info.kind {
+        assert!(signal > 0, "{info:?}");
+        assert!(!info.name.is_empty());
+    }
+}

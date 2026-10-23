@@ -33,3 +33,13 @@ fn wifi_signal_wakes_the_bar_only_when_the_bars_change() {
     assert!(wlan_wakes(WlanEvent::Connected, &mut bars));
     assert!(!wlan_wakes(WlanEvent::Other, &mut bars));
 }
+
+#[test]
+fn signal_bars_map_to_quality_and_arcs() {
+    let wifi = |q| info(NetKind::WiFi { signal: q }, true, None);
+    assert_eq!(quality_from_bars(0), 0);
+    assert_eq!(quality_from_bars(4), 80);
+    assert_eq!(quality_from_bars(9), 100);
+    assert_eq!(icon_for(&wifi(quality_from_bars(4))), NetIcon::WiFi { bars: 3, internet: true });
+    assert_eq!(icon_for(&wifi(quality_from_bars(1))), NetIcon::WiFi { bars: 1, internet: true });
+}

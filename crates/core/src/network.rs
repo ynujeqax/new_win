@@ -24,6 +24,11 @@ pub enum NetIcon {
     Disconnected,
 }
 
+/// Signal quality 0..=100 for WinRT signal bars (0..=5).
+pub fn quality_from_bars(bars: u8) -> u8 {
+    bars.min(5) * 20
+}
+
 /// Wi-Fi arcs lit for a signal quality.
 fn bars_for(signal: u8) -> u8 {
     match signal {
