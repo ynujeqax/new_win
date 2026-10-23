@@ -68,3 +68,10 @@ pub const SPOTLIGHT_TOP: f32 = 0.22;
 pub const SPOTLIGHT_SHADE: Color = Color::rgba(0, 0, 0, 0.22);
 pub const CARET_W: f32 = 1.35;
 pub const ROW_FADE_MS: u32 = 120;
+
+// M4 settings controls
+pub const TOGGLE_W: f32 = 36.0;
+pub const TOGGLE_H: f32 = 20.0;
+pub const TOGGLE_MS: u32 = 150;
+pub const SEGMENT_PAD_X: f32 = 12.0;
+pub const SEGMENT_H: f32 = 26.0;

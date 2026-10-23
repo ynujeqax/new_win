@@ -13,6 +13,7 @@ mod layer;
 mod paint;
 pub mod panel;
 pub mod popup;
+pub mod segmented;
 pub mod slider;
 pub mod spotlight;
 mod text;
@@ -20,6 +21,7 @@ pub mod tooltip;
 pub mod tray_list;
 pub mod volume_panel;
 pub mod theme;
+pub mod toggle;
 
 pub use anim::{ease_out_progress, fade, set_offset_opacity, slide_y, slide_y_both};
 pub use geom::{Color, PointF, RectF};
