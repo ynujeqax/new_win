@@ -53,12 +53,4 @@ impl Usage {
     }
 }
 
-/// Writes `text` next to `path` and renames it over, so a crash never leaves half a file.
-pub fn save_atomic(path: &Path, text: &str) -> std::io::Result<()> {
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir)?;
-    }
-    let tmp = path.with_extension("toml.tmp");
-    std::fs::write(&tmp, text)?;
-    std::fs::rename(&tmp, path)
-}
+pub use crate::save_atomic;

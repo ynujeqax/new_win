@@ -47,20 +47,20 @@ fn partial_file_keeps_other_defaults_and_ignores_unknown() {
 
 #[test]
 fn invalid_toml_is_error() {
-    assert!(matches!(parse("[bar\nmode="), Err(ConfigError::Parse(_))));
+    assert!(matches!(parse("[bar\nmode="), Err(ConfigError::Parse { .. })));
 }
 
 #[test]
 fn wrong_type_is_error() {
-    assert!(matches!(parse("[bar]\nshow_delay_ms = \"slow\"\n"), Err(ConfigError::Parse(_))));
+    assert!(matches!(parse("[bar]\nshow_delay_ms = \"slow\"\n"), Err(ConfigError::Parse { .. })));
 }
 
 #[test]
 fn sanitize_clamps() {
     let c = parse("[bar]\ntrigger_height_px = 9\nshow_delay_ms = 99999\n[appearance]\nheight = 3\n").unwrap();
     assert_eq!(c.bar.trigger_height_px, 2);
-    assert_eq!(c.bar.show_delay_ms, 2000);
-    assert_eq!(c.appearance.height, 24);
+    assert_eq!(c.bar.show_delay_ms, 1000);
+    assert_eq!(c.appearance.height, 28);
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn out_of_type_range_integers_are_clamped_not_rejected() {
     let c = parse("[bar]\ntrigger_height_px = 300\nshow_delay_ms = -5\n[appearance]\nheight = -1\nmargin = 99999999999\n").unwrap();
     assert_eq!(c.bar.trigger_height_px, 2);
     assert_eq!(c.bar.show_delay_ms, 0);
-    assert_eq!(c.appearance.height, 24);
+    assert_eq!(c.appearance.height, 28);
     assert_eq!(c.appearance.margin, 16);
 }
 
@@ -101,4 +101,62 @@ fn write_default_if_missing_creates_once() {
     newwin_config::write_default_if_missing(&path).unwrap();
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "[bar]\nmode = \"pinned\"\n", "an existing file is left alone");
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+fn tempdir_in_target(name: &str) -> std::path::PathBuf {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/test-tmp").join(format!("{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+#[test]
+fn out_of_range_values_are_clamped_to_the_m4_bounds() {
+    let c: Config = toml::from_str("[bar]\nshow_delay_ms = 5000\n[appearance]\nheight = 20\n[spotlight]\nmax_results = 99").unwrap();
+    let c = c.sanitized();
+    assert_eq!((c.bar.show_delay_ms, c.appearance.height, c.spotlight.max_results), (1000, 28, 15));
+    let c: Config = toml::from_str("[spotlight]\nmax_results = 0").unwrap();
+    assert_eq!(c.sanitized().spotlight.max_results, 3);
+}
+
+#[test]
+fn item_lists_are_normalized() {
+    let c: Config = toml::from_str("[items]\nright = [\"time\", \"time\", \"clock\", \"date\"]\nhidden = [\"clock\", \"date\"]").unwrap();
+    let c = c.sanitized();
+    assert_eq!(c.items.right, ["time", "date", "layout", "network", "volume", "search"]);
+    assert_eq!(c.items.hidden, ["date"]);
+}
+
+#[test]
+fn tray_lists_drop_duplicates_ignoring_case() {
+    let c: Config = toml::from_str("[tray]\norder = [\"Discord.exe\", \"discord.EXE\", \"\"]\nhidden = [\"A.exe\"]").unwrap();
+    assert_eq!(c.sanitized().tray.order, ["Discord.exe"]);
+}
+
+#[test]
+fn round_trip_keeps_every_field() {
+    let mut c = Config::default();
+    c.items.hidden = vec!["search".into()];
+    c.tray.hidden = vec!["MSI Afterburner.exe".into()];
+    let text = to_toml(&c);
+    assert!(text.starts_with("# NewWin settings. NewWinSettings.exe rewrites this file.\n"));
+    assert_eq!(toml::from_str::<Config>(&text).unwrap().sanitized(), c);
+}
+
+#[test]
+fn a_parse_error_names_its_line() {
+    let dir = tempdir_in_target("parse_line");
+    let p = dir.join("config.toml");
+    std::fs::write(&p, "version = 1\n[bar]\nmode = \n").unwrap();
+    match load(&p) { Err(ConfigError::Parse { line, .. }) => assert_eq!(line, Some(3)), r => panic!("{r:?}") }
+}
+
+#[test]
+fn save_atomic_replaces_the_file_and_leaves_no_temp() {
+    let dir = tempdir_in_target("save_atomic");
+    let p = dir.join("config.toml");
+    save_atomic(&p, "a").unwrap();
+    save_atomic(&p, "b").unwrap();
+    assert_eq!(std::fs::read_to_string(&p).unwrap(), "b");
+    assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1);
 }
