@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+pub mod diff;
 pub mod usage;
 
 /// Integer fields accept any TOML integer and saturate into the field's type,
