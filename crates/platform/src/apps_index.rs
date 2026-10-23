@@ -3,22 +3,20 @@
 
 use std::path::Path;
 
+use crate::dir_watch::Registration;
 use newwin_core::spotlight::{Candidate, Kind, is_listed};
 use windows::ApplicationModel::{PackageCatalog, PackageInstallingEventArgs, PackageUninstallingEventArgs, PackageUpdatingEventArgs};
 use windows::Foundation::TypedEventHandler;
-use windows::Win32::Foundation::{HANDLE, HWND, INVALID_HANDLE_VALUE, LPARAM, PROPERTYKEY, WPARAM};
+use windows::Win32::Foundation::{HWND, LPARAM, PROPERTYKEY, WPARAM};
 use windows::Win32::Storage::EnhancedStorage::PKEY_Link_TargetParsingPath;
-use windows::Win32::Storage::FileSystem::{
-    FILE_NOTIFY_CHANGE_DIR_NAME, FILE_NOTIFY_CHANGE_FILE_NAME, FindCloseChangeNotification, FindFirstChangeNotificationW, FindNextChangeNotification,
-};
+use windows::Win32::Storage::FileSystem::{FILE_NOTIFY_CHANGE_DIR_NAME, FILE_NOTIFY_CHANGE_FILE_NAME};
 use windows::Win32::System::Com::CoTaskMemFree;
-use windows::Win32::System::Threading::{INFINITE, RegisterWaitForSingleObject, UnregisterWaitEx, WT_EXECUTEDEFAULT};
 use windows::Win32::UI::Shell::{
     BHID_EnumItems, FOLDERID_AppsFolder, IEnumShellItems, IShellItem, IShellItem2, KF_FLAG_DEFAULT, SHGetKnownFolderItem, SIGDN, SIGDN_NORMALDISPLAY,
     SIGDN_PARENTRELATIVEPARSING,
 };
 use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
-use windows::core::{GUID, HSTRING, Interface, Result};
+use windows::core::{GUID, Interface, Result};
 
 /// `System.AppUserModel.PackageFullName`: set only on packaged apps (not in `windows` 0.62).
 const PKEY_PACKAGE_FULL_NAME: PROPERTYKEY = PROPERTYKEY { fmtid: GUID::from_u128(0x9f4c2855_9f79_4b39_a8d0_e1d42de1d5f3), pid: 21 };
@@ -65,25 +63,10 @@ pub fn enumerate_apps() -> Result<Vec<Candidate>> {
     Ok(out)
 }
 
-/// What a thread-pool wait callback needs; boxed, freed after the wait is gone.
-struct Wait {
-    change: HANDLE,
-    notify: isize,
-    msg: u32,
-}
-
-unsafe extern "system" fn on_change(ctx: *mut core::ffi::c_void, _timed_out: bool) {
-    let w = unsafe { &*(ctx as *const Wait) };
-    unsafe {
-        let _ = PostMessageW(Some(HWND(w.notify as *mut _)), w.msg, WPARAM(0), LPARAM(0));
-        let _ = FindNextChangeNotification(w.change);
-    }
-}
-
 /// Posts `msg` when an app may have been installed or removed. Several posts can arrive for one
 /// install: the owner debounces.
 pub struct AppsWatch {
-    waits: Vec<(HANDLE, *mut Wait)>,
+    _waits: Vec<Registration>,
     catalog: Option<(PackageCatalog, [i64; 3])>,
 }
 
@@ -99,19 +82,9 @@ fn start_menu_dirs() -> Vec<std::path::PathBuf> {
 impl AppsWatch {
     pub fn start(notify: HWND, msg: u32) -> Result<AppsWatch> {
         let n = notify.0 as isize;
-        let mut w = AppsWatch { waits: Vec::new(), catalog: None };
+        let mut w = AppsWatch { _waits: Vec::new(), catalog: None };
         for dir in start_menu_dirs() {
-            let change = unsafe { FindFirstChangeNotificationW(&HSTRING::from(dir.as_os_str()), true, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME)? };
-            let ctx = Box::into_raw(Box::new(Wait { change, notify: n, msg }));
-            let mut wait = HANDLE::default();
-            if let Err(e) = unsafe { RegisterWaitForSingleObject(&mut wait, change, Some(on_change), Some(ctx as *const _), INFINITE, WT_EXECUTEDEFAULT) } {
-                unsafe {
-                    let _ = FindCloseChangeNotification(change);
-                    drop(Box::from_raw(ctx));
-                }
-                return Err(e);
-            }
-            w.waits.push((wait, ctx));
+            w._waits.push(Registration::new(&dir, true, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME, notify, msg)?);
         }
         match watch_packages(n, msg) {
             Ok(c) => w.catalog = Some(c),
@@ -149,14 +122,6 @@ fn watch_packages(notify: isize, msg: u32) -> Result<(PackageCatalog, [i64; 3])>
 
 impl Drop for AppsWatch {
     fn drop(&mut self) {
-        for (wait, ctx) in self.waits.drain(..) {
-            unsafe {
-                // Blocks until a running callback has returned: then the context can go.
-                let _ = UnregisterWaitEx(wait, Some(INVALID_HANDLE_VALUE));
-                let _ = FindCloseChangeNotification((*ctx).change);
-                drop(Box::from_raw(ctx));
-            }
-        }
         if let Some((c, [i, u, up])) = self.catalog.take() {
             let _ = c.RemovePackageInstalling(i);
             let _ = c.RemovePackageUninstalling(u);

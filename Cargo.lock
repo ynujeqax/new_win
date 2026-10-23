@@ -53,6 +53,7 @@ name = "newwin-platform"
 version = "0.1.0"
 dependencies = [
  "log",
+ "newwin-config",
  "newwin-core",
  "windows",
  "windows-core",

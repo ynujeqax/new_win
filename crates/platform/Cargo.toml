@@ -47,3 +47,6 @@ windows = { workspace = true, features = [
     "Win32_System_RemoteDesktop",
     "Win32_Security",
 ] }
+
+[dev-dependencies]
+newwin-config.workspace = true
