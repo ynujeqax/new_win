@@ -67,7 +67,7 @@ impl App {
         self.apps_watch = AppsWatch::start(self.ping, WM_APP_APPS_CHANGED).map_err(|e| log::warn!("app index watch: {e}")).ok();
     }
 
-    fn submit_job(&self, job: Job) {
+    pub(super) fn submit_job(&self, job: Job) {
         match self.names.as_ref().and_then(|n| n.worker()) {
             Some(w) => w.submit_job(job),
             None => log::warn!("no worker thread"),

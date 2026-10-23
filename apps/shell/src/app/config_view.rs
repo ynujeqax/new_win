@@ -130,7 +130,10 @@ impl App {
         {
             h.set_win_key(self.config.spotlight.win_key);
         }
-        // c.tray: Task 5 rebuilds the tray rows here. c.spotlight: read on the next open.
+        if c.tray {
+            self.refresh_tray();
+        }
+        // c.spotlight: read on the next open.
         if c.autostart {
             sync_autostart(self.config.system.start_with_windows);
         }

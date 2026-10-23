@@ -210,3 +210,15 @@ fn a_restored_icon_is_the_registration_it_replays() {
     assert_eq!((icon.callback_message, icon.version, icon.tip.as_str(), icon.hidden, icon.adopted), (0xB00, 3, "NVIDIA Settings", false, false));
     assert_eq!(icon.pid, 2832);
 }
+
+#[test]
+fn arrange_puts_ordered_first_and_drops_hidden() {
+    let rows = vec![("a.exe".into(), 1), ("B.exe".into(), 2), ("c.exe".into(), 3)];
+    assert_eq!(arrange_rows(rows, &["b.EXE".into()], &["C.exe".into()]), vec![2, 1]);
+}
+
+#[test]
+fn arrange_keeps_unknown_order_and_rows_without_exe() {
+    let rows = vec![("a.exe".into(), 1), ("".into(), 2), ("b.exe".into(), 3), ("c.exe".into(), 4)];
+    assert_eq!(arrange_rows(rows, &["c.exe".into(), "b.exe".into(), "zzz.exe".into()], &["".into()]), vec![4, 3, 1, 2]);
+}

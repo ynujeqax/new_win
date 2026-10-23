@@ -336,3 +336,22 @@ pub fn missing_known(running: &[(u32, String)], icon_pids: &[u32]) -> Vec<(&'sta
         })
         .collect()
 }
+
+/// The tray rows as the user arranged them: `hidden` apps removed, `order` first in its order,
+/// the rest in their incoming order. Rows are `(exe file name, row)`; an empty exe (process gone)
+/// is never ordered or hidden. Exe names compare case-insensitively.
+pub fn arrange_rows<T>(rows: Vec<(String, T)>, order: &[String], hidden: &[String]) -> Vec<T> {
+    let is = |list: &[String], exe: &str| list.iter().any(|x| x.eq_ignore_ascii_case(exe));
+    let (mut ranked, mut rest) = (Vec::new(), Vec::new());
+    for (exe, row) in rows {
+        if !exe.is_empty() && is(hidden, &exe) {
+            continue;
+        }
+        match (!exe.is_empty()).then(|| order.iter().position(|x| x.eq_ignore_ascii_case(&exe))).flatten() {
+            Some(p) => ranked.push((p, row)),
+            None => rest.push(row),
+        }
+    }
+    ranked.sort_by_key(|(p, _)| *p);
+    ranked.into_iter().map(|(_, r)| r).chain(rest).collect()
+}

@@ -151,6 +151,8 @@ pub struct App {
     /// System commands, then the indexed apps.
     catalog: Rc<Vec<newwin_core::spotlight::Candidate>>,
     usage: newwin_config::usage::Usage,
+    /// Apps that have had a tray icon (`tray_seen.toml`); loaded once, saved when it changes.
+    tray_seen: newwin_config::tray_seen::TraySeen,
     spotlight: Option<newwin_ui::panel::Panel<newwin_ui::spotlight::SpotlightView>>,
     apps_watch: Option<newwin_platform::apps_index::AppsWatch>,
     // Tray button and right side (M2)
@@ -559,6 +561,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         apps: Vec::new(),
         catalog: Rc::new(Vec::new()),
         usage: Default::default(),
+        tray_seen: Default::default(),
         spotlight: None,
         apps_watch: None,
         date_text: String::new(),
@@ -611,6 +614,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         a.start_audio();
         a.start_network();
         a.start_layout();
+        a.load_tray_seen();
         a.start_spotlight();
         a.tick_clock();
         a.reposition();

@@ -1,16 +1,20 @@
 //! The tray panel under `⌃` (spec: M2 §3.1): NewWin, then the apps of our tray host.
 
-use newwin_core::tray::{is_bar_duplicate, missing_known, row_label};
-use newwin_platform::appinfo::{process_display_name, session_processes};
+use newwin_config::tray_seen::TraySeen;
+use newwin_config::{save_atomic, tray_seen_path};
+use newwin_core::tray::{arrange_rows, is_bar_duplicate, missing_known, row_label};
+use newwin_platform::appinfo::{process_display_name, process_image_path, session_processes};
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
 use newwin_platform::launch::shell_execute;
 use newwin_platform::tray_host::{TrayClick, TrayHost, find_process_window, send_click, watch_foreground};
+use newwin_platform::worker::Job;
 use newwin_ui::panel::Panel;
 use newwin_ui::popup::PopupStyle;
 use newwin_ui::tray_list::{TrayList, TrayOp, TrayRow, decode_action};
 use newwin_ui::{PointF, theme};
 use windows::Win32::Foundation::{HWND, POINT, RECT};
+use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::WindowsAndMessaging::{GWL_EXSTYLE, GWL_STYLE, GetCursorPos, GetWindowLongW, GetWindowThreadProcessId, IsWindowVisible, WM_APP, WS_CAPTION, WS_EX_TOOLWINDOW};
 
 use super::App;
@@ -19,21 +23,56 @@ use super::panels::{ShellPanel, WM_APP_PANEL};
 pub(super) const WM_APP_FOREGROUND: u32 = WM_APP + 13;
 
 impl App {
-    /// NewWin, then every shown icon in order of addition; `tray_keys[i]` belongs to row `i + 1`.
+    /// Apps that had a tray icon before: read once at startup.
+    pub(super) fn load_tray_seen(&mut self) {
+        let (seen, err) = TraySeen::load(&tray_seen_path());
+        if let Some(e) = err {
+            log::warn!("tray_seen.toml unreadable, starting empty: {e}");
+        }
+        self.tray_seen = seen;
+    }
+
+    /// NewWin, then the shown icons as configured (`tray.order` first, `tray.hidden` left out, the
+    /// rest in order of addition); `tray_keys[i]` belongs to row `i + 1`.
     fn tray_rows(&mut self) -> Vec<TrayRow> {
         let icons = self.tray_host.as_ref().map(|h| h.icons()).unwrap_or_default();
-        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true }];
-        self.tray_keys.clear();
+        let own = unsafe { GetCurrentProcessId() };
+        let mut pending = Vec::new();
+        let mut changed = false;
         for icon in icons.iter().filter(|i| !i.hidden && !is_bar_duplicate(&i.key)) {
             let name = self.tray_names.entry(icon.pid).or_insert_with(|| process_display_name(icon.pid).unwrap_or_default());
             let label = row_label(&icon.tip, name);
             if label.is_empty() {
                 continue;
             }
-            rows.push(TrayRow { label, header: false });
-            self.tray_keys.push(icon.key);
+            let exe = if icon.pid == own { String::new() } else { exe_file_name(icon.pid) };
+            if !exe.is_empty() && !exe.eq_ignore_ascii_case("explorer.exe") {
+                let app = if name.is_empty() { exe.as_str() } else { name.as_str() };
+                changed |= self.tray_seen.note(&exe, app);
+            }
+            pending.push((exe, (TrayRow { label, header: false }, icon.key)));
+        }
+        if changed {
+            let text = self.tray_seen.to_toml();
+            self.submit_job(Job::Run(Box::new(move || {
+                if let Err(e) = save_atomic(&tray_seen_path(), &text) {
+                    log::warn!("cannot write tray_seen.toml: {e}");
+                }
+            })));
+        }
+        let tray = &self.config.tray;
+        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true }];
+        self.tray_keys.clear();
+        for (row, key) in arrange_rows(pending, &tray.order, &tray.hidden) {
+            rows.push(row);
+            self.tray_keys.push(key);
         }
         rows
+    }
+
+    /// `tray.order` or `tray.hidden` changed: an open tray follows.
+    pub(super) fn refresh_tray(&mut self) {
+        self.on_tray_changed(0);
     }
 
     pub(super) fn popup_style_px(&self) -> PopupStyle {
@@ -152,6 +191,11 @@ impl App {
             self.begin_close_panel();
         }
     }
+}
+
+/// The exe file name of a process, empty when it cannot be read (gone, denied).
+fn exe_file_name(pid: u32) -> String {
+    process_image_path(pid).and_then(|p| p.rsplit(['\\', '/']).next().map(str::to_string)).unwrap_or_default()
 }
 
 /// Icons of apps that registered with explorer before us and never will with us (NVIDIA): found
