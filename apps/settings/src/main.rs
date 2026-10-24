@@ -5,6 +5,10 @@
 // A misspelled or unimported message constant in a `match` arm silently becomes a catch-all binding.
 #![deny(non_snake_case)]
 
+mod body;
+mod font_list;
+mod fonts;
+mod sections;
 mod view;
 mod writer;
 

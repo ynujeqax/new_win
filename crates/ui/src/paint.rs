@@ -41,6 +41,15 @@ impl<'a> Painter<'a> {
         }
     }
 
+    /// Drawing until the matching [`Self::pop_clip`] stays inside `r` (a scrolled list).
+    pub fn push_clip(&mut self, r: RectF) {
+        unsafe { self.dc.PushAxisAlignedClip(&r.d2d(), D2D1_ANTIALIAS_MODE_ALIASED) };
+    }
+
+    pub fn pop_clip(&mut self) {
+        unsafe { self.dc.PopAxisAlignedClip() };
+    }
+
     pub fn fill_round_rect(&mut self, r: RectF, radius: f32, c: Color) {
         let Some(b) = self.brush(c) else { return };
         let rr = D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: radius, radiusY: radius };

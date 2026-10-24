@@ -13,6 +13,7 @@ use std::rc::Rc;
 
 use newwin_config::{Config, ConfigError};
 use newwin_core::strings::Strings;
+use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
 use newwin_platform::launch::shell_execute;
 use newwin_ui::app_window::{AppContent, CAPTION_H, CONTENT_MSG_MIN, CONTENT_TIMER_MIN};
@@ -22,10 +23,16 @@ use newwin_ui::{Color, Gfx, Painter, PointF, RectF, TextCache, TextLayout, TextS
 use windows::Win32::Foundation::{CloseHandle, HWND, LPARAM, WPARAM};
 use windows::Win32::System::Threading::{OpenMutexW, SYNCHRONIZATION_SYNCHRONIZE};
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VK_ESCAPE, VK_LEFT, VK_RETURN, VK_RIGHT, VK_SHIFT, VK_SPACE, VK_TAB};
-use windows::Win32::UI::WindowsAndMessaging::{KillTimer, SetTimer, WA_INACTIVE, WM_ACTIVATE, WM_TIMER};
+use windows::Win32::UI::WindowsAndMessaging::{GetCaretBlinkTime, KillTimer, SetTimer, WA_INACTIVE, WM_ACTIVATE, WM_TIMER};
 use windows::core::w;
 
+use crate::body::Body;
+use crate::font_list::FontList;
+use crate::sections::Confirm;
+use crate::sections::about::RestoreWait;
 use crate::writer::Writer;
+
+mod dispatch;
 
 /// The window: fixed size, logical px (global constraints).
 pub const SIZE: (f32, f32) = (760.0, 560.0);
@@ -39,6 +46,10 @@ const WRITE_TIMER: usize = CONTENT_TIMER_MIN;
 const RELOAD_TIMER: usize = CONTENT_TIMER_MIN + 1;
 /// One-shot, after *Start NewWin*: look for the shell again.
 const RECHECK_TIMER: usize = CONTENT_TIMER_MIN + 2;
+/// One-shot, when an armed *Clear* / *Restore* runs out: its label goes back.
+const CONFIRM_TIMER: usize = CONTENT_TIMER_MIN + 3;
+/// Every [`RESTORE_POLL_MS`], only during the ≤ 3 s after *Restore Windows taskbar*.
+const RESTORE_TIMER: usize = CONTENT_TIMER_MIN + 4;
 const WRITE_DELAY_MS: u32 = 100;
 const RELOAD_DELAY_MS: u32 = 50;
 const RECHECK_MS: u32 = 3000;
@@ -189,7 +200,6 @@ pub fn shift_focus(focus: Option<usize>, had: bool, has: bool) -> Option<usize> 
 }
 
 /// What a focusable control is, for the keys it takes.
-#[allow(dead_code)] // the section controls (Tasks 10–11) use the others
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FocusKind {
     Button,
@@ -198,6 +208,8 @@ pub enum FocusKind {
     Slider,
     /// The font row: opens its list.
     FontList,
+    /// Takes the typing itself (the date template).
+    TextField,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -257,7 +269,6 @@ struct Geometry {
     button: Option<RectF>,
     title: PointF,
     /// The section body's area.
-    #[allow(dead_code)] // the section bodies (Tasks 10–11) lay out in it
     body: RectF,
 }
 
@@ -283,6 +294,20 @@ pub struct SettingsView {
     focus: Option<usize>,
     button_hover: bool,
     button_pressed: bool,
+    /// The section's rows and controls.
+    body: Body,
+    /// Open over the window while picking a font.
+    font_list: Option<FontList>,
+    /// The installed families, read the first time the list opens.
+    families: Option<Rc<Vec<String>>>,
+    /// *Custom* picked, no template typed yet.
+    date_custom: bool,
+    clear_confirm: Confirm,
+    restore_confirm: Confirm,
+    /// Waiting for the shell to quit after *Restore Windows taskbar*.
+    restore_wait: Option<RestoreWait>,
+    /// The caret blink period.
+    blink: Option<u32>,
 }
 
 impl SettingsView {
@@ -312,13 +337,24 @@ impl SettingsView {
             focus: None,
             button_hover: false,
             button_pressed: false,
+            body: Body::new(),
+            font_list: None,
+            families: None,
+            date_custom: false,
+            clear_confirm: Confirm::default(),
+            restore_confirm: Confirm::default(),
+            restore_wait: None,
+            blink: {
+                let b = unsafe { GetCaretBlinkTime() };
+                (b != 0 && b != u32::MAX).then_some(b)
+            },
         };
         v.refresh_banner();
+        v.sync_body(0);
         v
     }
 
     /// Changes the config from a control: shown at once, written 100 ms after the last change.
-    #[allow(dead_code)] // the section controls (Tasks 10–11) call it
     pub fn edit(&mut self, f: impl FnOnce(&mut Config)) {
         let mut c = self.config.clone();
         f(&mut c);
@@ -410,7 +446,7 @@ impl SettingsView {
 
     /// The config was replaced from outside: the section's controls take the new values.
     fn controls_changed(&mut self) {
-        // The section bodies (Tasks 10–11) rebuild their controls from `self.config` here.
+        self.sync_body(now_ms());
     }
 
     fn check_shell(&mut self) {
@@ -451,6 +487,10 @@ impl SettingsView {
         self.nav.select(i, now);
         self.focus = None;
         self.texts = None;
+        self.font_list = None;
+        self.date_custom = false;
+        self.body.reset();
+        self.sync_body(now);
     }
 
     /// The controls Tab moves over, in order: the banner's button, then the section's controls.
@@ -464,40 +504,83 @@ impl SettingsView {
         out
     }
 
-    /// The section's focusable controls (the section bodies fill this in Tasks 10–11).
+    /// The section's focusable controls.
     fn section_controls(&self) -> Vec<(FocusKind, RectF)> {
-        Vec::new()
+        self.body.focusables().into_iter().map(|(k, r, _)| (k, r)).collect()
+    }
+
+    /// Focusable `i` of [`SettingsView::focusables`] as a body row.
+    fn body_row(&self, i: usize) -> Option<usize> {
+        let j = i.checked_sub(usize::from(self.has_button()))?;
+        self.body.focusables().get(j).map(|f| f.2)
+    }
+
+    fn focused_kind(&self) -> Option<FocusKind> {
+        self.focus.and_then(|i| self.focusables().get(i).map(|f| f.0))
+    }
+
+    /// Moves the focus; the template field takes the caret when it gets it, and the focused row
+    /// scrolls into view.
+    fn set_focus(&mut self, focus: Option<usize>, now: u64) {
+        self.focus = focus;
+        let field = self.focused_kind() == Some(FocusKind::TextField);
+        if field && !self.body.field.focused {
+            self.body.field.blink_from = now;
+        }
+        self.body.field.focused = field;
+        if let Some(row) = focus.and_then(|i| self.body_row(i)) {
+            self.body.reveal(row);
+        }
     }
 
     /// A key on the focused control `i` of [`SettingsView::focusables`].
-    fn act(&mut self, i: usize, action: KeyAction) {
-        if self.has_button() && i == 0 && action == KeyAction::Activate {
-            self.press_banner_button();
+    fn act(&mut self, i: usize, action: KeyAction, now: u64) {
+        if self.has_button() && i == 0 {
+            if action == KeyAction::Activate {
+                self.press_banner_button();
+            }
+            return;
         }
-        // Otherwise a section control takes `action` here (Tasks 10–11).
+        if let Some(ev) = self.body_row(i).and_then(|row| self.body.activate(row, action, now)) {
+            self.on_body(ev, now);
+        }
     }
 
-    /// Esc: closes an open list (the font list, Task 10). True when one was open.
+    /// Esc: closes the font list. True when it was open.
     fn close_lists(&mut self) -> bool {
-        false
+        self.font_list.take().is_some()
     }
 
-    fn on_key(&mut self, vk: u16) -> bool {
-        if vk == VK_TAB.0 {
+    fn on_key(&mut self, ev: PanelInput, now: u64) -> bool {
+        let vk = match ev {
+            PanelInput::Key(vk) => Some(vk),
+            _ => None,
+        };
+        if vk == Some(VK_ESCAPE.0) {
+            return self.close_lists();
+        }
+        if self.font_list.is_some() && vk != Some(VK_TAB.0) {
+            return self.list_input(ev, now);
+        }
+        if vk == Some(VK_TAB.0) {
+            self.font_list = None;
             let count = self.focusables().len();
             let next = focus_next(self.focus, count, key_down(VK_SHIFT.0));
             let changed = next != self.focus;
-            self.focus = next;
+            self.set_focus(next, now);
             return changed;
         }
-        if vk == VK_ESCAPE.0 {
-            return self.close_lists();
+        if self.focused_kind() == Some(FocusKind::TextField) {
+            if let Some(ev) = self.body.field_input(ev, now) {
+                self.on_body(ev, now);
+            }
+            return true;
         }
-        let Some(i) = self.focus else { return false };
+        let (Some(vk), Some(i)) = (vk, self.focus) else { return false };
         let Some(&(kind, _)) = self.focusables().get(i) else { return false };
         match key_action(kind, vk) {
             Some(a) => {
-                self.act(i, a);
+                self.act(i, a, now);
                 true
             }
             None => false,
@@ -578,27 +661,51 @@ impl AppContent for SettingsView {
         if let Some(t) = texts.title.as_ref() {
             p.text(t, PointF { x: g.title.x.round(), y: g.title.y.round() }, theme::TEXT_STRONG);
         }
-        // The section body paints into `g.body` (Tasks 10–11).
-        if let Some((_, r)) = self.focus.and_then(|i| self.focusables().get(i).copied()) {
+        let body_area = g.body;
+        self.body.paint(p, &mut self.text, self.strings, body_area, now_ms, self.blink);
+        // The field shows its own focus; a ring outside the body area would sit on the title.
+        if let Some(i) = self.focus
+            && let Some(&(kind, r)) = self.focusables().get(i)
+            && kind != FocusKind::TextField
+            && ((i == 0 && self.has_button()) || (r.y >= body_area.y && r.bottom() <= body_area.bottom()))
+        {
             let ring = r.inset(-s(FOCUS_GAP));
             p.stroke_round_rect(ring, ring.h.min(ring.w) / 2.0, FOCUS_RING, s(1.0).round().max(1.0));
+        }
+        if let Some(rect) = self.list_rect()
+            && let Some(list) = self.font_list.as_mut()
+        {
+            list.paint(p, &mut self.text, rect);
         }
         self.texts = Some(texts);
     }
 
     fn input(&mut self, ev: PanelInput, now_ms: u64) -> PanelReply {
+        let list_open = self.font_list.is_some();
         let repaint = match ev {
+            PanelInput::Move(_) | PanelInput::Leave | PanelInput::Wheel(_) | PanelInput::Release(_) if list_open => self.list_input(ev, now_ms),
+            // A press outside closes the list and does nothing else.
+            PanelInput::Press(_) if list_open => {
+                self.list_input(ev, now_ms);
+                true
+            }
             PanelInput::Move(pt) => {
                 let hover = self.geo.button.is_some_and(|b| b.contains(pt));
                 let changed = hover != self.button_hover;
                 self.button_hover = hover;
-                changed
+                let (ev, body) = self.body.move_to(pt);
+                let edited = ev.is_some();
+                if let Some(ev) = ev {
+                    self.on_body(ev, now_ms);
+                }
+                changed || body || edited
             }
             PanelInput::Leave => {
                 let changed = self.button_hover;
                 self.button_hover = false;
-                changed
+                self.body.leave() || changed
             }
+            PanelInput::Wheel(delta) => self.body.wheel(delta),
             PanelInput::Press(pt) => {
                 if let Some(i) = self.nav.hit(&self.geo.nav, pt) {
                     self.select_section(i, now_ms);
@@ -607,7 +714,14 @@ impl AppContent for SettingsView {
                     self.button_pressed = true;
                     true
                 } else {
-                    false
+                    // A click elsewhere takes the focus from the template field.
+                    if self.focused_kind() == Some(FocusKind::TextField) {
+                        self.set_focus(None, now_ms);
+                    }
+                    if let Some(ev) = self.body.press(pt, now_ms) {
+                        self.on_body(ev, now_ms);
+                    }
+                    true
                 }
             }
             PanelInput::Release(pt) => {
@@ -615,7 +729,11 @@ impl AppContent for SettingsView {
                 if was && self.geo.button.is_some_and(|b| b.contains(pt)) {
                     self.press_banner_button();
                 }
-                was
+                let (ev, body) = self.body.release(pt);
+                if let Some(ev) = ev {
+                    self.on_body(ev, now_ms);
+                }
+                was || body
             }
             PanelInput::CtrlKey(vk) if vk == VK_TAB.0 => {
                 let next = focus_next(Some(self.section.index()), Section::ALL.len(), key_down(VK_SHIFT.0));
@@ -624,22 +742,29 @@ impl AppContent for SettingsView {
                 }
                 true
             }
-            PanelInput::Key(vk) => self.on_key(vk),
+            PanelInput::Key(_) | PanelInput::CtrlKey(_) | PanelInput::Char(_) => self.on_key(ev, now_ms),
             _ => false,
         };
         PanelReply { repaint, ..PanelReply::default() }
     }
 
     fn animating(&self, now_ms: u64) -> bool {
-        self.nav.animating(now_ms)
+        self.nav.animating(now_ms) || self.body.animating(now_ms)
+    }
+
+    fn wake_at(&self, now_ms: u64) -> Option<u64> {
+        self.body.field.next_blink(now_ms, self.blink)
     }
 
     fn dpi_changed(&mut self, dpi: u32) {
         self.dpi = dpi;
         self.texts = None;
+        self.body.set_dpi(dpi);
+        // The list is laid out for the old DPI.
+        self.font_list = None;
     }
 
-    fn message(&mut self, msg: u32, wp: WPARAM, _lp: LPARAM, _now_ms: u64) -> PanelReply {
+    fn message(&mut self, msg: u32, wp: WPARAM, _lp: LPARAM, now_ms: u64) -> PanelReply {
         match (msg, wp.0) {
             (DIR_CHANGED, _) => {
                 self.set_timer(RELOAD_TIMER, RELOAD_DELAY_MS);
@@ -657,6 +782,11 @@ impl AppContent for SettingsView {
                 self.kill_timer(RECHECK_TIMER);
                 self.check_shell();
             }
+            (WM_TIMER, CONFIRM_TIMER) => {
+                self.kill_timer(CONFIRM_TIMER);
+                self.refresh_armed(now_ms);
+            }
+            (WM_TIMER, RESTORE_TIMER) => self.poll_restore(now_ms),
             (WM_ACTIVATE, w) if (w & 0xFFFF) as u32 != WA_INACTIVE => self.check_shell(),
             _ => return PanelReply::default(),
         }
