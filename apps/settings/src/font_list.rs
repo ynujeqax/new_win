@@ -40,6 +40,8 @@ pub struct FontList {
     scroll: Scroll,
     /// Dragging the thumb, grabbed this far below its top.
     drag: Option<f32>,
+    /// A press began on the list (the release of the click that opened it picks nothing).
+    pressed: bool,
     dpi: u32,
     /// Laid-out rows by family index; cleared when the query changes.
     layouts: HashMap<usize, Option<TextLayout>>,
@@ -54,6 +56,7 @@ impl FontList {
             hover: None,
             scroll: Scroll::default(),
             drag: None,
+            pressed: false,
             dpi,
             layouts: HashMap::new(),
         };
@@ -100,21 +103,29 @@ impl FontList {
         self.scroll.clamp();
     }
 
-    /// The list's rectangle under (or, without room, over) the font row `anchor`, right-aligned
-    /// with it, inside `window`; physical px.
+    /// The scroll view follows the list's actual height at `rect` (fewer rows when it had to
+    /// shrink to fit beside its row).
+    fn fit_scroll(&mut self, rect: RectF) {
+        self.sync_scroll();
+        self.scroll.view_h = self.view(rect).h.max(0.0);
+        self.scroll.clamp();
+    }
+
+    /// The list's rectangle under (or, with more room there, over) the font row `anchor`,
+    /// right-aligned with it, inside `window`; physical px. It never covers the row: when the
+    /// rows do not fit on either side, it shows fewer and scrolls.
     pub fn rect_at(&self, anchor: RectF, window: RectF) -> RectF {
-        let (gap, edge, pad) = (self.s(GAP), self.s(EDGE), self.s(theme::POPUP_PAD));
+        let (gap, edge, pad, ih) = (self.s(GAP), self.s(EDGE), self.s(theme::POPUP_PAD), self.item_h());
         let w = anchor.w.max(self.s(MIN_W)).min(window.w - 2.0 * edge);
-        let h = self.rows_shown() as f32 * self.item_h() + 2.0 * pad;
         let x = (anchor.right() - w).max(window.x + edge);
-        let (below, above) = (anchor.bottom() + gap, anchor.y - gap - h);
-        let y = if below + h <= window.bottom() - edge {
-            below
-        } else if above >= window.y + edge {
-            above
-        } else {
-            (window.bottom() - edge - h).max(window.y)
-        };
+        let want = self.rows_shown();
+        let fit = |room: f32| (((room - 2.0 * pad) / ih).floor().max(0.0) as usize).min(want);
+        let below_rows = fit(window.bottom() - edge - (anchor.bottom() + gap));
+        let above_rows = fit((anchor.y - gap) - (window.y + edge));
+        let below = below_rows >= want || below_rows >= above_rows;
+        let rows = if below { below_rows } else { above_rows }.max(1);
+        let h = rows as f32 * ih + 2.0 * pad;
+        let y = if below { anchor.bottom() + gap } else { anchor.y - gap - h };
         RectF::new(x, y, w, h)
     }
 
@@ -176,7 +187,7 @@ impl FontList {
 
     /// `rect` is where the list is (from [`FontList::rect_at`]).
     pub fn input(&mut self, ev: PanelInput, rect: RectF) -> ListReply {
-        self.sync_scroll();
+        self.fit_scroll(rect);
         let view = self.view(rect);
         match ev {
             PanelInput::Move(p) => match self.drag {
@@ -195,14 +206,16 @@ impl FontList {
                     self.drag = Some(p.y - t.y);
                     return ListReply::Repaint;
                 }
+                self.pressed = true;
                 self.set_hover(self.hit(rect, p));
                 ListReply::Repaint
             }
             PanelInput::Release(p) => {
+                let pressed = std::mem::take(&mut self.pressed);
                 if self.drag.take().is_some() {
                     return ListReply::Repaint;
                 }
-                match self.hit(rect, p) {
+                match self.hit(rect, p).filter(|_| pressed) {
                     Some(k) => self.pick(k),
                     None => ListReply::Ignored,
                 }
@@ -244,7 +257,7 @@ impl FontList {
 
     /// The list at `rect`; each family is laid out in itself the first time it is shown.
     pub fn paint(&mut self, p: &mut Painter, text: &mut TextCache, rect: RectF) {
-        self.sync_scroll();
+        self.fit_scroll(rect);
         paint_glass(p, rect, self.s(theme::POPUP_RADIUS), false);
         let view = self.view(rect);
         let (pad_x, ih, item_r) = (self.s(theme::POPUP_ITEM_PAD_X), self.item_h(), self.s(theme::POPUP_ITEM_RADIUS));
@@ -322,6 +335,33 @@ mod tests {
         l.input(PanelInput::Key(VK_UP.0), r);
         assert_eq!(l.hovered(), Some("Segoe UI"));
         assert_eq!(l.input(PanelInput::Key(VK_RETURN.0), r), ListReply::Pick("Segoe UI".into()));
+    }
+
+    #[test]
+    fn the_release_of_the_opening_click_picks_nothing() {
+        let mut l = list("Arial");
+        let r = rect(&l);
+        let row = l.row_rect(r, 2);
+        let mid = PointF { x: row.x + row.w / 2.0, y: row.y + row.h / 2.0 };
+        assert_eq!(l.input(PanelInput::Release(mid), r), ListReply::Ignored, "no press began in the list");
+    }
+
+    #[test]
+    fn the_list_never_covers_its_row() {
+        let l = list("Arial");
+        let win = RectF::new(0.0, 40.0, 760.0, 520.0);
+        let mut big = list("Arial");
+        big.families = Rc::new((0..40).map(|i| format!("Font {i:02}")).collect());
+        for y in [48.0, 150.0, 240.0, 290.0, 330.0, 420.0, 520.0] {
+            let anchor = RectF::new(400.0, y, 200.0, 26.0);
+            for list in [&l, &big] {
+                let r = list.rect_at(anchor, win);
+                let overlaps = r.y < anchor.bottom() && anchor.y < r.bottom();
+                assert!(!overlaps, "anchor at {y}: {r:?}");
+                assert!(r.y >= win.y && r.bottom() <= win.bottom(), "anchor at {y}: {r:?}");
+                assert!(r.h >= 30.0 + 12.0, "at least one row: {r:?}");
+            }
+        }
     }
 
     #[test]

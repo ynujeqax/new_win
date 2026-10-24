@@ -4,6 +4,9 @@
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
+/// The shell's hidden window: the watchdog pings it, Settings posts its quit request to it.
+pub const PING_WINDOW_CLASS: &str = "NewWin.Ping";
+
 const CRASH_WINDOW: Duration = Duration::from_secs(60);
 const MAX_CRASHES: usize = 3;
 const MAX_MISSED_PINGS: u32 = 3;

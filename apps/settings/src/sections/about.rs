@@ -4,11 +4,12 @@
 use std::path::Path;
 
 use newwin_config::Config;
+use newwin_core::watchdog::PING_WINDOW_CLASS;
 use newwin_platform::launch::shell_execute;
 use newwin_platform::paths::log_dir;
 use windows::Win32::Foundation::{LPARAM, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, PostMessageW, WM_APP};
-use windows::core::{PCWSTR, w};
+use windows::core::{HSTRING, PCWSTR};
 
 use super::{Control, Row, RowId, RowValue};
 
@@ -64,7 +65,7 @@ impl RestoreWait {
 
 /// Asks the shell to quit through its `NewWin.Ping` window; false when there is none.
 pub fn request_quit() -> bool {
-    let Ok(hwnd) = (unsafe { FindWindowW(w!("NewWin.Ping"), PCWSTR::null()) }) else { return false };
+    let Ok(hwnd) = (unsafe { FindWindowW(&HSTRING::from(PING_WINDOW_CLASS), PCWSTR::null()) }) else { return false };
     match unsafe { PostMessageW(Some(hwnd), WM_QUIT_REQUEST, WPARAM(0), LPARAM(0)) } {
         Ok(()) => true,
         Err(e) => {

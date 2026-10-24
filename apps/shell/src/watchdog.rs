@@ -14,7 +14,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows::core::{HSTRING, w};
 
-pub const PING_WINDOW_CLASS: &str = "NewWin.Ping";
+pub use newwin_core::watchdog::PING_WINDOW_CLASS;
 const PING_INTERVAL_MS: u32 = 5000;
 const PING_TIMEOUT_MS: u32 = 2000;
 
