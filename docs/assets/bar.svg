@@ -36,8 +36,8 @@
     <text x="368" y="53">Spotify</text>
     <text x="760" y="53" fill="#ececec">ENG</text>
     <g fill="none" stroke="#ececec" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M816 54a14 14 0 0 1 20 0M820 50a8.5 8.5 0 0 1 12 0"/>
-      <circle cx="826" cy="57" r="1" fill="#ececec"/>
+      <path d="M819.2 55.4V45h3.6v-2.4h6.4V45h3.6v10.4z"/>
+      <path d="M822.9 51.5v2.6M826 51.5v2.6M829.1 51.5v2.6"/>
       <path d="M862 44v12M858 47h-4v6h4l6 5V42z"/>
       <circle cx="905" cy="47" r="6"/>
       <path d="M909.5 51.5l4.5 4.5"/>
