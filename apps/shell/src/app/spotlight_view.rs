@@ -2,6 +2,7 @@
 //! Search. It is not over the bar, so it never reveals it.
 
 use std::rc::Rc;
+use std::sync::atomic::Ordering;
 
 use newwin_config::usage::{Usage, save_atomic};
 use newwin_config::usage_path;
@@ -57,11 +58,13 @@ fn post_launched(ping: isize, key: String) {
 
 impl App {
     pub(super) fn start_spotlight(&mut self) {
-        let (usage, err) = Usage::load(&usage_path());
+        let path = usage_path();
+        let (usage, err) = Usage::load(&path);
         if let Some(e) = err {
             log::warn!("usage.toml unreadable, starting from zero: {e}");
         }
         self.usage = usage;
+        self.usage_on_disk.store(path.exists(), Ordering::Release);
         self.rebuild_catalog();
         self.submit_job(Job::Apps);
         self.apps_watch = AppsWatch::start(self.ping, WM_APP_APPS_CHANGED).map_err(|e| log::warn!("app index watch: {e}")).ok();
@@ -293,8 +296,9 @@ impl App {
         unsafe {
             let _ = KillTimer(Some(self.bar), USAGE_SAVE_TIMER);
         }
-        if let Err(e) = save_atomic(&usage_path(), &self.usage.to_toml()) {
-            log::warn!("cannot write usage.toml: {e}");
+        match save_atomic(&usage_path(), &self.usage.to_toml()) {
+            Ok(()) => self.usage_on_disk.store(true, Ordering::Release),
+            Err(e) => log::warn!("cannot write usage.toml: {e}"),
         }
     }
 
@@ -304,10 +308,10 @@ impl App {
             self.usage.retain(|k| k.starts_with("system:") || catalog.iter().any(|c| c.id == k));
         }
         let text = self.usage.to_toml();
-        self.submit_job(Job::Run(Box::new(move || {
-            if let Err(e) = save_atomic(&usage_path(), &text) {
-                log::warn!("cannot write usage.toml: {e}");
-            }
+        let on_disk = self.usage_on_disk.clone();
+        self.submit_job(Job::Run(Box::new(move || match save_atomic(&usage_path(), &text) {
+            Ok(()) => on_disk.store(true, Ordering::Release),
+            Err(e) => log::warn!("cannot write usage.toml: {e}"),
         })));
     }
 

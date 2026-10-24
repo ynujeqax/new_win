@@ -243,11 +243,13 @@ fn dedupe_ci(list: &mut Vec<String>) {
     *list = out;
 }
 
-/// A missing file yields the defaults; an unreadable or invalid one is an error.
+/// A missing file yields the defaults; an unreadable or invalid one is an error. Text that is
+/// not UTF-8 is a parse error (no line), like any other broken file.
 pub fn load(path: &Path) -> Result<Config, ConfigError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Config::default()),
+        Err(e) if e.kind() == std::io::ErrorKind::InvalidData => return Err(ConfigError::Parse { line: None, message: e.to_string() }),
         Err(e) => return Err(ConfigError::Io(e)),
     };
     let config: Config = toml::from_str(&text).map_err(|e| {
@@ -281,13 +283,19 @@ pub fn to_toml(c: &Config) -> String {
     format!("{CONFIG_HEADER}\n\n{body}")
 }
 
-/// Writes `text` next to `path` and renames it over, so a crash never leaves half a file.
+/// Writes `text` next to `path`, flushes it to disk and renames it over, so neither a crash nor a
+/// power cut leaves half a file.
 pub fn save_atomic(path: &Path, text: &str) -> std::io::Result<()> {
+    use std::io::Write;
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
     let tmp = path.with_extension("toml.tmp");
-    std::fs::write(&tmp, text)?;
+    {
+        let mut f = std::fs::File::create(&tmp)?;
+        f.write_all(text.as_bytes())?;
+        f.sync_all()?;
+    }
     std::fs::rename(&tmp, path)
 }
 

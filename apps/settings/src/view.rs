@@ -162,18 +162,28 @@ pub fn save_reason(e: &std::io::Error) -> String {
     if reason.is_empty() { "unknown error".to_owned() } else { reason.to_owned() }
 }
 
-/// The config to show at start and the banner it needs: a broken file shows the defaults and the
-/// parse banner, and is left alone until an edit.
+/// The parse banner a load result needs (`Some(line)`), or `None` when the file loaded. A file
+/// that is there but cannot be read (locked, denied) gets the same banner, without a line: the
+/// window never shows silent defaults for an existing file.
+pub fn parse_error_of(r: &Result<Config, ConfigError>) -> Option<Option<usize>> {
+    match r {
+        Ok(_) => None,
+        Err(ConfigError::Parse { line, .. }) => Some(*line),
+        Err(ConfigError::Io(_)) => Some(None),
+    }
+}
+
+/// The config to show at start and the banner it needs: a broken or unreadable file shows the
+/// defaults and the parse banner, and is left alone until an edit.
 pub fn load_for_view(path: &Path) -> (Config, Option<Banner>) {
-    match newwin_config::load(path) {
-        Ok(c) => (c, None),
-        Err(ConfigError::Parse { line, message }) => {
-            log::warn!("config.toml has an error (line {line:?}): {message}");
+    let r = newwin_config::load(path);
+    match parse_error_of(&r) {
+        None => (r.unwrap_or_default(), None),
+        Some(line) => {
+            if let Err(e) = &r {
+                log::warn!("config.toml cannot be used, showing defaults: {e}");
+            }
             (Config::default(), Some(Banner::ParseError { line }))
-        }
-        Err(e) => {
-            log::warn!("{e}; showing defaults");
-            (Config::default(), None)
         }
     }
 }
@@ -446,20 +456,18 @@ impl SettingsView {
         {
             return;
         }
-        match newwin_config::load(&self.path) {
+        let r = newwin_config::load(&self.path);
+        self.parse_error = parse_error_of(&r);
+        match r {
             Ok(c) => {
-                self.parse_error = None;
                 if c != self.config {
                     log::info!("config.toml changed outside, reloading");
                     self.config = c;
                     self.controls_changed();
                 }
             }
-            Err(ConfigError::Parse { line, message }) => {
-                log::warn!("config.toml has an error (line {line:?}): {message}");
-                self.parse_error = Some(line);
-            }
-            Err(e) => log::warn!("{e}"),
+            // The shown config stays; the banner says the file cannot be used.
+            Err(e) => log::warn!("config.toml cannot be used: {e}"),
         }
         self.refresh_banner();
     }

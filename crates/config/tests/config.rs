@@ -152,6 +152,14 @@ fn a_parse_error_names_its_line() {
 }
 
 #[test]
+fn a_file_that_is_not_utf8_is_a_parse_error_without_a_line() {
+    let dir = tempdir_in_target("not_utf8");
+    let p = dir.join("config.toml");
+    std::fs::write(&p, b"[bar]\nmode = \"\xff\xfe\"\n").unwrap();
+    match load(&p) { Err(ConfigError::Parse { line, .. }) => assert_eq!(line, None), r => panic!("{r:?}") }
+}
+
+#[test]
 fn save_atomic_replaces_the_file_and_leaves_no_temp() {
     let dir = tempdir_in_target("save_atomic");
     let p = dir.join("config.toml");

@@ -118,6 +118,29 @@ mod tests {
     }
 
     #[test]
+    fn an_unreadable_file_shows_the_banner_and_is_not_overwritten_until_an_edit() {
+        use crate::view::{Banner, load_for_view, parse_error_of};
+        // Not UTF-8.
+        let path = temp_file("not-utf8");
+        let bytes = b"[appearance]\nheight = 44\nfont_family = \"\xff\"\n";
+        std::fs::write(&path, bytes).unwrap();
+        let (config, banner) = load_for_view(&path);
+        assert_eq!(config, Config::default());
+        assert_eq!(banner, Some(Banner::ParseError { line: None }), "never silent defaults");
+        let mut w = Writer::default();
+        w.flush(&path).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), bytes, "left alone until an edit");
+        // Cannot be read at all (a folder where the file should be stands in for a lock).
+        let dir = temp_file("locked");
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(load_for_view(&dir).1, Some(Banner::ParseError { line: None }));
+        // The reload path uses the same rule.
+        assert_eq!(parse_error_of(&newwin_config::load(&dir)), Some(None));
+        assert_eq!(parse_error_of(&newwin_config::load(&path)), Some(None));
+        assert_eq!(parse_error_of(&Ok(Config::default())), None);
+    }
+
+    #[test]
     fn a_text_without_settings_is_never_written() {
         let path = temp_file("bodyless");
         std::fs::write(&path, "[bar]\nmode = \"pinned\"\n").unwrap();

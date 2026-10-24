@@ -155,8 +155,15 @@ pub struct App {
     /// System commands, then the indexed apps.
     catalog: Rc<Vec<newwin_core::spotlight::Candidate>>,
     usage: newwin_config::usage::Usage,
+    /// `usage.toml` is known to be on disk (loaded, or written by the worker): only then does its
+    /// absence mean it was deleted from outside.
+    usage_on_disk: std::sync::Arc<std::sync::atomic::AtomicBool>,
     /// Apps that have had a tray icon (`tray_seen.toml`); loaded once, saved when it changes.
     tray_seen: newwin_config::tray_seen::TraySeen,
+    /// A name changed since `tray_seen.toml` was last written (saved with the next add or at quit).
+    tray_seen_dirty: bool,
+    /// `config.toml` was there at the last read: "missing" is logged once, on the change.
+    config_on_disk: bool,
     spotlight: Option<newwin_ui::panel::Panel<newwin_ui::spotlight::SpotlightView>>,
     apps_watch: Option<newwin_platform::apps_index::AppsWatch>,
     // Tray button and right side (M2)
@@ -260,11 +267,12 @@ impl App {
         self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
     }
 
-    /// Saves usage, gives the taskbar back and ends the message loop. Exit code 0 makes the
-    /// watchdog exit as well.
+    /// Saves usage and changed tray names, gives the taskbar back and ends the message loop. Exit
+    /// code 0 makes the watchdog exit as well.
     pub(super) fn quit(&mut self) {
         log::info!("quit requested");
         self.save_usage_now();
+        self.save_tray_seen_if_dirty();
         self.restore_taskbar();
         unsafe { PostQuitMessage(0) };
     }
@@ -452,6 +460,7 @@ impl App {
                 None
             }
             WM_ENDSESSION if wp.0 != 0 => {
+                self.save_tray_seen_if_dirty();
                 self.restore_taskbar();
                 Some(LRESULT(0))
             }
@@ -579,7 +588,10 @@ fn start() -> Result<Rc<RefCell<App>>> {
         apps: Vec::new(),
         catalog: Rc::new(Vec::new()),
         usage: Default::default(),
+        usage_on_disk: Default::default(),
         tray_seen: Default::default(),
+        tray_seen_dirty: false,
+        config_on_disk: config_path.exists(),
         spotlight: None,
         apps_watch: None,
         date_text: String::new(),

@@ -1,6 +1,8 @@
 //! Live config (spec: M4 §2, §4.2): the shell watches `%APPDATA%\NewWin`, re-reads `config.toml`
 //! after a short debounce and applies only what changed.
 
+use std::sync::atomic::Ordering;
+
 use newwin_config::diff::changes;
 use newwin_config::usage::Usage;
 use newwin_config::{Config, ConfigError, Items, default_path, load, usage_path};
@@ -23,6 +25,18 @@ pub(super) const CONFIG_DEBOUNCE_MS: u32 = 50;
 /// says nothing new. A missing file loads as the defaults, which then apply.
 pub(super) fn next_config(current: &Config, loaded: Result<Config, ConfigError>) -> Option<Config> {
     loaded.ok().filter(|c| c != current)
+}
+
+/// `usage.toml` was deleted from outside: it was on disk (loaded, or saved by us) and is gone now.
+/// Counts not yet written to a file that never existed stay.
+pub(super) fn usage_deleted(on_disk: bool, exists: bool) -> bool {
+    on_disk && !exists
+}
+
+/// Whether to log "config file missing": only when it goes from present to missing, not on
+/// every event in the folder.
+pub(super) fn config_went_missing(was_present: bool, exists: bool) -> bool {
+    was_present && !exists
 }
 
 /// The right items the bar shows: `right` in its order, minus `hidden`.
@@ -57,15 +71,17 @@ impl App {
     pub(super) fn reload_config(&mut self) {
         let path = default_path();
         let loaded = load(&path);
+        let exists = path.exists();
         match &loaded {
             Err(ConfigError::Parse { line, message }) => {
                 let line = line.map_or_else(|| "?".to_string(), |n| n.to_string());
                 log::info!("config error at line {line}, keeping the last good one: {message}");
             }
             Err(ConfigError::Io(e)) => log::info!("config error at line ?, keeping the last good one: {e}"),
-            Ok(_) if !path.exists() => log::info!("config file missing: defaults"),
+            Ok(_) if config_went_missing(self.config_on_disk, exists) => log::info!("config file missing: defaults"),
             Ok(_) => {}
         }
+        self.config_on_disk = exists;
         if let Some(new) = next_config(&self.config, loaded) {
             self.apply_config(new);
         }
@@ -73,15 +89,18 @@ impl App {
     }
 
     /// `usage.toml` deleted by hand (or by Settings' reset): forget the counts too. Nothing is
-    /// written; the next launch saves as usual.
+    /// written; the next launch saves as usual. Counts never written yet (no file so far) stay.
     pub(super) fn reset_usage_if_deleted(&mut self) {
-        if self.usage != Usage::default() && !usage_path().exists() {
-            log::info!("usage.toml deleted: launch counts reset");
-            unsafe {
-                let _ = KillTimer(Some(self.bar), super::spotlight_view::USAGE_SAVE_TIMER);
-            }
-            self.usage = Usage::default();
+        let on_disk = self.usage_on_disk.load(Ordering::Acquire);
+        if !usage_deleted(on_disk, usage_path().exists()) {
+            return;
         }
+        self.usage_on_disk.store(false, Ordering::Release);
+        log::info!("usage.toml deleted: launch counts reset");
+        unsafe {
+            let _ = KillTimer(Some(self.bar), super::spotlight_view::USAGE_SAVE_TIMER);
+        }
+        self.usage = Usage::default();
     }
 
     /// Stores `new` and runs only the actions its changes need, in a fixed order (geometry →
@@ -111,7 +130,8 @@ impl App {
         if c.glass {
             self.set_glass(self.config.appearance.glass);
         }
-        if c.clock {
+        // Hiding or showing the time changes the clock cadence too.
+        if c.clock || c.items {
             self.tick_clock();
         }
         if c.visibility {
@@ -191,6 +211,22 @@ mod tests {
     fn debounce_restarts_on_each_event() {
         assert_eq!(CONFIG_DEBOUNCE_TIMER, 11);
         assert_eq!(CONFIG_DEBOUNCE_MS, 50);
+    }
+
+    #[test]
+    fn unsaved_counts_survive_until_the_file_was_there_and_is_gone() {
+        assert!(!usage_deleted(false, false), "never written yet: the pending counts stay");
+        assert!(!usage_deleted(true, true));
+        assert!(usage_deleted(true, false), "on disk before, gone now: deleted from outside");
+        assert!(!usage_deleted(false, true));
+    }
+
+    #[test]
+    fn a_missing_config_is_logged_once() {
+        assert!(config_went_missing(true, false));
+        assert!(!config_went_missing(false, false), "still missing: no new line per event");
+        assert!(!config_went_missing(true, true));
+        assert!(!config_went_missing(false, true));
     }
 
     #[test]

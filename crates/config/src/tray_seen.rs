@@ -12,6 +12,15 @@ pub struct SeenApp {
     pub name: String,
 }
 
+/// What [`TraySeen::note`] did, least to most: a new app is written at once, a new name only
+/// rides along with the next write (or the one at quit).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Noted {
+    Same,
+    Renamed,
+    Added,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct TraySeen {
@@ -36,21 +45,21 @@ impl TraySeen {
         }
     }
 
-    /// True when something changed: a new app (at the end; past 200 the oldest goes) or a new name.
-    pub fn note(&mut self, exe: &str, name: &str) -> bool {
+    /// What changed: a new app (at the end; past 200 the oldest goes), a new name, or nothing.
+    pub fn note(&mut self, exe: &str, name: &str) -> Noted {
         if let Some(a) = self.apps.iter_mut().find(|a| a.exe.eq_ignore_ascii_case(exe)) {
             if a.name == name {
-                return false;
+                return Noted::Same;
             }
             a.name = name.to_string();
-            return true;
+            return Noted::Renamed;
         }
         self.apps.push(SeenApp { exe: exe.to_string(), name: name.to_string() });
         if self.apps.len() > MAX_APPS {
             let extra = self.apps.len() - MAX_APPS;
             self.apps.drain(..extra);
         }
-        true
+        Noted::Added
     }
 
     pub fn to_toml(&self) -> String {

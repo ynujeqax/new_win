@@ -17,17 +17,23 @@ fn temp_file(text: Option<&str>) -> PathBuf {
 #[test]
 fn note_adds_once_and_updates_the_name() {
     let mut s = TraySeen::default();
-    assert!(s.note("Discord.exe", "Discord"));
-    assert!(!s.note("discord.exe", "Discord"));
-    assert!(s.note("Discord.exe", "Discord (3)"));
+    assert_eq!(s.note("Discord.exe", "Discord"), Noted::Added);
+    assert_eq!(s.note("discord.exe", "Discord"), Noted::Same);
+    assert_eq!(s.note("Discord.exe", "Discord (3)"), Noted::Renamed);
     assert_eq!(s.apps.len(), 1);
+    assert_eq!(s.apps[0].name, "Discord (3)");
+}
+
+#[test]
+fn an_add_outranks_a_rename_outranks_nothing() {
+    assert!(Noted::Added > Noted::Renamed && Noted::Renamed > Noted::Same);
 }
 
 #[test]
 fn seen_list_is_capped_at_200() {
     let mut s = TraySeen::default();
     for i in 0..201 {
-        assert!(s.note(&format!("app{i}.exe"), "x"));
+        assert_eq!(s.note(&format!("app{i}.exe"), "x"), Noted::Added);
     }
     assert_eq!(s.apps.len(), 200);
     assert_eq!(s.apps[0].exe, "app1.exe");

@@ -228,6 +228,7 @@ impl App {
                 RESTART_NEWWIN => {
                     log::info!("restart requested from the menu");
                     self.save_usage_now();
+                    self.save_tray_seen_if_dirty();
                     unsafe { PostQuitMessage(APPS_EXIT_RESTART) };
                 }
                 QUIT => self.quit(),

@@ -46,13 +46,16 @@ fn label(a: &SeenApp) -> &str {
     if a.name.trim().is_empty() { &a.exe } else { &a.name }
 }
 
-/// A row dragged from `from` to `to`: `tray.order` becomes the whole list in its new order.
+/// A row dragged from `from` to `to`: `tray.order` becomes the whole list in its new order, then
+/// the old entries for apps not in the list (no longer in `tray_seen.toml`), in their old order.
 pub fn moved(c: &mut Config, rows_exe: &[String], from: usize, to: usize) {
     if from >= rows_exe.len() || to >= rows_exe.len() {
         return;
     }
     let mut order = rows_exe.to_vec();
     reorder(&mut order, from, to);
+    let unseen: Vec<String> = c.tray.order.iter().filter(|o| !rows_exe.iter().any(|r| same(r, o))).cloned().collect();
+    order.extend(unseen);
     c.tray.order = order;
 }
 
@@ -133,6 +136,20 @@ mod tests {
         assert_eq!(c.tray.order, ["c.exe", "a.exe", "b.exe"]);
         moved(&mut c, &keys, 7, 0);
         assert_eq!(c.tray.order, ["c.exe", "a.exe", "b.exe"], "out of range does nothing");
+    }
+
+    #[test]
+    fn moving_keeps_the_saved_order_of_apps_not_in_the_list() {
+        let mut c = Config::default();
+        // gone.exe and Old.exe are in the order but not in tray_seen.toml (not listed).
+        c.tray.order = ["gone.exe", "b.exe", "Old.exe", "a.exe"].map(String::from).to_vec();
+        let keys: Vec<String> = ["b.exe", "a.exe", "c.exe"].map(String::from).to_vec();
+        moved(&mut c, &keys, 2, 0);
+        assert_eq!(c.tray.order, ["c.exe", "b.exe", "a.exe", "gone.exe", "Old.exe"]);
+        // Case-insensitive: a listed app is not kept twice.
+        c.tray.order = vec!["A.EXE".into(), "x.exe".into()];
+        moved(&mut c, &keys, 0, 1);
+        assert_eq!(c.tray.order, ["a.exe", "b.exe", "c.exe", "x.exe"]);
     }
 
     #[test]

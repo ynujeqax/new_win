@@ -1,6 +1,8 @@
 //! The tray panel under `⌃` (spec: M2 §3.1): NewWin, then the apps of our tray host.
 
-use newwin_config::tray_seen::TraySeen;
+use std::collections::HashMap;
+
+use newwin_config::tray_seen::{Noted, TraySeen};
 use newwin_config::{save_atomic, tray_seen_path};
 use newwin_core::tray::{arrange_rows, is_bar_duplicate, missing_known, row_label};
 use newwin_platform::appinfo::{process_display_name, process_image_path, session_processes};
@@ -38,12 +40,17 @@ impl App {
         self.tray_exes.entry(pid).or_insert_with(|| exe_file_name(pid)).clone()
     }
 
-    /// Records every icon's app in `tray_seen.toml` (the name is the row label); saved on the
-    /// worker only when something changed. Runs on every tray-host change, panel open or not.
+    /// Records every icon's app in `tray_seen.toml` (the name is the row label, the first icon of
+    /// an exe wins). A new app is saved on the worker at once; a new name is kept in memory and
+    /// goes with the next save or the one at quit. Runs on every tray-host change, panel open or
+    /// not, and forgets cached pids that no longer have an icon.
     pub(super) fn note_seen_icons(&mut self) {
         let icons = self.tray_host.as_ref().map(|h| h.icons()).unwrap_or_default();
+        let pids: Vec<u32> = icons.iter().map(|i| i.pid).collect();
+        retain_pids(&mut self.tray_names, &pids);
+        retain_pids(&mut self.tray_exes, &pids);
         let own = unsafe { GetCurrentProcessId() };
-        let mut changed = false;
+        let mut pass = Vec::new();
         for icon in icons.iter().filter(|i| !i.hidden && !is_bar_duplicate(&i.key)) {
             let name = self.tray_names.entry(icon.pid).or_insert_with(|| process_display_name(icon.pid).unwrap_or_default());
             let label = row_label(&icon.tip, name);
@@ -51,15 +58,29 @@ impl App {
             if label.is_empty() || !is_noted(&exe, icon.pid, own) {
                 continue;
             }
-            changed |= self.tray_seen.note(&exe, &label);
+            pass.push((exe, label));
         }
-        if changed {
+        let noted = note_pass(&mut self.tray_seen, &pass);
+        if seen_write_now(noted) {
+            self.tray_seen_dirty = false;
             let text = self.tray_seen.to_toml();
             self.submit_job(Job::Run(Box::new(move || {
                 if let Err(e) = save_atomic(&tray_seen_path(), &text) {
                     log::warn!("cannot write tray_seen.toml: {e}");
                 }
             })));
+        } else if noted == Noted::Renamed {
+            self.tray_seen_dirty = true;
+        }
+    }
+
+    /// At quit: names changed since the last save are written now, on this thread.
+    pub(super) fn save_tray_seen_if_dirty(&mut self) {
+        if !std::mem::take(&mut self.tray_seen_dirty) {
+            return;
+        }
+        if let Err(e) = save_atomic(&tray_seen_path(), &self.tray_seen.to_toml()) {
+            log::warn!("cannot write tray_seen.toml: {e}");
         }
     }
 
@@ -229,6 +250,31 @@ fn is_noted(exe: &str, pid: u32, own_pid: u32) -> bool {
     !exe.is_empty() && pid != own_pid && !exe.eq_ignore_ascii_case("explorer.exe")
 }
 
+/// Notes one pass over the tray's icons as `(exe, label)`; the first icon of an exe gives its
+/// name, so an app with several icons (HWiNFO) never flips between their tips.
+pub(super) fn note_pass(seen: &mut TraySeen, pass: &[(String, String)]) -> Noted {
+    let mut done: Vec<&str> = Vec::with_capacity(pass.len());
+    let mut result = Noted::Same;
+    for (exe, label) in pass {
+        if done.iter().any(|d| d.eq_ignore_ascii_case(exe)) {
+            continue;
+        }
+        done.push(exe);
+        result = result.max(seen.note(exe, label));
+    }
+    result
+}
+
+/// A new app is written at once; a new name waits for the next write (or the one at quit).
+pub(super) fn seen_write_now(n: Noted) -> bool {
+    n == Noted::Added
+}
+
+/// Drops the cached entries of pids that no longer have an icon (a reused pid is another process).
+pub(super) fn retain_pids<V>(map: &mut HashMap<u32, V>, pids: &[u32]) {
+    map.retain(|pid, _| pids.contains(pid));
+}
+
 /// The exe file name of a process, empty when it cannot be read (gone, denied).
 fn exe_file_name(pid: u32) -> String {
     process_image_path(pid).and_then(|p| p.rsplit(['\\', '/']).next().map(str::to_string)).unwrap_or_default()
@@ -283,6 +329,39 @@ mod tests {
         // tool window (topmost popup), as menus are.
         let steam_menu = ForegroundChange { is_panel: false, visible: true, same_app: false, captioned: true, tool: true };
         assert!(!held_tray_closes(steam_menu), "a helper process's menu");
+    }
+
+    fn pass(icons: &[(&str, &str)]) -> Vec<(String, String)> {
+        icons.iter().map(|(e, n)| ((*e).to_string(), (*n).to_string())).collect()
+    }
+
+    #[test]
+    fn an_app_with_several_icons_keeps_one_name_and_only_an_add_writes() {
+        let mut s = TraySeen::default();
+        let hwinfo = pass(&[("HWiNFO64.exe", "CPU 40°"), ("hwinfo64.EXE", "GPU 55°")]);
+        assert_eq!(note_pass(&mut s, &hwinfo), Noted::Added);
+        assert_eq!(s.apps.len(), 1);
+        assert_eq!(s.apps[0].name, "CPU 40°", "the first icon gives the name");
+        assert_eq!(note_pass(&mut s, &hwinfo), Noted::Same, "the same pass again changes nothing");
+        assert_eq!(note_pass(&mut s, &pass(&[("HWiNFO64.exe", "CPU 41°")])), Noted::Renamed);
+        assert_eq!(s.apps[0].name, "CPU 41°", "the name still follows the tip, in memory");
+        assert!(!seen_write_now(Noted::Renamed), "a new name alone is not written");
+        assert!(!seen_write_now(Noted::Same));
+        let both = pass(&[("HWiNFO64.exe", "CPU 42°"), ("Discord.exe", "Discord")]);
+        assert_eq!(note_pass(&mut s, &both), Noted::Added);
+        assert!(seen_write_now(Noted::Added), "a new app is written, the new name with it");
+        assert_eq!(note_pass(&mut s, &[]), Noted::Same);
+    }
+
+    #[test]
+    fn caches_keep_only_pids_with_an_icon() {
+        let mut m: HashMap<u32, String> = [(1, "a.exe".to_string()), (2, "b.exe".to_string()), (3, "c.exe".to_string())].into();
+        retain_pids(&mut m, &[3, 1, 9]);
+        let mut keys: Vec<u32> = m.keys().copied().collect();
+        keys.sort();
+        assert_eq!(keys, [1, 3]);
+        retain_pids(&mut m, &[]);
+        assert!(m.is_empty());
     }
 
     #[test]
