@@ -138,7 +138,19 @@ impl App {
         self.sync_glass();
     }
 
-    pub(super) fn open_settings_file(&self) {
+    /// Opens NewWinSettings.exe; without it (or when it cannot start) the config file opens.
+    pub(super) fn open_settings(&self) {
+        let Some(exe) = newwin_platform::launch::settings_exe() else {
+            self.open_settings_file();
+            return;
+        };
+        if let Err(e) = newwin_platform::launch::run_settings(&exe) {
+            log::error!("cannot start {}: {e}", exe.display());
+            self.open_settings_file();
+        }
+    }
+
+    fn open_settings_file(&self) {
         let path = newwin_config::default_path();
         if let Err(e) = newwin_config::write_default_if_missing(&path) {
             log::error!("cannot create {}: {e}", path.display());
@@ -157,7 +169,7 @@ impl App {
         }
         if row == 0 {
             match op {
-                TrayOp::Left | TrayOp::Key => self.open_settings_file(),
+                TrayOp::Left | TrayOp::Key => self.open_settings(),
                 TrayOp::Right => {
                     self.close_panel();
                     self.open_newwin_menu(PointF { x: at.x as f32, y: at.y as f32 });

@@ -79,3 +79,18 @@ fn clipboard_read_never_panics() {
     // Whatever the user copied: text or `None`.
     let _ = newwin_platform::clipboard::text();
 }
+
+#[test]
+fn settings_exe_is_next_to_the_current_exe() {
+    let dir = std::env::current_exe().unwrap().parent().unwrap().to_path_buf();
+    let file = dir.join("NewWinSettings.exe");
+    if file.exists() {
+        assert_eq!(newwin_platform::launch::settings_exe(), Some(file));
+        return;
+    }
+    assert_eq!(newwin_platform::launch::settings_exe(), None);
+    std::fs::write(&file, b"").unwrap();
+    let found = newwin_platform::launch::settings_exe();
+    let _ = std::fs::remove_file(&file);
+    assert_eq!(found, Some(file));
+}

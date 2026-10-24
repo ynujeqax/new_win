@@ -1,6 +1,7 @@
 //! Watchdog role: keeps the shell alive and guarantees the native taskbar comes back.
 
 use std::os::windows::io::AsRawHandle;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::time::Instant;
 
@@ -18,11 +19,28 @@ pub use newwin_core::watchdog::PING_WINDOW_CLASS;
 const PING_INTERVAL_MS: u32 = 5000;
 const PING_TIMEOUT_MS: u32 = 2000;
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum SecondLaunch {
+    OpenSettings(PathBuf),
+    Nothing,
+}
+
+/// Starting NewWin.exe while it already runs opens Settings (when it is installed).
+pub fn second_launch_action(settings: Option<&Path>) -> SecondLaunch {
+    settings.map_or(SecondLaunch::Nothing, |p| SecondLaunch::OpenSettings(p.to_path_buf()))
+}
+
 pub fn run_watchdog() -> i32 {
     // Held for the life of the process; a second watchdog exits immediately.
     let _mutex = unsafe { CreateMutexW(None, true, w!("Local\\NewWin.Watchdog")) };
     if unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
-        log::info!("watchdog already running, exiting");
+        log::info!("watchdog already running");
+        let settings = newwin_platform::launch::settings_exe();
+        if let SecondLaunch::OpenSettings(exe) = second_launch_action(settings.as_deref())
+            && let Err(e) = newwin_platform::launch::run_settings(&exe)
+        {
+            log::error!("cannot start {}: {e}", exe.display());
+        }
         return 0;
     }
 
@@ -101,5 +119,18 @@ fn give_up(state: &std::path::Path) {
             w!("NewWin"),
             MB_OK | MB_ICONWARNING,
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn a_second_launch_opens_settings_when_present() {
+        let p = Path::new(r"C:\x\NewWinSettings.exe");
+        assert_eq!(second_launch_action(Some(p)), SecondLaunch::OpenSettings(p.into()));
+        assert_eq!(second_launch_action(None), SecondLaunch::Nothing);
     }
 }

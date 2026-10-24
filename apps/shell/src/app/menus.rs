@@ -171,8 +171,7 @@ impl App {
                 t(SystemTarget::Restart, s.restart),
             ]),
             t(SystemTarget::Desktop, s.desktop),
-            // The settings window arrives in milestone 4.
-            MenuItem::new(NEWWIN_SETTINGS, s.newwin_settings).separator().enabled(false),
+            MenuItem::new(NEWWIN_SETTINGS, s.newwin_settings).separator(),
             MenuItem::new(RESTART_NEWWIN, s.restart_newwin),
             MenuItem::new(QUIT, s.quit),
         ];
@@ -224,19 +223,14 @@ impl App {
             }
             MenuCtx::SpotlightRow { item } => self.on_spotlight_menu_pick(item.clone(), id),
             MenuCtx::BarMenu | MenuCtx::NewWinMenu => match id {
-                NEWWIN_SETTINGS => self.open_settings_file(),
+                NEWWIN_SETTINGS => self.open_settings(),
                 SEARCH => self.toggle_spotlight(),
                 RESTART_NEWWIN => {
                     log::info!("restart requested from the menu");
                     self.save_usage_now();
                     unsafe { PostQuitMessage(APPS_EXIT_RESTART) };
                 }
-                QUIT => {
-                    log::info!("quit requested from the menu");
-                    self.save_usage_now();
-                    self.restore_taskbar();
-                    unsafe { PostQuitMessage(0) };
-                }
+                QUIT => self.quit(),
                 _ if id >= TARGET_BASE && ((id - TARGET_BASE) as usize) < SYSTEM_TARGETS.len() => {
                     let target = SYSTEM_TARGETS[(id - TARGET_BASE) as usize];
                     if let Err(e) = launch::run(target) {

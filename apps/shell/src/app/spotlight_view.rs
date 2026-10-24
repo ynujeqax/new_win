@@ -264,7 +264,7 @@ impl App {
                 }
                 let r = match cmd {
                     SystemCommand::Settings => {
-                        self.open_settings_file();
+                        self.open_settings();
                         Ok(())
                     }
                     SystemCommand::ShutDown => launch::run(SystemTarget::ShutDown),

@@ -60,6 +60,8 @@ const WM_APP_NAME: u32 = WM_APP + 4;
 const WM_APP_GLASS: u32 = WM_APP + 6;
 const WM_APP_TRAY: u32 = WM_APP + 7;
 const WM_APP_REORDER: u32 = WM_APP + 12;
+/// Settings' *Restore Windows taskbar*: the same as *Quit NewWin*.
+pub(super) const WM_APP_QUIT: u32 = WM_APP + 20;
 
 /// `TaskbarCreated` also comes from our own tray host (start, quit, restart handling). Explorer
 /// restarted only if its tray (`current`) is a different window than the one we forward to
@@ -258,6 +260,15 @@ impl App {
         self.reorder_watch = watch_reorder(self.ping, WM_APP_REORDER).map_err(|e| log::error!("tray reorder watch: {e}")).ok();
     }
 
+    /// Saves usage, gives the taskbar back and ends the message loop. Exit code 0 makes the
+    /// watchdog exit as well.
+    pub(super) fn quit(&mut self) {
+        log::info!("quit requested");
+        self.save_usage_now();
+        self.restore_taskbar();
+        unsafe { PostQuitMessage(0) };
+    }
+
     fn restore_taskbar(&mut self) {
         // Apps go back to explorer, and restoring talks to explorer directly.
         self.reorder_watch = None;
@@ -333,6 +344,10 @@ impl App {
             if let Some(h) = &self.tray_host {
                 h.ensure_on_top();
             }
+            return Some(LRESULT(0));
+        }
+        if msg == WM_APP_QUIT {
+            self.quit();
             return Some(LRESULT(0));
         }
         if msg == config_view::WM_APP_CONFIG {

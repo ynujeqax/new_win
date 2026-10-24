@@ -7,7 +7,7 @@ use newwin_core::spotlight::Candidate;
 use windows::Win32::System::Com::CoTaskMemFree;
 use windows::Win32::UI::Shell::Common::ITEMIDLIST;
 use windows::Win32::UI::Shell::{IShellDispatch4, SEE_MASK_FLAG_NO_UI, SHELLEXECUTEINFOW, SHOpenFolderAndSelectItems, SHParseDisplayName, Shell, ShellExecuteExW, ShellExecuteW};
-use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+use windows::Win32::UI::WindowsAndMessaging::{ASFW_ANY, AllowSetForegroundWindow, SW_SHOWNORMAL};
 use windows::core::{HSTRING, PCWSTR, Result};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -148,4 +148,19 @@ pub fn open_file_location(path: &str) -> Result<()> {
         CoTaskMemFree(Some(pidl as _));
         r
     }
+}
+
+/// `NewWinSettings.exe` next to the running exe, if it is there.
+pub fn settings_exe() -> Option<std::path::PathBuf> {
+    let path = std::env::current_exe().ok()?.parent()?.join("NewWinSettings.exe");
+    path.is_file().then_some(path)
+}
+
+/// Starts Settings (single-instance: a running one just comes to the front). Lets it take the
+/// foreground first, since the click that asked for it belongs to this process.
+pub fn run_settings(exe: &std::path::Path) -> std::io::Result<()> {
+    unsafe {
+        let _ = AllowSetForegroundWindow(ASFW_ANY);
+    }
+    std::process::Command::new(exe).spawn().map(|_| ())
 }
