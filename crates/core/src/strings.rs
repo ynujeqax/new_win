@@ -102,6 +102,14 @@ pub struct Strings {
     pub click_again_to_restore: &'static str,
     pub unit_ms: &'static str,
     pub unit_px: &'static str,
+    // Settings sections Items and Tray (M4 §3.3, §3.5)
+    pub item_layout: &'static str,
+    pub item_network: &'static str,
+    pub item_volume: &'static str,
+    pub item_search: &'static str,
+    pub item_date: &'static str,
+    pub item_time: &'static str,
+    pub tray_empty: &'static str,
 }
 
 static EN: Strings = Strings {
@@ -196,6 +204,13 @@ static EN: Strings = Strings {
     click_again_to_restore: "Click again to restore",
     unit_ms: "ms",
     unit_px: "px",
+    item_layout: "Keyboard layout",
+    item_network: "Network",
+    item_volume: "Volume",
+    item_search: "Search",
+    item_date: "Date",
+    item_time: "Time",
+    tray_empty: "Apps appear here after they put an icon in the tray.",
 };
 
 static UK: Strings = Strings {
@@ -290,6 +305,13 @@ static UK: Strings = Strings {
     click_again_to_restore: "Клацніть ще раз, щоб повернути",
     unit_ms: "мс",
     unit_px: "пкс",
+    item_layout: "Розкладка клавіатури",
+    item_network: "Мережа",
+    item_volume: "Гучність",
+    item_search: "Пошук",
+    item_date: "Дата",
+    item_time: "Час",
+    tray_empty: "Програми з'являться тут, коли покажуть іконку в треї.",
 };
 
 /// `lang_tag` is a BCP-47 tag such as `en-US` or `uk-UA`.

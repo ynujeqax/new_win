@@ -1,5 +1,6 @@
 //! `NewWinSettings.exe` (spec: M4 §2, §4.1, §5): the settings window. One instance; it writes
-//! `config.toml` and never touches the taskbar, `usage.toml` or `tray_seen.toml`.
+//! `config.toml`, deletes `usage.toml` on *Clear*, reads `tray_seen.toml` and never touches the
+//! taskbar.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 // A misspelled or unimported message constant in a `match` arm silently becomes a catch-all binding.
@@ -73,7 +74,7 @@ fn run() -> i32 {
             return 1;
         }
     };
-    let view = SettingsView::new(&gfx, strings_for(&ui_language_tag()), path.clone(), writer.clone());
+    let view = SettingsView::new(&gfx, strings_for(&ui_language_tag()), path.clone(), newwin_config::tray_seen_path(), writer.clone());
     let win = match AppWindow::create(&gfx, view, CLASS, TITLE, SIZE) {
         Ok(w) => w,
         Err(e) => {
@@ -83,6 +84,7 @@ fn run() -> i32 {
     };
     let hwnd = win.hwnd();
     win.update(|v| v.hwnd = hwnd);
+    // One watch on the folder: `config.toml` and `tray_seen.toml` (the Tray list) both live there.
     let watch = path.parent().and_then(|dir| {
         let _ = std::fs::create_dir_all(dir);
         DirWatch::start(dir, hwnd, DIR_CHANGED).map_err(|e| log::warn!("cannot watch {}: {e}", dir.display())).ok()

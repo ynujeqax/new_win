@@ -19,8 +19,12 @@ use newwin_ui::text_field::TextField;
 use newwin_ui::toggle::Toggle;
 use newwin_ui::{Color, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, theme};
 
-use crate::sections::{self, Control, Row, RowId, RowValue};
+use crate::sections::{self, Control, List, ListEdit, Row, RowId, RowValue};
 use crate::view::{FocusKind, KeyAction};
+
+mod list;
+
+use list::SectionList;
 
 /// What a control asks the window to do.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -29,6 +33,15 @@ pub enum BodyEvent {
     Press(RowId),
     OpenFonts,
     FocusField,
+    /// A toggle or a drag in the Items / Tray list.
+    List(ListEdit),
+}
+
+/// What the focus is on, kept across a change of rows: a row, or a list row by its key.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FocusKey {
+    Row(RowId),
+    Item(String),
 }
 
 const FONT: &str = "Segoe UI Variable Text";
@@ -104,6 +117,8 @@ pub struct Body {
     hover: Option<usize>,
     pressed: Option<usize>,
     dpi: u32,
+    /// Items and Tray: the reorder list instead of rows.
+    list: Option<SectionList>,
 }
 
 fn focus_kind(c: &Control) -> Option<FocusKind> {
@@ -141,6 +156,7 @@ impl Body {
             hover: None,
             pressed: None,
             dpi: 96,
+            list: None,
         }
     }
 
@@ -156,11 +172,16 @@ impl Body {
     pub fn set_dpi(&mut self, dpi: u32) {
         self.dpi = dpi;
         self.texts = None;
+        if let Some(l) = self.list.as_mut() {
+            l.forget_texts();
+        }
+        self.layout_list();
     }
 
     /// The rows for the current config: changed toggles and segments glide to their new value;
     /// the field keeps what is being typed while it is focused.
     pub fn set_rows(&mut self, rows: Vec<Row>, s: &Strings, now: u64) {
+        self.list = None;
         for r in &rows {
             match &r.control {
                 Control::Toggle(on) => match self.toggles.get_mut(&r.id) {
@@ -195,6 +216,74 @@ impl Body {
         self.texts = None;
     }
 
+    /// Items / Tray: the list for the current config (see [`SectionList::update`]).
+    pub fn set_list(&mut self, l: List, now: u64) {
+        if !self.rows.is_empty() {
+            *self = Body { area: self.area, dpi: self.dpi, ..Body::new() };
+        }
+        match self.list.as_mut() {
+            Some(current) => current.update(l, now),
+            None => self.list = Some(SectionList::new(l)),
+        }
+        self.layout_list();
+    }
+
+    /// The list's keys in the order shown (empty for a section of rows).
+    pub fn list_keys(&self) -> &[String] {
+        self.list.as_ref().map_or(&[], |l| &l.keys)
+    }
+
+    /// Applies a move the window has written into the config.
+    pub fn commit_move(&mut self, from: usize, to: usize, now: u64) {
+        if let Some(l) = self.list.as_mut() {
+            l.commit(from, to, now);
+        }
+    }
+
+    /// The text shown by an empty list.
+    #[cfg(test)]
+    pub fn hint(&self) -> Option<&'static str> {
+        self.list.as_ref().filter(|l| l.row_count() == 0).and_then(|l| l.hint)
+    }
+
+    /// What row `row` is, to find it again after the rows change.
+    pub fn focus_key(&self, row: usize) -> Option<FocusKey> {
+        match self.list.as_ref() {
+            Some(l) => l.key(row).map(|k| FocusKey::Item(k.to_owned())),
+            None => self.rows.get(row).map(|r| FocusKey::Row(r.id)),
+        }
+    }
+
+    /// The index into [`Body::focusables`] of the control `key` names, if it is still there.
+    pub fn focus_of(&self, key: &FocusKey) -> Option<usize> {
+        let row = match (key, self.list.as_ref()) {
+            (FocusKey::Item(k), Some(l)) => l.position(k)?,
+            (FocusKey::Row(id), None) => self.rows.iter().position(|r| r.id == *id)?,
+            _ => return None,
+        };
+        self.focusables().iter().position(|f| f.2 == row)
+    }
+
+    /// Lays the list out in the area at the current scroll.
+    fn layout_list(&mut self) {
+        let (a, dpi) = (self.area, self.dpi);
+        let (right, row_h) = (a.right() - self.s(SCROLL_GAP), self.s(ROW_H));
+        let Some(l) = self.list.as_mut() else { return };
+        self.scroll.content_h = row_h * l.row_count().max(1) as f32;
+        self.scroll.view_h = a.h;
+        self.scroll.clamp();
+        l.list.set_layout(PointF { x: a.x, y: a.y - self.scroll.offset }, right - a.x, row_h, dpi);
+    }
+
+    /// The body's area (physical px); painting sets it too.
+    pub fn set_area(&mut self, area: RectF) {
+        if area != self.area {
+            self.area = area;
+            self.texts = None;
+        }
+        self.layout_list();
+    }
+
     /// Buttons now waiting for a second click (their label says so).
     pub fn set_armed(&mut self, armed: Vec<RowId>) {
         if armed != self.armed {
@@ -205,6 +294,9 @@ impl Body {
 
     /// The focusable controls in order: (kind, rectangle, row index).
     pub fn focusables(&self) -> Vec<(FocusKind, RectF, usize)> {
+        if let Some(l) = self.list.as_ref() {
+            return l.focusables();
+        }
         self.rows
             .iter()
             .enumerate()
@@ -236,6 +328,9 @@ impl Body {
 
     /// A key on the control in row `row`.
     pub fn activate(&mut self, row: usize, action: KeyAction, now: u64) -> Option<BodyEvent> {
+        if let Some(l) = self.list.as_mut() {
+            return l.activate(row, action, now);
+        }
         let r = self.rows.get(row)?;
         let id = r.id;
         match (&r.control, action) {
@@ -276,19 +371,25 @@ impl Body {
 
     /// Scrolls so that row `row` is inside the area.
     pub fn reveal(&mut self, row: usize) {
-        let Some(g) = self.geo.get(row) else { return };
-        let (top, bottom) = (g.row.y, g.row.bottom());
+        let rect = match self.list.as_ref() {
+            Some(l) => l.row_rect(row),
+            None => self.geo.get(row).map(|g| g.row),
+        };
+        let Some(r) = rect else { return };
+        let (top, bottom) = (r.y, r.bottom());
         if top < self.area.y {
             self.scroll.offset -= self.area.y - top;
         } else if bottom > self.area.bottom() {
             self.scroll.offset += bottom - self.area.bottom();
         }
         self.scroll.clamp();
+        self.layout_list();
     }
 
     pub fn wheel(&mut self, delta: i16) -> bool {
         let before = self.scroll.offset;
         self.scroll.wheel_dpi(delta, self.dpi);
+        self.layout_list();
         self.scroll.offset != before
     }
 
@@ -307,6 +408,9 @@ impl Body {
         if let Some(t) = self.scroll.thumb_rect_dpi(self.area, self.dpi).filter(|t| t.inset(-self.s(4.0)).contains(p)) {
             self.drag = Some(Drag::Thumb(p.y - t.y));
             return None;
+        }
+        if let Some(l) = self.list.as_mut() {
+            return l.press(p, now);
         }
         let i = self.row_at(p)?;
         let (r, g) = (self.rows.get(i)?, self.geo.get(i)?);
@@ -344,7 +448,12 @@ impl Body {
     }
 
     /// The pointer moved; `(event, repaint)`.
-    pub fn move_to(&mut self, p: PointF) -> (Option<BodyEvent>, bool) {
+    pub fn move_to(&mut self, p: PointF, now: u64) -> (Option<BodyEvent>, bool) {
+        if let Some(l) = self.list.as_mut()
+            && l.dragging()
+        {
+            return (None, l.move_to(p, now));
+        }
         match self.drag {
             Some(Drag::Slider(i)) => {
                 let (Some((id, v)), Some(g)) = (self.slider_value(i), self.geo.get(i)) else { return (None, false) };
@@ -353,6 +462,7 @@ impl Body {
             }
             Some(Drag::Thumb(grab)) => {
                 self.scroll.drag_thumb_dpi(self.area, p.y, grab, self.dpi);
+                self.layout_list();
                 (None, true)
             }
             None => {
@@ -371,8 +481,13 @@ impl Body {
         self.hover.take().is_some()
     }
 
-    /// The button released over itself is pressed.
-    pub fn release(&mut self, p: PointF) -> (Option<BodyEvent>, bool) {
+    /// The button released over itself is pressed; a list row let go lands.
+    pub fn release(&mut self, p: PointF, now: u64) -> (Option<BodyEvent>, bool) {
+        if let Some(l) = self.list.as_mut()
+            && l.dragging()
+        {
+            return l.release(now);
+        }
         let dragged = self.drag.take().is_some();
         let Some(i) = self.pressed.take() else { return (None, dragged) };
         let hit = self.geo.get(i).is_some_and(|g| g.control.inset(-self.s(4.0)).contains(p));
@@ -380,7 +495,9 @@ impl Body {
     }
 
     pub fn animating(&self, now: u64) -> bool {
-        self.toggles.values().any(|t| t.animating(now)) || self.segs.values().any(|g| g.animating(now))
+        self.toggles.values().any(|t| t.animating(now))
+            || self.segs.values().any(|g| g.animating(now))
+            || self.list.as_ref().is_some_and(|l| l.animating(now))
     }
 
     fn build_texts(&mut self, cache: &mut TextCache, s: &Strings) -> Vec<RowTexts> {
@@ -502,9 +619,15 @@ impl Body {
 
     /// Paints the body into `area` (physical px). `blink` is the caret blink period.
     pub fn paint(&mut self, p: &mut Painter, cache: &mut TextCache, s: &Strings, area: RectF, now: u64, blink: Option<u32>) {
-        if area != self.area {
-            self.area = area;
-            self.texts = None;
+        self.set_area(area);
+        if let Some(l) = self.list.as_mut() {
+            let style = |size: f32| TextStyle { family: FONT.into(), size: scale(size, self.dpi), weight: theme::WEIGHT_REGULAR };
+            let (label, small) = (style(LABEL_TEXT), style(SMALL_TEXT));
+            p.push_clip(area);
+            l.paint(p, cache, (&label, &small), area, now);
+            p.pop_clip();
+            self.scroll.paint(p, area, self.dpi);
+            return;
         }
         let texts = match self.texts.take() {
             Some(t) => t,
@@ -638,6 +761,129 @@ mod tests {
         let mut ap = body(Section::Appearance);
         let font = rows_for(Section::Appearance, &Config::default(), false).iter().position(|r| matches!(r.control, Control::Font(_))).unwrap();
         assert_eq!(ap.activate(font, KeyAction::Activate, 0), Some(BodyEvent::OpenFonts));
+    }
+
+    use newwin_config::tray_seen::{SeenApp, TraySeen};
+
+    /// Rows are 40 px high at 96 DPI; the toggle sits at x 438–474 (area 500 wide, 14 px for the
+    /// scroll thumb, 12 px padding), y 10–30 within its row.
+    fn list_body(section: Section, c: &Config, seen: &TraySeen) -> Body {
+        let mut b = Body::new();
+        b.set_list(sections::list_for(section, c, seen, strings_for("en-US")).unwrap(), 0);
+        b.set_area(RectF::new(0.0, 0.0, 500.0, 400.0));
+        b
+    }
+
+    fn items() -> Body {
+        list_body(Section::Items, &Config::default(), &TraySeen::default())
+    }
+
+    fn seen(exes: &[&str]) -> TraySeen {
+        TraySeen { apps: exes.iter().map(|e| SeenApp { exe: (*e).into(), name: (*e).into() }).collect() }
+    }
+
+    fn pt(x: f32, y: f32) -> PointF {
+        PointF { x, y }
+    }
+
+    #[test]
+    fn a_press_on_a_row_toggle_switches_it_and_starts_no_drag() {
+        let mut b = items();
+        assert_eq!(b.press(pt(456.0, 60.0), 0), Some(BodyEvent::List(ListEdit::Toggled(1, false))));
+        assert_eq!(b.move_to(pt(456.0, 200.0), 5), (None, false), "no row follows the pointer");
+        assert_eq!(b.release(pt(456.0, 200.0), 10).0, None);
+        assert_eq!(b.list_keys(), ["layout", "network", "volume", "search", "date", "time"]);
+    }
+
+    #[test]
+    fn dragging_a_row_by_its_body_moves_it() {
+        let mut b = items();
+        assert_eq!(b.press(pt(50.0, 20.0), 0), None);
+        assert_eq!(b.move_to(pt(50.0, 150.0), 5), (None, true));
+        assert!(b.animating(10), "the rows in between glide aside");
+        assert_eq!(b.release(pt(50.0, 150.0), 10), (Some(BodyEvent::List(ListEdit::Moved(0, 3))), true));
+        b.commit_move(0, 3, 10);
+        assert_eq!(b.list_keys(), ["network", "volume", "search", "layout", "date", "time"]);
+        assert_eq!(b.release(pt(50.0, 150.0), 20), (None, false), "a second release does nothing");
+    }
+
+    #[test]
+    fn a_press_and_release_in_place_moves_nothing() {
+        let mut b = items();
+        assert_eq!(b.press(pt(50.0, 100.0), 0), None);
+        assert_eq!(b.release(pt(50.0, 100.0), 5), (None, true));
+        assert_eq!(b.press(pt(50.0, 300.0), 0), None, "below the last row");
+        assert_eq!(b.move_to(pt(50.0, 20.0), 5), (None, false));
+        assert_eq!(b.release(pt(50.0, 20.0), 5).0, None);
+    }
+
+    #[test]
+    fn list_rows_are_focusable_space_toggles_and_steps_move() {
+        let mut b = items();
+        let f = b.focusables();
+        assert_eq!(f.len(), 6);
+        assert!(f.iter().all(|f| f.0 == FocusKind::ListRow));
+        assert_eq!(b.activate(0, KeyAction::Activate, 0), Some(BodyEvent::List(ListEdit::Toggled(0, false))));
+        assert_eq!(b.activate(0, KeyAction::Step(-1), 0), None, "the first row cannot go up");
+        assert_eq!(b.activate(5, KeyAction::Step(1), 0), None, "the last row cannot go down");
+        assert_eq!(b.activate(2, KeyAction::Step(1), 0), Some(BodyEvent::List(ListEdit::Moved(2, 3))));
+    }
+
+    #[test]
+    fn a_reload_with_the_same_rows_keeps_the_list_and_glides_toggles() {
+        let mut b = items();
+        let mut c = Config::default();
+        c.items.hidden = vec!["date".into()];
+        b.set_list(sections::list_for(Section::Items, &c, &TraySeen::default(), strings_for("en-US")).unwrap(), 100);
+        assert!(b.animating(150));
+        assert_eq!(b.activate(4, KeyAction::Activate, 200), Some(BodyEvent::List(ListEdit::Toggled(4, true))));
+    }
+
+    #[test]
+    fn a_new_tray_app_during_a_drag_waits_for_the_release() {
+        let c = Config::default();
+        let mut b = list_body(Section::Tray, &c, &seen(&["b.exe", "c.exe"]));
+        assert_eq!(b.press(pt(50.0, 20.0), 0), None);
+        b.set_list(sections::list_for(Section::Tray, &c, &seen(&["a.exe", "b.exe", "c.exe"]), strings_for("en-US")).unwrap(), 5);
+        assert_eq!(b.list_keys(), ["b.exe", "c.exe"]);
+        assert_eq!(b.move_to(pt(50.0, 70.0), 6), (None, true), "still dragging");
+        assert_eq!(b.release(pt(50.0, 70.0), 7).0, Some(BodyEvent::List(ListEdit::Moved(0, 1))));
+        b.set_list(sections::list_for(Section::Tray, &c, &seen(&["a.exe", "b.exe", "c.exe"]), strings_for("en-US")).unwrap(), 8);
+        assert_eq!(b.list_keys(), ["a.exe", "b.exe", "c.exe"]);
+    }
+
+    #[test]
+    fn the_focus_follows_its_tray_row_when_apps_appear() {
+        let c = Config::default();
+        let mut b = list_body(Section::Tray, &c, &seen(&["b.exe", "c.exe"]));
+        let key = b.focus_key(1).unwrap();
+        assert_eq!(key, FocusKey::Item("c.exe".into()));
+        b.set_list(sections::list_for(Section::Tray, &c, &seen(&["a.exe", "b.exe", "c.exe"]), strings_for("en-US")).unwrap(), 5);
+        assert_eq!(b.focus_of(&key), Some(2));
+        b.set_list(sections::list_for(Section::Tray, &c, &seen(&["a.exe"]), strings_for("en-US")).unwrap(), 6);
+        assert_eq!(b.focus_of(&key), None, "its app is gone");
+    }
+
+    #[test]
+    fn a_row_focus_survives_a_row_appearing_above_it() {
+        let en = strings_for("en-US");
+        let mut c = Config::default();
+        let mut b = Body::new();
+        b.set_rows(rows_for(Section::Appearance, &c, false), en, 0);
+        let seconds = b.rows.iter().position(|r| r.id == RowId::ShowSeconds).unwrap();
+        let key = b.focus_key(seconds).unwrap();
+        let before = b.focus_of(&key).unwrap();
+        c.appearance.date_format = "dd.MM".into();
+        b.set_rows(rows_for(Section::Appearance, &c, false), en, 0);
+        assert_eq!(b.focus_of(&key), Some(before + 1), "the template field came in above");
+    }
+
+    #[test]
+    fn empty_tray_list_shows_the_hint() {
+        let b = list_body(Section::Tray, &Config::default(), &TraySeen::default());
+        assert_eq!(b.hint(), Some("Apps appear here after they put an icon in the tray."));
+        assert!(b.focusables().is_empty());
+        assert_eq!(items().hint(), None);
     }
 
     #[test]

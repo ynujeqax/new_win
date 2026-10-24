@@ -2,16 +2,21 @@
 //! (`rows`) and a mapping from a control's new value back to the config (`apply`). Both are pure;
 //! the window lays the rows out and paints them (`body.rs`).
 //!
-//! A new section (Items, Tray) adds its module with the same two functions, its row ids to
-//! [`RowId`], and an arm to [`rows_for`] and [`apply`].
+//! A new section of rows adds its module with the same two functions, its row ids to [`RowId`],
+//! and an arm to [`rows_for`] and [`apply`]. Items and Tray are one reorder list each instead:
+//! [`list_for`] and [`apply_list`].
 
 pub mod about;
 pub mod appearance;
 pub mod bar;
+pub mod items;
 pub mod spotlight;
+pub mod tray;
 
 use newwin_config::Config;
+use newwin_config::tray_seen::TraySeen;
 use newwin_core::strings::Strings;
+use newwin_ui::reorder_list::ReorderRow;
 use newwin_ui::slider::Range;
 
 use crate::view::Section;
@@ -108,7 +113,7 @@ impl Row {
 }
 
 /// The section's rows. `date_custom`: the user picked *Custom* and has not typed a template yet
-/// (the config still says `"system"`).
+/// (the config still says `"system"`). Items and Tray have none: they are a [`List`].
 pub fn rows_for(section: Section, c: &Config, date_custom: bool) -> Vec<Row> {
     match section {
         Section::Bar => bar::rows(c),
@@ -116,8 +121,57 @@ pub fn rows_for(section: Section, c: &Config, date_custom: bool) -> Vec<Row> {
         Section::Appearance => appearance::rows(c),
         Section::Spotlight => spotlight::rows(c),
         Section::About => about::rows(c),
-        // Task 11.
         Section::Items | Section::Tray => Vec::new(),
+    }
+}
+
+/// A section that is one reorder list (Items, Tray): the rows with their keys (item name / exe),
+/// and what shows while it is empty.
+#[derive(Clone, Debug)]
+pub struct List {
+    pub rows: Vec<(String, ReorderRow)>,
+    pub hint: Option<&'static str>,
+}
+
+impl List {
+    #[cfg(test)]
+    pub fn keys(&self) -> Vec<String> {
+        self.rows.iter().map(|(k, _)| k.clone()).collect()
+    }
+}
+
+/// The list of Items or Tray; `None` for the sections made of rows.
+pub fn list_for(section: Section, c: &Config, seen: &TraySeen, s: &Strings) -> Option<List> {
+    match section {
+        Section::Items => Some(List { rows: items::keys(c).into_iter().zip(items::rows(c, s)).collect(), hint: None }),
+        Section::Tray => {
+            let rows = tray::rows(c, seen);
+            let hint = tray::empty_hint(&rows, s);
+            Some(List { rows, hint })
+        }
+        _ => None,
+    }
+}
+
+/// A change made in a reorder list, by row index into the list as shown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ListEdit {
+    Toggled(usize, bool),
+    Moved(usize, usize),
+}
+
+/// Writes a list change into the config; `keys` are the list's keys before the change.
+pub fn apply_list(section: Section, c: &mut Config, keys: &[String], e: ListEdit) {
+    match (section, e) {
+        (Section::Items, ListEdit::Toggled(i, on)) => items::toggled(c, i, on),
+        (Section::Items, ListEdit::Moved(from, to)) => items::moved(c, from, to),
+        (Section::Tray, ListEdit::Toggled(i, on)) => {
+            if let Some(exe) = keys.get(i) {
+                tray::toggled(c, exe, on);
+            }
+        }
+        (Section::Tray, ListEdit::Moved(from, to)) => tray::moved(c, keys, from, to),
+        _ => {}
     }
 }
 
@@ -319,6 +373,37 @@ mod tests {
         assert_eq!(button_label(RowId::ClearHistory, true, en), "Click again to clear");
         assert_eq!(button_label(RowId::RestoreTaskbar, false, en), "Restore Windows taskbar");
         assert_eq!(button_label(RowId::OpenConfig, true, en), "Open config file");
+    }
+
+    #[test]
+    fn items_and_tray_are_lists_and_the_rest_are_rows() {
+        let en = strings_for("en-US");
+        let (c, seen) = (Config::default(), TraySeen::default());
+        let items = list_for(Section::Items, &c, &seen, en).unwrap();
+        assert_eq!(items.keys(), ["layout", "network", "volume", "search", "date", "time"]);
+        assert_eq!(items.hint, None);
+        assert_eq!(list_for(Section::Tray, &c, &seen, en).unwrap().hint, Some(en.tray_empty));
+        assert!(list_for(Section::Bar, &c, &seen, en).is_none());
+        assert!(rows_for(Section::Items, &c, false).is_empty());
+    }
+
+    #[test]
+    fn list_edits_go_to_their_section() {
+        let mut c = Config::default();
+        let keys = items::keys(&c);
+        apply_list(Section::Items, &mut c, &keys, ListEdit::Toggled(1, false));
+        apply_list(Section::Items, &mut c, &keys, ListEdit::Moved(1, 0));
+        assert_eq!(c.items.hidden, ["network"]);
+        assert_eq!(c.items.right[0], "network");
+        let exes: Vec<String> = ["a.exe", "b.exe"].map(String::from).to_vec();
+        apply_list(Section::Tray, &mut c, &exes, ListEdit::Toggled(1, false));
+        apply_list(Section::Tray, &mut c, &exes, ListEdit::Toggled(5, false));
+        apply_list(Section::Tray, &mut c, &exes, ListEdit::Moved(1, 0));
+        assert_eq!(c.tray.hidden, ["b.exe"]);
+        assert_eq!(c.tray.order, ["b.exe", "a.exe"]);
+        let before = c.clone();
+        apply_list(Section::Bar, &mut c, &exes, ListEdit::Moved(1, 0));
+        assert_eq!(c, before);
     }
 
     #[test]

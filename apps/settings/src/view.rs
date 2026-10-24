@@ -4,13 +4,14 @@
 //!
 //! Edits go through [`SettingsView::edit`]: the [`Writer`] holds them and the 100 ms
 //! [`WRITE_TIMER`] writes the last one. The directory watch posts [`DIR_CHANGED`]; 50 ms later the
-//! file is re-read unless it is the window's own write. All timers and messages arrive through
-//! [`AppContent::message`] on the window itself.
+//! file is re-read unless it is the window's own write, and `tray_seen.toml` for the Tray list. All
+//! timers and messages arrive through [`AppContent::message`] on the window itself.
 
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use newwin_config::tray_seen::TraySeen;
 use newwin_config::{Config, ConfigError};
 use newwin_core::strings::Strings;
 use newwin_platform::clock::now_ms;
@@ -22,7 +23,7 @@ use newwin_ui::panel::{PanelInput, PanelReply};
 use newwin_ui::{Color, Gfx, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, theme};
 use windows::Win32::Foundation::{CloseHandle, HWND, LPARAM, WPARAM};
 use windows::Win32::System::Threading::{OpenMutexW, SYNCHRONIZATION_SYNCHRONIZE};
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VK_ESCAPE, VK_LEFT, VK_RETURN, VK_RIGHT, VK_SHIFT, VK_SPACE, VK_TAB};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VK_DOWN, VK_LEFT, VK_RETURN, VK_RIGHT, VK_SPACE, VK_UP};
 use windows::Win32::UI::WindowsAndMessaging::{GetCaretBlinkTime, KillTimer, SetTimer, WA_INACTIVE, WM_ACTIVATE, WM_TIMER};
 use windows::core::w;
 
@@ -33,6 +34,7 @@ use crate::sections::about::RestoreWait;
 use crate::writer::Writer;
 
 mod dispatch;
+mod input;
 
 /// The window: fixed size, logical px (global constraints).
 pub const SIZE: (f32, f32) = (760.0, 560.0);
@@ -210,13 +212,15 @@ pub enum FocusKind {
     FontList,
     /// Takes the typing itself (the date template).
     TextField,
+    /// A row of the Items / Tray list: Space switches it, Ctrl+↑/↓ move it.
+    ListRow,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyAction {
     /// Press a button, flip a toggle, open the font list.
     Activate,
-    /// A slider by one step, a segment by one (-1 left, +1 right).
+    /// A slider by one step, a segment by one (-1 left, +1 right), a list row by one (-1 up).
     Step(i32),
 }
 
@@ -225,8 +229,17 @@ pub fn key_action(kind: FocusKind, vk: u16) -> Option<KeyAction> {
     match (kind, vk) {
         (FocusKind::Slider | FocusKind::Segmented, v) if v == VK_LEFT.0 => Some(KeyAction::Step(-1)),
         (FocusKind::Slider | FocusKind::Segmented, v) if v == VK_RIGHT.0 => Some(KeyAction::Step(1)),
-        (FocusKind::Toggle, v) if v == VK_SPACE.0 => Some(KeyAction::Activate),
+        (FocusKind::Toggle | FocusKind::ListRow, v) if v == VK_SPACE.0 => Some(KeyAction::Activate),
         (FocusKind::Button | FocusKind::FontList, v) if v == VK_SPACE.0 || v == VK_RETURN.0 => Some(KeyAction::Activate),
+        _ => None,
+    }
+}
+
+/// The key `vk` pressed with Ctrl on a focused control of `kind`: Ctrl+↑/↓ move a list row.
+pub fn ctrl_key_action(kind: FocusKind, vk: u16) -> Option<KeyAction> {
+    match (kind, vk) {
+        (FocusKind::ListRow, v) if v == VK_UP.0 => Some(KeyAction::Step(-1)),
+        (FocusKind::ListRow, v) if v == VK_DOWN.0 => Some(KeyAction::Step(1)),
         _ => None,
     }
 }
@@ -306,12 +319,16 @@ pub struct SettingsView {
     restore_confirm: Confirm,
     /// Waiting for the shell to quit after *Restore Windows taskbar*.
     restore_wait: Option<RestoreWait>,
+    /// The apps that have had a tray icon (the shell writes the file), for the Tray list.
+    seen_path: PathBuf,
+    seen: TraySeen,
     /// The caret blink period.
     blink: Option<u32>,
 }
 
 impl SettingsView {
-    pub fn new(gfx: &Rc<Gfx>, strings: &'static Strings, path: PathBuf, writer: Rc<RefCell<Writer>>) -> SettingsView {
+    /// `path`: `config.toml`; `seen_path`: `tray_seen.toml`, in the same watched folder.
+    pub fn new(gfx: &Rc<Gfx>, strings: &'static Strings, path: PathBuf, seen_path: PathBuf, writer: Rc<RefCell<Writer>>) -> SettingsView {
         let (config, banner) = load_for_view(&path);
         let parse_error = match banner {
             Some(Banner::ParseError { line }) => Some(line),
@@ -344,6 +361,8 @@ impl SettingsView {
             clear_confirm: Confirm::default(),
             restore_confirm: Confirm::default(),
             restore_wait: None,
+            seen: dispatch::load_seen(&seen_path).unwrap_or_default(),
+            seen_path,
             blink: {
                 let b = unsafe { GetCaretBlinkTime() };
                 (b != 0 && b != u32::MAX).then_some(b)
@@ -418,6 +437,7 @@ impl SettingsView {
     /// The file changed on disk: show it, unless it is our own write or an edit is about to be
     /// written over it.
     fn reload(&mut self) {
+        self.reload_seen();
         if self.writer.borrow().pending.is_some() {
             return;
         }
@@ -491,100 +511,6 @@ impl SettingsView {
         self.date_custom = false;
         self.body.reset();
         self.sync_body(now);
-    }
-
-    /// The controls Tab moves over, in order: the banner's button, then the section's controls.
-    fn focusables(&self) -> Vec<(FocusKind, RectF)> {
-        let mut out = Vec::new();
-        if self.has_button() {
-            // Its rectangle is known once painted.
-            out.push((FocusKind::Button, self.geo.button.unwrap_or_default()));
-        }
-        out.extend(self.section_controls());
-        out
-    }
-
-    /// The section's focusable controls.
-    fn section_controls(&self) -> Vec<(FocusKind, RectF)> {
-        self.body.focusables().into_iter().map(|(k, r, _)| (k, r)).collect()
-    }
-
-    /// Focusable `i` of [`SettingsView::focusables`] as a body row.
-    fn body_row(&self, i: usize) -> Option<usize> {
-        let j = i.checked_sub(usize::from(self.has_button()))?;
-        self.body.focusables().get(j).map(|f| f.2)
-    }
-
-    fn focused_kind(&self) -> Option<FocusKind> {
-        self.focus.and_then(|i| self.focusables().get(i).map(|f| f.0))
-    }
-
-    /// Moves the focus; the template field takes the caret when it gets it, and the focused row
-    /// scrolls into view.
-    fn set_focus(&mut self, focus: Option<usize>, now: u64) {
-        self.focus = focus;
-        let field = self.focused_kind() == Some(FocusKind::TextField);
-        if field && !self.body.field.focused {
-            self.body.field.blink_from = now;
-        }
-        self.body.field.focused = field;
-        if let Some(row) = focus.and_then(|i| self.body_row(i)) {
-            self.body.reveal(row);
-        }
-    }
-
-    /// A key on the focused control `i` of [`SettingsView::focusables`].
-    fn act(&mut self, i: usize, action: KeyAction, now: u64) {
-        if self.has_button() && i == 0 {
-            if action == KeyAction::Activate {
-                self.press_banner_button();
-            }
-            return;
-        }
-        if let Some(ev) = self.body_row(i).and_then(|row| self.body.activate(row, action, now)) {
-            self.on_body(ev, now);
-        }
-    }
-
-    /// Esc: closes the font list. True when it was open.
-    fn close_lists(&mut self) -> bool {
-        self.font_list.take().is_some()
-    }
-
-    fn on_key(&mut self, ev: PanelInput, now: u64) -> bool {
-        let vk = match ev {
-            PanelInput::Key(vk) => Some(vk),
-            _ => None,
-        };
-        if vk == Some(VK_ESCAPE.0) {
-            return self.close_lists();
-        }
-        if self.font_list.is_some() && vk != Some(VK_TAB.0) {
-            return self.list_input(ev, now);
-        }
-        if vk == Some(VK_TAB.0) {
-            self.font_list = None;
-            let count = self.focusables().len();
-            let next = focus_next(self.focus, count, key_down(VK_SHIFT.0));
-            let changed = next != self.focus;
-            self.set_focus(next, now);
-            return changed;
-        }
-        if self.focused_kind() == Some(FocusKind::TextField) {
-            if let Some(ev) = self.body.field_input(ev, now) {
-                self.on_body(ev, now);
-            }
-            return true;
-        }
-        let (Some(vk), Some(i)) = (vk, self.focus) else { return false };
-        let Some(&(kind, _)) = self.focusables().get(i) else { return false };
-        match key_action(kind, vk) {
-            Some(a) => {
-                self.act(i, a, now);
-                true
-            }
-            None => false,
-        }
     }
 
     fn style(&self, size: f32, weight: u16) -> TextStyle {
@@ -681,70 +607,7 @@ impl AppContent for SettingsView {
     }
 
     fn input(&mut self, ev: PanelInput, now_ms: u64) -> PanelReply {
-        let list_open = self.font_list.is_some();
-        let repaint = match ev {
-            PanelInput::Move(_) | PanelInput::Leave | PanelInput::Wheel(_) | PanelInput::Release(_) if list_open => self.list_input(ev, now_ms),
-            // A press outside closes the list and does nothing else.
-            PanelInput::Press(_) if list_open => {
-                self.list_input(ev, now_ms);
-                true
-            }
-            PanelInput::Move(pt) => {
-                let hover = self.geo.button.is_some_and(|b| b.contains(pt));
-                let changed = hover != self.button_hover;
-                self.button_hover = hover;
-                let (ev, body) = self.body.move_to(pt);
-                let edited = ev.is_some();
-                if let Some(ev) = ev {
-                    self.on_body(ev, now_ms);
-                }
-                changed || body || edited
-            }
-            PanelInput::Leave => {
-                let changed = self.button_hover;
-                self.button_hover = false;
-                self.body.leave() || changed
-            }
-            PanelInput::Wheel(delta) => self.body.wheel(delta),
-            PanelInput::Press(pt) => {
-                if let Some(i) = self.nav.hit(&self.geo.nav, pt) {
-                    self.select_section(i, now_ms);
-                    true
-                } else if self.geo.button.is_some_and(|b| b.contains(pt)) {
-                    self.button_pressed = true;
-                    true
-                } else {
-                    // A click elsewhere takes the focus from the template field.
-                    if self.focused_kind() == Some(FocusKind::TextField) {
-                        self.set_focus(None, now_ms);
-                    }
-                    if let Some(ev) = self.body.press(pt, now_ms) {
-                        self.on_body(ev, now_ms);
-                    }
-                    true
-                }
-            }
-            PanelInput::Release(pt) => {
-                let was = std::mem::take(&mut self.button_pressed);
-                if was && self.geo.button.is_some_and(|b| b.contains(pt)) {
-                    self.press_banner_button();
-                }
-                let (ev, body) = self.body.release(pt);
-                if let Some(ev) = ev {
-                    self.on_body(ev, now_ms);
-                }
-                was || body
-            }
-            PanelInput::CtrlKey(vk) if vk == VK_TAB.0 => {
-                let next = focus_next(Some(self.section.index()), Section::ALL.len(), key_down(VK_SHIFT.0));
-                if let Some(i) = next {
-                    self.select_section(i, now_ms);
-                }
-                true
-            }
-            PanelInput::Key(_) | PanelInput::CtrlKey(_) | PanelInput::Char(_) => self.on_key(ev, now_ms),
-            _ => false,
-        };
+        let repaint = self.route(ev, now_ms);
         PanelReply { repaint, ..PanelReply::default() }
     }
 
@@ -830,6 +693,16 @@ mod tests {
         assert_eq!(key_action(FocusKind::FontList, VK_SPACE.0), Some(KeyAction::Activate));
         assert_eq!(key_action(FocusKind::Toggle, VK_LEFT.0), None);
         assert_eq!(key_action(FocusKind::Slider, VK_UP.0), None);
+    }
+
+    #[test]
+    fn list_rows_switch_with_space_and_move_with_ctrl_arrows() {
+        use windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN;
+        assert_eq!(key_action(FocusKind::ListRow, VK_SPACE.0), Some(KeyAction::Activate));
+        assert_eq!(key_action(FocusKind::ListRow, VK_UP.0), None, "plain arrows do not move rows");
+        assert_eq!(ctrl_key_action(FocusKind::ListRow, VK_UP.0), Some(KeyAction::Step(-1)));
+        assert_eq!(ctrl_key_action(FocusKind::ListRow, VK_DOWN.0), Some(KeyAction::Step(1)));
+        assert_eq!(ctrl_key_action(FocusKind::Slider, VK_UP.0), None);
     }
 
     #[test]
