@@ -160,6 +160,32 @@ fn a_file_that_is_not_utf8_is_a_parse_error_without_a_line() {
 }
 
 #[test]
+fn two_concurrent_saves_leave_one_whole_file_and_no_temp() {
+    let dir = tempdir_in_target("save_concurrent");
+    let p = dir.join("tray_seen.toml");
+    let a = "a".repeat(256 * 1024);
+    let b = "b".repeat(192 * 1024);
+    for i in 0..200 {
+        let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+        let spawn = |text: String| {
+            let (p, barrier) = (p.clone(), barrier.clone());
+            std::thread::spawn(move || {
+                barrier.wait();
+                // A failed rename (the other writer's rename in the way) is allowed; a broken file is not.
+                let _ = save_atomic(&p, &text);
+            })
+        };
+        let (ta, tb) = (spawn(a.clone()), spawn(b.clone()));
+        ta.join().unwrap();
+        tb.join().unwrap();
+        let got = std::fs::read_to_string(&p).unwrap_or_default();
+        assert!(got == a || got == b, "iteration {i}: a torn file of {} bytes", got.len());
+    }
+    let names: Vec<_> = std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().file_name()).collect();
+    assert_eq!(names, [std::ffi::OsString::from("tray_seen.toml")], "no temp files left behind");
+}
+
+#[test]
 fn save_atomic_replaces_the_file_and_leaves_no_temp() {
     let dir = tempdir_in_target("save_atomic");
     let p = dir.join("config.toml");

@@ -284,19 +284,29 @@ pub fn to_toml(c: &Config) -> String {
 }
 
 /// Writes `text` next to `path`, flushes it to disk and renames it over, so neither a crash nor a
-/// power cut leaves half a file.
+/// power cut leaves half a file. Each call has its own temp file (`<name>.<pid>.<n>.tmp`), so two
+/// writers at once (main thread and worker) never share one: the last rename wins whole. The temp
+/// file is removed when any step fails.
 pub fn save_atomic(path: &Path, text: &str) -> std::io::Result<()> {
     use std::io::Write;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static N: AtomicU64 = AtomicU64::new(0);
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    let tmp = path.with_extension("toml.tmp");
-    {
-        let mut f = std::fs::File::create(&tmp)?;
+    let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let tmp = path.with_file_name(format!("{name}.{}.{}.tmp", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+    let r = (|| {
+        let mut f = std::fs::OpenOptions::new().write(true).create_new(true).open(&tmp)?;
         f.write_all(text.as_bytes())?;
         f.sync_all()?;
+        drop(f);
+        std::fs::rename(&tmp, path)
+    })();
+    if r.is_err() {
+        let _ = std::fs::remove_file(&tmp);
     }
-    std::fs::rename(&tmp, path)
+    r
 }
 
 /// Writes the default settings to `path` unless a file is already there (to open it for

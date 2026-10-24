@@ -34,7 +34,8 @@ fn round_trip() {
     assert_eq!(back.get("Microsoft.WindowsTerminal_8wekyb3d8bbwe!App"), 2);
     assert_eq!(back.get("system:lock"), 1);
     assert_eq!(back.get("unknown"), 0);
-    assert!(!path.with_extension("toml.tmp").exists(), "the temporary file is renamed away");
+    let dir = path.parent().unwrap();
+    assert_eq!(std::fs::read_dir(dir).unwrap().count(), 1, "the temporary file is renamed away");
 }
 
 #[test]
