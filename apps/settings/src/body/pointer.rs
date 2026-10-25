@@ -47,6 +47,7 @@ impl Body {
         }
     }
 
+    #[cfg(test)]
     pub fn scroll_offset(&self) -> f32 {
         self.scroll.offset
     }
