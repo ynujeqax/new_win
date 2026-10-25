@@ -29,8 +29,7 @@ use windows::core::w;
 
 use crate::body::Body;
 use crate::font_list::FontList;
-use crate::sections::Confirm;
-use crate::sections::about::RestoreWait;
+use crate::sections::Confirms;
 use crate::writer::Writer;
 
 mod dispatch;
@@ -50,8 +49,6 @@ const RELOAD_TIMER: usize = CONTENT_TIMER_MIN + 1;
 const RECHECK_TIMER: usize = CONTENT_TIMER_MIN + 2;
 /// One-shot, when an armed *Clear* / *Restore* runs out: its label goes back.
 const CONFIRM_TIMER: usize = CONTENT_TIMER_MIN + 3;
-/// Every [`RESTORE_POLL_MS`], only during the ≤ 3 s after *Restore Windows taskbar*.
-const RESTORE_TIMER: usize = CONTENT_TIMER_MIN + 4;
 const WRITE_DELAY_MS: u32 = 100;
 const RELOAD_DELAY_MS: u32 = 50;
 const RECHECK_MS: u32 = 3000;
@@ -325,10 +322,7 @@ pub struct SettingsView {
     families: Option<Rc<Vec<String>>>,
     /// *Custom* picked, no template typed yet.
     date_custom: bool,
-    clear_confirm: Confirm,
-    restore_confirm: Confirm,
-    /// Waiting for the shell to quit after *Restore Windows taskbar*.
-    restore_wait: Option<RestoreWait>,
+    confirms: Confirms,
     /// The apps that have had a tray icon (the shell writes the file), for the Tray list.
     seen_path: PathBuf,
     seen: TraySeen,
@@ -368,9 +362,7 @@ impl SettingsView {
             font_list: None,
             families: None,
             date_custom: false,
-            clear_confirm: Confirm::default(),
-            restore_confirm: Confirm::default(),
-            restore_wait: None,
+            confirms: Confirms::default(),
             seen: dispatch::load_seen(&seen_path).unwrap_or_default(),
             seen_path,
             blink: {
@@ -657,7 +649,6 @@ impl AppContent for SettingsView {
                 self.kill_timer(CONFIRM_TIMER);
                 self.refresh_armed(now_ms);
             }
-            (WM_TIMER, RESTORE_TIMER) => self.poll_restore(now_ms),
             (WM_ACTIVATE, w) if (w & 0xFFFF) as u32 != WA_INACTIVE => self.check_shell(),
             _ => return PanelReply::default(),
         }

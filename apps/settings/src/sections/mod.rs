@@ -325,10 +325,55 @@ impl Confirm {
     }
 }
 
+/// The two confirmations; a click on one disarms the other, so only one asks at a time.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Confirms {
+    pub clear: Confirm,
+    pub restore: Confirm,
+}
+
+impl Confirms {
+    /// A click on *Clear* (`ClearHistory`) or *Restore* (`RestoreTaskbar`).
+    pub fn click(&mut self, id: RowId, now: u64) -> Click {
+        let (this, other) = match id {
+            RowId::RestoreTaskbar => (&mut self.restore, &mut self.clear),
+            _ => (&mut self.clear, &mut self.restore),
+        };
+        *other = Confirm::default();
+        this.click(now)
+    }
+
+    /// The buttons waiting for their second click at `now`.
+    pub fn armed(&self, now: u64) -> Vec<RowId> {
+        [(RowId::ClearHistory, self.clear), (RowId::RestoreTaskbar, self.restore)]
+            .into_iter()
+            .filter(|(_, c)| c.armed(now))
+            .map(|(id, _)| id)
+            .collect()
+    }
+
+    /// When the next armed one runs out.
+    pub fn next_expiry(&self, now: u64) -> Option<u64> {
+        [self.clear, self.restore].iter().filter(|c| c.armed(now)).filter_map(|c| c.expires_at()).min()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use newwin_core::strings::strings_for;
+
+    #[test]
+    fn arming_one_confirm_disarms_the_other() {
+        let mut c = Confirms::default();
+        assert_eq!(c.click(RowId::ClearHistory, 0), Click::Armed);
+        assert_eq!(c.click(RowId::RestoreTaskbar, 500), Click::Armed);
+        assert_eq!(c.armed(600), vec![RowId::RestoreTaskbar]);
+        assert_eq!(c.click(RowId::ClearHistory, 700), Click::Armed, "Clear was disarmed by Restore");
+        assert_eq!(c.armed(800), vec![RowId::ClearHistory]);
+        assert_eq!(c.click(RowId::ClearHistory, 900), Click::Fire);
+        assert_eq!(c.armed(900), Vec::<RowId>::new());
+    }
 
     #[test]
     fn clear_history_needs_a_second_click_within_3_s() {

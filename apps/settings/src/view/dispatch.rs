@@ -15,11 +15,13 @@ use std::path::Path;
 use newwin_config::tray_seen::TraySeen;
 use newwin_platform::clock::now_ms;
 
-use super::{CONFIRM_TIMER, FocusKind, RESTORE_TIMER, SIZE, Section, SettingsView, newwin_exe, shell_running};
+use super::{CONFIRM_TIMER, FocusKind, SIZE, Section, SettingsView, newwin_exe};
 use crate::body::{BodyEvent, FocusKey};
 use crate::font_list::{FontList, ListReply};
 use crate::fonts;
-use crate::sections::about::{self, RESTORE_POLL_MS, RestoreStep, RestoreWait};
+use crate::sections::about;
+use windows::Win32::Foundation::{LPARAM, WPARAM};
+use windows::Win32::UI::WindowsAndMessaging::{PostMessageW, WM_CLOSE};
 use crate::sections::{self, Click, ListEdit, RowId, RowValue, spotlight};
 
 /// `tray_seen.toml`; a missing file is empty, an unreadable or broken one is `None` (logged).
@@ -77,11 +79,7 @@ impl SettingsView {
     }
 
     fn armed_ids(&self, now: u64) -> Vec<RowId> {
-        [(RowId::ClearHistory, self.clear_confirm), (RowId::RestoreTaskbar, self.restore_confirm)]
-            .into_iter()
-            .filter(|(_, c)| c.armed(now))
-            .map(|(id, _)| id)
-            .collect()
+        self.confirms.armed(now)
     }
 
     /// The focusable index of the body's control `j`.
@@ -128,7 +126,7 @@ impl SettingsView {
     fn press_button(&mut self, id: RowId, now: u64) {
         match id {
             RowId::ClearHistory => {
-                if self.clear_confirm.click(now) == Click::Fire {
+                if self.confirms.click(id, now) == Click::Fire {
                     let path = newwin_config::usage_path();
                     match spotlight::clear_history(&path) {
                         Ok(()) => log::info!("launch history cleared"),
@@ -137,8 +135,8 @@ impl SettingsView {
                 }
             }
             RowId::RestoreTaskbar => {
-                if self.restore_confirm.click(now) == Click::Fire {
-                    self.restore_taskbar(now);
+                if self.confirms.click(id, now) == Click::Fire {
+                    self.restore_taskbar();
                 }
             }
             RowId::OpenLogs => about::open_logs(),
@@ -151,8 +149,7 @@ impl SettingsView {
     /// Button labels follow the confirmations; the timer wakes when the next one runs out.
     pub(super) fn refresh_armed(&mut self, now: u64) {
         self.body.set_armed(self.armed_ids(now));
-        let next = [self.clear_confirm, self.restore_confirm].iter().filter(|c| c.armed(now)).filter_map(|c| c.expires_at()).min();
-        match next {
+        match self.confirms.next_expiry(now) {
             Some(t) => self.set_timer(CONFIRM_TIMER, u32::try_from(t.saturating_sub(now)).unwrap_or(u32::MAX).max(1)),
             None => self.kill_timer(CONFIRM_TIMER),
         }
@@ -169,30 +166,14 @@ impl SettingsView {
         }
     }
 
-    /// *Restore Windows taskbar*: asks the shell to quit, then waits up to 3 s for it to go.
-    fn restore_taskbar(&mut self, now: u64) {
-        if about::request_quit() {
-            log::info!("asked NewWin to quit (restore the Windows taskbar)");
-            self.restore_wait = Some(RestoreWait::start(now));
-            self.set_timer(RESTORE_TIMER, RESTORE_POLL_MS);
-        } else {
-            about::run_restore(newwin_exe().as_deref());
-            self.check_shell();
+    /// *Restore Windows taskbar*: `NewWin.exe --quit` ends every NewWin process, this window
+    /// included; it saves and closes first.
+    fn restore_taskbar(&mut self) {
+        about::run_quit(newwin_exe().as_deref());
+        self.flush();
+        unsafe {
+            let _ = PostMessageW(Some(self.hwnd), WM_CLOSE, WPARAM(0), LPARAM(0));
         }
-    }
-
-    pub(super) fn poll_restore(&mut self, now: u64) {
-        let step = self.restore_wait.map(|w| w.poll(now, shell_running()));
-        if step == Some(RestoreStep::Wait) {
-            return;
-        }
-        self.kill_timer(RESTORE_TIMER);
-        self.restore_wait = None;
-        if step == Some(RestoreStep::Fallback) {
-            log::warn!("NewWin did not quit within 3 s");
-            about::run_restore(newwin_exe().as_deref());
-        }
-        self.check_shell();
     }
 
     fn open_fonts(&mut self, now: u64) {
