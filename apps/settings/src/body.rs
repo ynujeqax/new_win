@@ -12,6 +12,7 @@ use newwin_core::strings::Strings;
 use newwin_core::text_edit::Edit;
 use newwin_platform::clock::format_bar_date;
 use newwin_platform::dpi::scale;
+use newwin_ui::reorder_list::autoscroll_speed;
 use newwin_ui::scroll::Scroll;
 use newwin_ui::segmented::Segmented;
 use newwin_ui::slider::{thumb_x_for, value_at};
@@ -73,6 +74,12 @@ const THUMB_COLOR: Color = Color::rgba(255, 255, 255, 0.95);
 const BUTTON_FILL: Color = Color::rgba(255, 255, 255, 0.12);
 const BUTTON_HOVER: Color = Color::rgba(255, 255, 255, 0.22);
 const ARMED_RIM: Color = Color::rgba(255, 255, 255, 0.6);
+/// While a row is dragged this close to the list's edge (logical px) the list scrolls, up to
+/// this fast (logical px/s).
+const AUTOSCROLL_ZONE: f32 = 24.0;
+const AUTOSCROLL_MAX: f32 = 600.0;
+/// A late frame scrolls no further than this much time's worth.
+const AUTOSCROLL_MAX_STEP_MS: u64 = 50;
 
 /// Laid-out texts of one row: its name, then what the control shows (segment labels, the value,
 /// the button label, the font name, the field's text…), and the field's placeholder.
@@ -121,6 +128,10 @@ pub struct Body {
     dpi: u32,
     /// Items and Tray: the reorder list instead of rows.
     list: Option<SectionList>,
+    /// Where the pointer is while a list row is dragged (the wheel and the autoscroll move the
+    /// row to it again), and the last autoscroll step.
+    drag_at: Option<PointF>,
+    scroll_tick: Option<u64>,
 }
 
 fn focus_kind(c: &Control) -> Option<FocusKind> {
@@ -159,6 +170,8 @@ impl Body {
             pressed: None,
             dpi: 96,
             list: None,
+            drag_at: None,
+            scroll_tick: None,
         }
     }
 
@@ -393,6 +406,7 @@ impl Body {
         self.toggles.values().any(|t| t.animating(now))
             || self.segs.values().any(|g| g.animating(now))
             || self.list.as_ref().is_some_and(|l| l.animating(now))
+            || self.autoscroll_speed() != 0.0
     }
 }
 

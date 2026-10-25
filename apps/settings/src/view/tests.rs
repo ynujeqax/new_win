@@ -81,3 +81,11 @@ fn save_reason_drops_the_os_code_and_full_stop() {
     assert!(!r.ends_with('.'), "{r}");
     assert!(!r.is_empty());
 }
+
+#[test]
+fn only_a_keyboard_move_brings_the_focus_into_view() {
+    use crate::sections::ListEdit;
+    assert!(reveals_focus(&ListEdit::Moved(1, 2), false));
+    assert!(!reveals_focus(&ListEdit::Moved(1, 2), true), "a mouse drop leaves the scroll alone");
+    assert!(!reveals_focus(&ListEdit::Toggled(1, true), false));
+}

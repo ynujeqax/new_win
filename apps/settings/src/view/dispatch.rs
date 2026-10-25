@@ -15,7 +15,7 @@ use std::path::Path;
 use newwin_config::tray_seen::TraySeen;
 use newwin_platform::clock::now_ms;
 
-use super::{CONFIRM_TIMER, FocusKind, SIZE, Section, SettingsView, newwin_exe};
+use super::{CONFIRM_TIMER, FocusKind, SIZE, Section, SettingsView, newwin_exe, reveals_focus};
 use crate::body::{BodyEvent, FocusKey};
 use crate::font_list::{FontList, ListReply};
 use crate::fonts;
@@ -88,6 +88,11 @@ impl SettingsView {
     }
 
     pub(super) fn on_body(&mut self, ev: BodyEvent, now: u64) {
+        self.on_body_by(ev, now, false);
+    }
+
+    /// A body event; `by_pointer` = from a click or a drop, not a key.
+    pub(super) fn on_body_by(&mut self, ev: BodyEvent, now: u64, by_pointer: bool) {
         match ev {
             BodyEvent::Set(id, v) => {
                 let custom_picked = id == RowId::DateFormat && v == RowValue::Choice(1);
@@ -115,8 +120,7 @@ impl SettingsView {
                     self.body.commit_move(from, to, now);
                 }
                 self.sync_body_keeping(focused, now);
-                // A row moved by the keyboard stays in view.
-                if matches!(e, ListEdit::Moved(..)) {
+                if reveals_focus(&e, by_pointer) {
                     self.set_focus(self.focus, now);
                 }
             }

@@ -221,3 +221,26 @@ fn text_field_caret_blinks_and_restarts_on_edit() {
     assert!(f.caret_on(900, Some(500)));
     assert!(f.caret_on(10_000, None));
 }
+
+#[test]
+fn autoscroll_speed_is_zero_outside_and_max_at_the_edge() {
+    use newwin_ui::reorder_list::autoscroll_speed;
+    let (top, bottom, zone, max) = (100.0, 500.0, 24.0, 600.0);
+    assert_eq!(autoscroll_speed(top + 30.0, top, bottom, zone, max), 0.0);
+    assert_eq!(autoscroll_speed(300.0, top, bottom, zone, max), 0.0);
+    assert_eq!(autoscroll_speed(top, top, bottom, zone, max), -600.0);
+    assert_eq!(autoscroll_speed(top - 50.0, top, bottom, zone, max), -600.0, "above the list: full speed");
+    assert_eq!(autoscroll_speed(bottom, top, bottom, zone, max), 600.0);
+    assert_eq!(autoscroll_speed(top + 12.0, top, bottom, zone, max), -300.0);
+    assert_eq!(autoscroll_speed(bottom - 12.0, top, bottom, zone, max), 300.0);
+}
+
+#[test]
+fn a_keyboard_move_glides_the_row() {
+    let mut l = ReorderList::new(rows(3));
+    l.set_layout(PointF::default(), 300.0, 30.0, 96);
+    l.commit(0, 2, 0);
+    assert_eq!(l.rows[2].label, "r0");
+    assert!(l.animating(1), "no drop: the row glides from its old slot");
+    assert!(!l.animating(151));
+}

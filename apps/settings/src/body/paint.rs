@@ -123,6 +123,7 @@ impl Body {
     /// Paints the body into `area` (physical px). `blink` is the caret blink period.
     pub fn paint(&mut self, p: &mut Painter, cache: &mut TextCache, s: &Strings, area: RectF, now: u64, blink: Option<u32>) {
         self.set_area(area);
+        self.autoscroll(now);
         if let Some(l) = self.list.as_mut() {
             let style = |size: f32| TextStyle { family: FONT.into(), size: scale(size, self.dpi), weight: theme::WEIGHT_REGULAR };
             let (label, small) = (style(LABEL_TEXT), style(SMALL_TEXT));

@@ -142,9 +142,17 @@ impl ReorderList {
         }
         reorder(&mut self.rows, from, to);
         self.shift = vec![Tween::at_rest(0.0); self.rows.len()];
-        if let (Some(t), Some(dy)) = (self.shift.get_mut(to), self.dropped_offset.take()) {
-            *t = Tween::at_rest(dy);
-            t.to(0.0, now_ms, theme::REORDER_MS);
+        match self.dropped_offset.take() {
+            // Dropped: the others already glided aside; the row glides from where it was let go.
+            Some(dy) => glide_from(&mut self.shift[to], dy, now_ms),
+            // A keyboard move: the row glides from its old slot, the ones it passed from theirs.
+            None => {
+                glide_from(&mut self.shift[to], from as f32 - to as f32, now_ms);
+                let (passed, dy) = if from < to { (from..to, 1.0) } else { (to + 1..from + 1, -1.0) };
+                for i in passed {
+                    glide_from(&mut self.shift[i], dy, now_ms);
+                }
+            }
         }
     }
 
@@ -202,5 +210,25 @@ impl ReorderList {
         }
         let t = self.toggle_rect(i);
         row.on.paint(p, RectF::new(t.x, y + (r.h - t.h) / 2.0, t.w, t.h), now_ms);
+    }
+}
+
+fn glide_from(t: &mut Tween, dy: f32, now_ms: u64) {
+    *t = Tween::at_rest(dy);
+    t.to(0.0, now_ms, theme::REORDER_MS);
+}
+
+/// How fast a list scrolls while a row is dragged near its edge (px/s; negative = up): 0 more
+/// than `zone` inside the list, rising linearly to `max` at the edge and beyond it.
+pub fn autoscroll_speed(y: f32, top: f32, bottom: f32, zone: f32, max: f32) -> f32 {
+    if zone <= 0.0 || !y.is_finite() {
+        return 0.0;
+    }
+    if y < top + zone {
+        -max * ((top + zone - y) / zone).min(1.0)
+    } else if y > bottom - zone {
+        max * ((y - (bottom - zone)) / zone).min(1.0)
+    } else {
+        0.0
     }
 }

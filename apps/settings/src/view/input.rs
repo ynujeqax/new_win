@@ -135,7 +135,7 @@ impl SettingsView {
                 self.button_hover = false;
                 self.body.leave() || changed
             }
-            PanelInput::Wheel(delta) => self.body.wheel(delta),
+            PanelInput::Wheel(delta) => self.body.wheel(delta, now_ms),
             PanelInput::Press(pt) => {
                 if let Some(i) = self.nav.hit(&self.geo.nav, pt) {
                     self.select_section(i, now_ms);
@@ -149,7 +149,7 @@ impl SettingsView {
                         self.set_focus(None, now_ms);
                     }
                     if let Some(ev) = self.body.press(pt, now_ms) {
-                        self.on_body(ev, now_ms);
+                        self.on_body_by(ev, now_ms, true);
                     }
                     true
                 }
@@ -161,7 +161,7 @@ impl SettingsView {
                 }
                 let (ev, body) = self.body.release(pt, now_ms);
                 match ev {
-                    Some(ev) => self.on_body(ev, now_ms),
+                    Some(ev) => self.on_body_by(ev, now_ms, true),
                     // A tray app that came in during a drag joins the list now.
                     None if body && matches!(self.section, Section::Items | Section::Tray) => self.sync_body(now_ms),
                     None => {}

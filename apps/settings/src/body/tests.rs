@@ -173,3 +173,45 @@ fn an_outside_change_keeps_the_typed_template_while_the_field_is_focused() {
     b.set_rows(rows_for(Section::Appearance, &c, true), en, 0);
     assert_eq!(b.field.edit.text(), "dd.MM");
 }
+
+fn long_tray() -> Body {
+    let exes: Vec<String> = (0..20).map(|i| format!("app{i:02}.exe")).collect();
+    let exes: Vec<&str> = exes.iter().map(String::as_str).collect();
+    list_body(Section::Tray, &Config::default(), &seen(&exes))
+}
+
+#[test]
+fn the_wheel_during_a_drag_moves_the_slot() {
+    let mut b = long_tray();
+    assert_eq!(b.press(pt(50.0, 20.0), 0), None);
+    assert_eq!(b.move_to(pt(50.0, 25.0), 5), (None, true));
+    // Three wheel notches scroll 3 rows or more; the pointer stays put, the row goes with the list.
+    assert!(b.wheel(-360, 10));
+    let (ev, _) = b.release(pt(50.0, 25.0), 20);
+    let Some(BodyEvent::List(ListEdit::Moved(0, to))) = ev else { panic!("no move: {ev:?}") };
+    assert!(to >= 3, "slot {to}");
+}
+
+#[test]
+fn dragging_near_the_bottom_edge_scrolls_the_list() {
+    let mut b = long_tray();
+    assert_eq!(b.press(pt(50.0, 20.0), 0), None);
+    assert_eq!(b.move_to(pt(50.0, 398.0), 5), (None, true));
+    assert!(b.animating(5), "an autoscroll keeps the frames coming");
+    let before = b.scroll_offset();
+    b.autoscroll(5);
+    assert!(b.autoscroll(105));
+    assert!(b.scroll_offset() > before, "{} > {before}", b.scroll_offset());
+    b.release(pt(50.0, 398.0), 110);
+    assert!(!b.autoscroll(200), "no drag, no autoscroll");
+}
+
+#[test]
+fn no_autoscroll_away_from_the_edges() {
+    let mut b = long_tray();
+    b.press(pt(50.0, 20.0), 0);
+    b.move_to(pt(50.0, 200.0), 5);
+    b.autoscroll(5);
+    assert!(!b.autoscroll(105));
+    assert_eq!(b.scroll_offset(), 0.0);
+}

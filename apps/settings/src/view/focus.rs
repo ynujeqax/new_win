@@ -1,6 +1,7 @@
 //! Keyboard focus: moving it and what a key does to the focused control.
 
 use super::*;
+use crate::sections::ListEdit;
 
 /// Tab / Shift+Tab (`back`) over `count` controls, wrapping; `None` when there are none.
 pub fn focus_next(current: Option<usize>, count: usize, back: bool) -> Option<usize> {
@@ -66,4 +67,10 @@ pub fn ctrl_key_action(kind: FocusKind, vk: u16) -> Option<KeyAction> {
         (FocusKind::ListRow, v) if v == VK_DOWN.0 => Some(KeyAction::Step(1)),
         _ => None,
     }
+}
+
+/// After a list edit, is the focused row brought into view? Only for a row moved by the keyboard:
+/// a mouse drop leaves the list where the user scrolled it.
+pub fn reveals_focus(e: &ListEdit, by_pointer: bool) -> bool {
+    matches!(e, ListEdit::Moved(..)) && !by_pointer
 }
