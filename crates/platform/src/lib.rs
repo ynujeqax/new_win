@@ -17,6 +17,7 @@ pub mod launch;
 pub mod log;
 pub mod network;
 pub mod paths;
+pub mod processes;
 pub mod taskbar;
 pub mod tray_host;
 pub mod window;

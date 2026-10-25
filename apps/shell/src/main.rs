@@ -4,6 +4,7 @@
 
 mod app;
 mod bar;
+mod quit;
 mod roles;
 mod watchdog;
 
@@ -42,6 +43,7 @@ fn main() {
     let code = match role_from_args(&args) {
         Role::Watchdog => watchdog::run_watchdog(),
         Role::Shell => app::run_shell(),
+        Role::Quit => quit::run_quit(),
         Role::RestoreTaskbar => match restore_from_state_file(&taskbar_state_file()) {
             Ok(_) => 0,
             Err(e) => {

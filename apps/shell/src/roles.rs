@@ -6,6 +6,8 @@ pub enum Role {
     Shell,
     /// Shows the native taskbar again (after tests, from the uninstaller) and exits.
     RestoreTaskbar,
+    /// Ends every NewWin process and shows the native taskbar (installer, uninstaller, Settings).
+    Quit,
 }
 
 /// Anything other than an explicit `--shell` is the watchdog, so a plain double-click
@@ -15,6 +17,8 @@ pub fn role_from_args(args: &[String]) -> Role {
         Role::Shell
     } else if args.iter().any(|a| a == "--restore-taskbar") {
         Role::RestoreTaskbar
+    } else if args.iter().any(|a| a == "--quit") {
+        Role::Quit
     } else {
         Role::Watchdog
     }
@@ -35,5 +39,6 @@ mod tests {
         assert_eq!(role_from_args(&args(&["--shell"])), Role::Shell);
         assert_eq!(role_from_args(&args(&["--bogus"])), Role::Watchdog);
         assert_eq!(role_from_args(&args(&["--restore-taskbar"])), Role::RestoreTaskbar);
+        assert_eq!(role_from_args(&args(&["--quit"])), Role::Quit);
     }
 }

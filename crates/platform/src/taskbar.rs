@@ -77,6 +77,11 @@ pub fn taskbar_created_message() -> u32 {
     unsafe { RegisterWindowMessageW(w!("TaskbarCreated")) }
 }
 
+/// Shows the native taskbar with auto-hide off, when no state file says otherwise.
+pub fn show_native() -> Result<()> {
+    restore_native(false)
+}
+
 fn restore_native(autohide_was_on: bool) -> Result<()> {
     let primary = primary_tray()?;
     set_autohide(primary, autohide_was_on);

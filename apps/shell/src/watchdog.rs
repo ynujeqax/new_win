@@ -63,7 +63,8 @@ pub fn run_watchdog() -> i32 {
         };
         log::info!("shell started pid={}", child.id());
         let code = supervise(&mut child);
-        match crashes.on_exit(code, Instant::now()) {
+        let quitting = newwin_platform::processes::event_exists(newwin_core::quit::QUITTING_EVENT);
+        match newwin_core::watchdog::while_quitting(crashes.on_exit(code, Instant::now()), quitting) {
             ExitDecision::Stop => {
                 log::info!("shell quit, watchdog exiting");
                 return 0;

@@ -46,6 +46,7 @@ windows = { workspace = true, features = [
     "Win32_System_Registry",
     "Win32_System_Memory",
     "Win32_System_RemoteDesktop",
+    "Win32_System_Diagnostics_ToolHelp",
     "Win32_Security",
 ] }
 
