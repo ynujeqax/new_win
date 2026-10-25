@@ -153,7 +153,7 @@ impl App {
     }
 
     /// The catalog the open Spotlight shows (action indices point into it).
-    fn shown_catalog(&self) -> Rc<Vec<Candidate>> {
+    pub(super) fn shown_catalog(&self) -> Rc<Vec<Candidate>> {
         self.spotlight.as_ref().and_then(|p| p.read(|v| v.catalog().clone())).unwrap_or_else(|| self.catalog.clone())
     }
 

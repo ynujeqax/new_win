@@ -96,11 +96,18 @@ impl App {
                 continue;
             }
             let exe = self.tray_exe(icon.pid);
-            let image = self.tray_icon(icon.hicon).map(|(img, _)| img);
+            // No icon of its own in the tray (one NewWin registers for the app, like NVIDIA's): the
+            // app's exe has one.
+            let image = match self.tray_icon(icon.hicon) {
+                Some((img, _)) => Some(img),
+                None => process_image_path(icon.pid).and_then(|p| self.shell_icon(&p, None)).map(|(img, _)| img),
+            };
             pending.push((exe, (TrayRow { label, header: false, icon: image }, icon.key)));
         }
+        let own = std::env::current_exe().ok().and_then(|p| p.to_str().map(str::to_string));
+        let own_icon = own.and_then(|p| self.shell_icon(&p, None)).map(|(img, _)| img);
         let tray = &self.config.tray;
-        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true, icon: None }];
+        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true, icon: own_icon }];
         self.tray_keys.clear();
         for (row, key) in arrange_rows(pending, &tray.order, &tray.hidden) {
             rows.push(row);
@@ -148,6 +155,11 @@ impl App {
     /// The tray host's model changed: an open tray follows.
     pub(super) fn on_tray_changed(&mut self, _change: usize) {
         self.note_seen_icons();
+        self.refresh_tray_rows();
+    }
+
+    /// An open tray shows the current icons and rows (a tray change, an icon that arrived).
+    pub(super) fn refresh_tray_rows(&mut self) {
         if !matches!(self.panel, Some(ShellPanel::Tray(_))) {
             return;
         }

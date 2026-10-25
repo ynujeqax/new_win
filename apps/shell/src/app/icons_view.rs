@@ -4,6 +4,7 @@
 use std::rc::Rc;
 
 use newwin_core::app_icon::{ICON_FADE_MS, ICON_LOGICAL_PX, IconImage, IconKey, Lookup, fade};
+use newwin_core::spotlight::{Kind, SystemCommand};
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
 use newwin_platform::worker::{IconReady, Job};
@@ -57,6 +58,7 @@ impl App {
         if self.spotlight.is_some() {
             self.fill_spotlight_icons();
         }
+        self.refresh_tray_rows();
         self.paint();
         self.keep_animating();
     }
@@ -85,9 +87,13 @@ impl App {
     pub(super) fn fill_spotlight_icons(&mut self) {
         let Some(shown) = self.spotlight.as_ref().and_then(|p| p.read(|v| v.shown())) else { return };
         let px = self.icon_px();
+        let catalog = self.shown_catalog();
+        // *NewWin Settings* is a command, not an app entry: it shows NewWinSettings.exe's icon.
+        let settings = newwin_platform::launch::settings_exe().and_then(|p| p.to_str().map(str::to_string));
         let mut ready = Vec::new();
         for (index, source) in shown {
-            let Some(source) = source else { continue };
+            let is_settings = catalog.get(index).is_some_and(|c| c.kind == Kind::System(SystemCommand::Settings));
+            let Some(source) = source.or_else(|| is_settings.then(|| settings.clone()).flatten()) else { continue };
             if self.shell_icon(&source, None).is_some() {
                 let key = IconKey::Shell { source, px };
                 if let Lookup::Ready(img) = self.icons.get(&key) {
