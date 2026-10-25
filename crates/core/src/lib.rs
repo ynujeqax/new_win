@@ -9,6 +9,7 @@ pub mod input_lang;
 pub mod items;
 pub mod layout;
 pub mod network;
+pub mod quit;
 pub mod spotlight;
 pub mod steam;
 pub mod strings;

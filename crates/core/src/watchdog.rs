@@ -86,3 +86,8 @@ impl Default for HangMonitor {
         Self::new()
     }
 }
+
+/// While a `--quit` runs, a shell that exited is never restarted.
+pub fn while_quitting(d: ExitDecision, quitting: bool) -> ExitDecision {
+    if quitting { ExitDecision::Stop } else { d }
+}
