@@ -38,6 +38,8 @@ pub(super) const WM_APP_LAUNCHED: u32 = WM_APP + 18;
 pub(super) const APPS_DEBOUNCE_TIMER: usize = 9;
 pub(super) const USAGE_SAVE_TIMER: usize = 10;
 const DEBOUNCE_MS: u32 = 2000;
+/// The one re-index after start (see `start_spotlight`).
+const STARTUP_REINDEX_MS: u32 = 5000;
 
 const MENU_OPEN: u32 = 1;
 const MENU_ADMIN: u32 = 2;
@@ -68,6 +70,12 @@ impl App {
         self.rebuild_catalog();
         self.submit_job(Job::Apps);
         self.apps_watch = AppsWatch::start(self.ping, WM_APP_APPS_CHANGED).map_err(|e| log::warn!("app index watch: {e}")).ok();
+        // Windows lists a Start-menu shortcut made just before we started (the installer's
+        // *NewWin Settings*, an app installed during sign-in) only a moment later, and its folder
+        // change came before the watch: one more look once that has settled.
+        unsafe {
+            SetTimer(Some(self.bar), APPS_DEBOUNCE_TIMER, STARTUP_REINDEX_MS, None);
+        }
     }
 
     pub(super) fn submit_job(&self, job: Job) {
