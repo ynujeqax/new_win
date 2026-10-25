@@ -92,7 +92,13 @@ impl App {
 
     pub(super) fn open(&mut self, items: Vec<MenuItem>, anchor: PointF, ctx: MenuCtx) {
         self.close_panel();
-        match Popup::show(&self.gfx, items, anchor, &self.popup_style(), self.bar, WM_APP_POPUP) {
+        // With glass on, the menu stays clear until its glass frame: no dark flash (1.0.1).
+        let shown = if self.backdrops.is_some() {
+            Popup::show_after_glass(&self.gfx, items, anchor, &self.popup_style(), self.bar, WM_APP_POPUP)
+        } else {
+            Popup::show(&self.gfx, items, anchor, &self.popup_style(), self.bar, WM_APP_POPUP)
+        };
+        match shown {
             Ok(p) => {
                 // Spotlight's row menu is not over the bar: the bar stays hidden (OLED).
                 let over_bar = !matches!(ctx, MenuCtx::SpotlightRow { .. });

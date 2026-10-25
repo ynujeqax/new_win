@@ -18,6 +18,7 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
 use crate::backdrop::Frame;
+use crate::win_loop::{REVEAL_TIMER, end_clear, start_clear};
 use crate::{Backdrop, Color, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyle, paint_glass, theme};
 
 pub const PICKED: isize = 1;
@@ -139,6 +140,10 @@ struct State {
     child: Option<(usize, Popup)>,
     /// A blurred backdrop is shown (else the stronger fallback tint).
     glass: bool,
+    /// Opened with `show_after_glass`: this menu and its submenus wait for their glass.
+    wait_glass: bool,
+    /// Shown but clear until its first glass frame.
+    waiting: bool,
     font_family: String,
     font_size: f32,
     dpi: u32,
@@ -152,11 +157,23 @@ pub struct Popup {
 impl Popup {
     /// Shows a menu with its top-left at `anchor` (screen px), kept inside the monitor.
     pub fn show(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32) -> Result<Popup> {
-        Self::create(gfx, items, anchor, style, notify, msg, None)
+        Self::create(gfx, items, anchor, style, notify, msg, None, false)
+    }
+
+    /// Like [`Self::show`], but clear (while already taking the keyboard) until its first glass
+    /// frame, so the dark fallback never flashes; at most 250 ms. Its submenus wait too.
+    pub fn show_after_glass(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32) -> Result<Popup> {
+        Self::create(gfx, items, anchor, style, notify, msg, None, true)
+    }
+
+    /// False while a `show_after_glass` menu still waits for its glass.
+    pub fn revealed(&self) -> bool {
+        self.state.try_borrow().is_ok_and(|s| !s.waiting)
     }
 
     /// `root` is `Some` for a submenu.
-    fn create(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32, root: Option<HWND>) -> Result<Popup> {
+    #[allow(clippy::too_many_arguments)]
+    fn create(gfx: &Rc<Gfx>, items: Vec<MenuItem>, anchor: PointF, style: &PopupStyle, notify: HWND, msg: u32, root: Option<HWND>, wait_glass: bool) -> Result<Popup> {
         let is_child = root.is_some();
         let metrics = PopupMetrics::for_dpi(style.dpi);
         let mut cache = TextCache::new(gfx);
@@ -199,6 +216,8 @@ impl Popup {
             closed: false,
             child: None,
             glass: false,
+            wait_glass,
+            waiting: false,
             font_family: style.font_family.clone(),
             font_size: style.font_size_px,
             dpi: style.dpi,
@@ -223,6 +242,9 @@ impl Popup {
             layer.set_corner_radius((theme::POPUP_RADIUS * style.dpi as f32 / 96.0).round())?;
             s.layer = Some(layer);
             s.paint();
+            if wait_glass {
+                s.hide_until_glass();
+            }
         }
         unsafe {
             if is_child {
@@ -277,6 +299,7 @@ impl Popup {
             s.glass = true;
             s.paint();
         }
+        s.reveal();
     }
 
     /// See [`Layer::set_capturable`]; applies to this popup and its submenu.
@@ -300,6 +323,7 @@ impl Popup {
             s.glass = false;
             s.paint();
         }
+        s.reveal();
         if let Some((_, child)) = &s.child {
             child.set_glass_unavailable();
         }
@@ -345,6 +369,33 @@ impl Drop for Popup {
 }
 
 impl State {
+    /// Clear until [`Self::reveal`] (at most 250 ms: the reveal timer).
+    fn hide_until_glass(&mut self) {
+        if let Some(layer) = self.layer.as_mut() {
+            match start_clear(&self.gfx, layer, self.hwnd, 0.0) {
+                Ok(()) => self.waiting = true,
+                Err(e) => log::warn!("popup cannot start clear: {e}"),
+            }
+        }
+    }
+
+    /// The glass came (or will not): show the menu.
+    fn reveal(&mut self) {
+        if !self.waiting {
+            return;
+        }
+        self.waiting = false;
+        end_clear(self.hwnd);
+        let Some(layer) = self.layer.as_mut() else { return };
+        let shown = layer.visual().and_then(|root| {
+            let inner = layer.backdrop_visual()?;
+            crate::set_offset_opacity(&self.gfx, &root, inner.as_ref(), 0.0, 1.0)
+        });
+        if let Err(e) = shown {
+            log::warn!("popup cannot reveal: {e}");
+        }
+    }
+
     fn paint(&mut self) {
         let (w, h) = self.size;
         let m = self.metrics;
@@ -430,7 +481,7 @@ impl State {
         }
         let anchor = PointF { x: wr.right as f32 - self.metrics.pad, y: wr.top as f32 + self.rects[i].y - self.metrics.pad };
         let style = PopupStyle { font_family: self.font_family.clone(), font_size_px: self.font_size, dpi: self.dpi };
-        match Popup::create(&self.gfx, sub, anchor, &style, self.notify, self.msg, Some(self.root)) {
+        match Popup::create(&self.gfx, sub, anchor, &style, self.notify, self.msg, Some(self.root), self.wait_glass) {
             Ok(p) => self.child = Some((i, p)),
             Err(e) => log::error!("submenu failed: {e}"),
         }
@@ -469,6 +520,10 @@ fn point(lp: LPARAM) -> PointF {
 impl Handler for State {
     fn on_message(&mut self, _hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> Option<LRESULT> {
         match msg {
+            WM_TIMER if wp.0 == REVEAL_TIMER => {
+                self.reveal();
+                Some(LRESULT(0))
+            }
             WM_MOUSEACTIVATE if self.is_child => Some(LRESULT(MA_NOACTIVATE as isize)),
             WM_MOUSEMOVE => {
                 if !self.tracking {
