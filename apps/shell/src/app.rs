@@ -35,6 +35,7 @@ mod apps_view;
 mod clock_view;
 mod config_view;
 mod glass_regions;
+mod icons_view;
 mod layout_view;
 mod menus;
 mod network_view;
@@ -166,6 +167,11 @@ pub struct App {
     tray_seen_dirty: bool,
     /// `config.toml` was there at the last read: "missing" is logged once, on the change.
     config_on_disk: bool,
+    // App icons (1.0.1)
+    icons: newwin_core::app_icon::IconCache<Rc<newwin_core::app_icon::IconImage>>,
+    icon_bitmaps: newwin_ui::icon_bitmaps::IconBitmaps,
+    /// When each icon arrived, while it fades in.
+    icon_arrived: std::collections::HashMap<newwin_core::app_icon::IconKey, u64>,
     spotlight: Option<newwin_ui::panel::Panel<newwin_ui::spotlight::SpotlightView>>,
     apps_watch: Option<newwin_platform::apps_index::AppsWatch>,
     // Tray button and right side (M2)
@@ -366,6 +372,11 @@ impl App {
         }
         if msg == WM_APP_GLASS {
             self.on_glass(wp, lp);
+            return Some(LRESULT(0));
+        }
+        if msg == WM_APP_ICON {
+            let r = unsafe { newwin_platform::worker::take_icon(lp) };
+            self.on_icon_ready(*r);
             return Some(LRESULT(0));
         }
         if msg == WM_APP_NAME {
@@ -600,6 +611,9 @@ fn start() -> Result<Rc<RefCell<App>>> {
         tray_seen: Default::default(),
         tray_seen_dirty: false,
         config_on_disk: config_path.exists(),
+        icons: Default::default(),
+        icon_bitmaps: Default::default(),
+        icon_arrived: Default::default(),
         spotlight: None,
         apps_watch: None,
         date_text: String::new(),

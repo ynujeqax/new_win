@@ -30,7 +30,8 @@ pub enum Job {
     /// Rebuild the Spotlight index; posts [`AppsIndexed`].
     Apps,
     /// An app icon as Explorer shows it; posts [`IconReady`].
-    Icon { key: IconKey, source: String, px: u32 },
+    /// `fallback` is tried when `source` has none; the result keeps `key` either way.
+    Icon { key: IconKey, source: String, fallback: Option<String>, px: u32 },
     /// Anything else that must not block the UI (writing `usage.toml`).
     Run(Box<dyn FnOnce() + Send>),
 }
@@ -79,8 +80,8 @@ impl Worker {
                             let apps = enumerate_apps().map_err(|e| e.to_string());
                             post(notify, apps_msg, AppsIndexed { apps, ms: started.elapsed().as_millis() as u32 });
                         }
-                        Job::Icon { key, source, px } => {
-                            let image = shell_icon(&source, px);
+                        Job::Icon { key, source, fallback, px } => {
+                            let image = shell_icon(&source, px).or_else(|| fallback.and_then(|f| shell_icon(&f, px)));
                             post(notify, icon_msg, IconReady { key, image });
                         }
                         Job::Run(f) => f(),

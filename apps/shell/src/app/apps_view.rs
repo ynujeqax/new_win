@@ -2,12 +2,14 @@
 
 use newwin_core::apps::{ClickAction, WindowInfo, is_screen_snip, left_click, middle_click};
 use newwin_core::items::RightItem;
-use newwin_core::layout::fit_labels;
+use newwin_core::app_icon::{ICON_GAP_LOGICAL_PX, ICON_LOGICAL_PX, fallback_for_group, source_for_group};
+use newwin_core::layout::{fit_labels, pill_widths};
 use newwin_platform::clock::now_ms;
 use newwin_platform::activate;
 use newwin_platform::dpi::scale;
 use newwin_platform::windows_watch::{WindowEvent, describe};
 use newwin_platform::worker::ResolvedName;
+use newwin_ui::icon_bitmaps::icon_rect;
 use newwin_ui::{Painter, PointF, RectF, TextLayout, theme};
 
 use super::App;
@@ -25,7 +27,10 @@ pub(super) enum Target {
 pub(super) struct BarItem {
     pub target: Target,
     pub rect: RectF,
-    pub text: TextLayout,
+    /// None when the pill is too narrow for any of the name (only the icon shows).
+    pub text: Option<TextLayout>,
+    /// Where an app pill takes its icon from, and where else when that has none.
+    pub icon: Option<(String, Option<String>)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -123,29 +128,40 @@ impl App {
 
         // Left: one pill per app group, shrinking or overflowing into » when crowded.
         let active = self.model.active_group();
-        let names: Vec<(String, bool)> =
-            self.model.groups().iter().enumerate().map(|(i, g)| (g.name.clone(), Some(i) == active)).collect();
+        let names: Vec<(String, bool, (String, Option<String>))> = self
+            .model
+            .groups()
+            .iter()
+            .enumerate()
+            .map(|(i, g)| (g.name.clone(), Some(i) == active, (source_for_group(&g.key), fallback_for_group(&g.key, g.exe.as_deref()))))
+            .collect();
+        // Room for the icon is kept from the start, so the name does not jump when it arrives.
+        let (icon, icon_gap) = (s(ICON_LOGICAL_PX), s(ICON_GAP_LOGICAL_PX));
         let natural: Vec<f32> = names
             .iter()
-            .map(|(n, act)| self.text.natural_width(n, if *act { &strong } else { &regular }).unwrap_or(0.0) + 2.0 * pill_pad)
+            .map(|(n, act, _)| {
+                let text_w = self.text.natural_width(n, if *act { &strong } else { &regular }).unwrap_or(0.0);
+                pill_widths(text_w, pill_pad, icon, icon_gap).0
+            })
             .collect();
+        let min_w = pill_widths(0.0, pill_pad, icon, icon_gap).1;
         let available = (end - start).max(0.0);
-        let fit = fit_labels(&natural, available, s(40.0), s(theme::ITEM_GAP), s(24.0));
+        let fit = fit_labels(&natural, available, min_w, s(theme::ITEM_GAP), s(24.0));
         let mut items = Vec::new();
         let mut x = start;
         let y = ((h - pill_h) / 2.0).round();
         for (i, width) in fit.widths.iter().enumerate() {
-            let (name, act) = &names[i];
+            let (name, act, source) = &names[i];
             let style = if *act { &strong } else { &regular };
-            if let Ok(text) = self.text.layout(name, style, (width - 2.0 * pill_pad).max(1.0)) {
-                items.push(BarItem { target: Target::Group(i), rect: RectF::new(x, y, *width, pill_h), text });
-            }
+            let room = width - 2.0 * pill_pad - icon - icon_gap;
+            let text = (room >= s(8.0)).then(|| self.text.layout(name, style, room).ok()).flatten();
+            items.push(BarItem { target: Target::Group(i), rect: RectF::new(x, y, *width, pill_h), text, icon: Some(source.clone()) });
             x += width + s(theme::ITEM_GAP);
         }
         if fit.overflow_from.is_some()
             && let Ok(text) = self.text.layout("»", &regular, s(24.0))
         {
-            items.push(BarItem { target: Target::Overflow, rect: RectF::new(x, y, s(24.0), pill_h), text });
+            items.push(BarItem { target: Target::Overflow, rect: RectF::new(x, y, s(24.0), pill_h), text: Some(text), icon: None });
         }
         let _ = h;
         self.items = items;
@@ -153,18 +169,24 @@ impl App {
     }
 
     pub(super) fn paint(&mut self) {
+        // Icons first: asking for one needs the whole App, drawing borrows its layer.
+        let sources: Vec<Option<(String, Option<String>)>> = self.items.iter().map(|it| it.icon.clone()).collect();
+        let icons: Vec<Option<super::icons_view::Shown>> =
+            sources.iter().map(|s| s.as_ref().and_then(|(src, fb)| self.shell_icon(src, fb.as_deref()))).collect();
         let Some(layer) = self.bar_layer.as_mut() else { return };
         let (w, h) = layer.size();
         let (w, h) = (w as f32, h as f32);
         let dpi = self.dpi;
         let a = &self.config.appearance;
+        let (pad, icon_w, icon_gap) = (scale(theme::PILL_PAD_X, dpi).round(), scale(ICON_LOGICAL_PX, dpi).round(), scale(ICON_GAP_LOGICAL_PX, dpi).round());
+        let bitmaps = &mut self.icon_bitmaps;
         let radius = scale(theme::PILL_RADIUS, dpi).round();
         let active = self.model.active_group();
         let (items, hover, glass, right) = (&self.items, self.hover, self.bar_glass, &self.right);
         let now = now_ms();
         let r = layer.draw(None, |p: &mut Painter| {
             paint_background(p, w, h, dpi, a, glass);
-            for it in items {
+            for (it, icon) in items.iter().zip(&icons) {
                 let is_active = matches!(it.target, Target::Group(g) if Some(g) == active);
                 let is_hover = hover == Some(it.target);
                 if is_active {
@@ -179,8 +201,15 @@ impl App {
                 } else {
                     theme::TEXT_INACTIVE
                 };
-                let x = (it.rect.x + (it.rect.w - it.text.width()) / 2.0).round();
-                p.text(&it.text, PointF { x, y: (it.rect.y + (it.rect.h - it.text.height()) / 2.0).round() }, color);
+                let mid_y = it.rect.y + it.rect.h / 2.0;
+                if let Some((img, opacity)) = icon {
+                    p.icon(bitmaps, img, icon_rect(it.rect.x + pad, mid_y, dpi), *opacity);
+                }
+                if let Some(t) = &it.text {
+                    // An app pill: the name after the icon; the overflow pill: centred.
+                    let x = if it.icon.is_some() { it.rect.x + pad + icon_w + icon_gap } else { it.rect.x + (it.rect.w - t.width()) / 2.0 };
+                    p.text(t, PointF { x: x.round(), y: (mid_y - t.height() / 2.0).round() }, color);
+                }
             }
             right.paint(p, h, dpi, now, hover);
         });

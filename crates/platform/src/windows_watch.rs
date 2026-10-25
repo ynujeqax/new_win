@@ -168,6 +168,7 @@ pub fn describe(h: Hwnd, names: &mut AppNames) -> Option<WindowInfo> {
             title: String::from_utf16_lossy(&buf[..n.max(0) as usize]),
             group_key,
             app_name,
+            exe: app_exe.map(str::to_string),
         })
     }
 }

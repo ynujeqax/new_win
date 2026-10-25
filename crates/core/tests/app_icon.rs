@@ -91,3 +91,12 @@ fn fade_takes_150_ms() {
     assert_eq!(fade(1000, 1150), 1.0);
     assert_eq!(fade(1000, 5), 0.0);
 }
+
+#[test]
+fn an_app_id_falls_back_to_the_windows_exe() {
+    // Chromium browsers tag windows with a per-profile id no Start entry has.
+    let id = GroupKey::AppId("Helium.Profile1".into());
+    assert_eq!(fallback_for_group(&id, Some(r"C:\Apps\helium.exe")).as_deref(), Some(r"C:\Apps\helium.exe"));
+    assert_eq!(fallback_for_group(&id, None), None);
+    assert_eq!(fallback_for_group(&GroupKey::ExePath(r"c:\a.exe".into()), Some(r"C:\a.exe")), None, "the exe is already the source");
+}

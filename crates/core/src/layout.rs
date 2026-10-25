@@ -55,3 +55,8 @@ fn water_level(widths: &[f32], space: f32) -> f32 {
     }
     f32::MAX
 }
+
+/// An app pill's `(natural, min)` width: padding, icon, gap and text; at the least the icon alone.
+pub fn pill_widths(text_w: f32, pad: f32, icon: f32, gap: f32) -> (f32, f32) {
+    (2.0 * pad + icon + gap + text_w, 2.0 * pad + icon)
+}

@@ -243,7 +243,8 @@ impl App {
 
     /// Repaints while a tween runs; stops waking once all are at rest.
     pub(super) fn keep_animating(&mut self) {
-        if self.right.animating(now_ms()) {
+        let now = now_ms();
+        if self.right.animating(now) || self.icons_animating(now) {
             unsafe { SetTimer(Some(self.bar), ANIM_TIMER, FRAME_MS, None) };
         }
     }

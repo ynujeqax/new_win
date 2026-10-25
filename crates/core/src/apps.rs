@@ -36,6 +36,8 @@ pub struct WindowInfo {
     pub title: String,
     pub group_key: GroupKey,
     pub app_name: String,
+    /// The window's exe, original case; `None` for a UWP frame host or an unreadable process.
+    pub exe: Option<String>,
 }
 
 /// Native taskbar rules: an explicit `WS_EX_APPWINDOW` wins, otherwise unowned windows that are
@@ -92,6 +94,8 @@ pub struct AppGroup {
     pub key: GroupKey,
     pub name: String,
     pub windows: Vec<Hwnd>,
+    /// The exe of the window that started the group (an icon when the app id has none).
+    pub exe: Option<String>,
 }
 
 #[derive(Default)]
@@ -127,7 +131,7 @@ impl AppModel {
                 }
             }
             None => {
-                self.groups.push(AppGroup { key: w.group_key.clone(), name: w.app_name.clone(), windows: vec![hwnd] });
+                self.groups.push(AppGroup { key: w.group_key.clone(), name: w.app_name.clone(), windows: vec![hwnd], exe: w.exe.clone() });
                 changed = true;
             }
         }

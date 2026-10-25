@@ -77,7 +77,7 @@ fn worker_answers_an_icon_job() {
     let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "icon-worker").unwrap();
     let w = Worker::spawn(notify, WM_APP + 4, WM_APP + 16, WM_APP + 21);
     let key = IconKey::Shell { source: r"C:\Windows\explorer.exe".into(), px: 16 };
-    w.submit_job(Job::Icon { key: key.clone(), source: r"C:\Windows\explorer.exe".into(), px: 16 });
+    w.submit_job(Job::Icon { key: key.clone(), source: r"C:\Windows\explorer.exe".into(), fallback: None, px: 16 });
     let end = Instant::now() + Duration::from_secs(10);
     let mut m = MSG::default();
     while Instant::now() < end {
@@ -85,6 +85,27 @@ fn worker_answers_an_icon_job() {
             let r = unsafe { take_icon(m.lParam) };
             assert_eq!(r.key, key);
             assert!(r.image.is_some());
+            return;
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    panic!("no icon posted");
+}
+
+#[test]
+fn an_icon_job_falls_back_when_the_source_has_none() {
+    let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "icon-fallback").unwrap();
+    let w = Worker::spawn(notify, WM_APP + 4, WM_APP + 16, WM_APP + 21);
+    let source = r"shell:AppsFolder\NoSuch.App.Profile7".to_string();
+    let key = IconKey::Shell { source: source.clone(), px: 16 };
+    w.submit_job(Job::Icon { key: key.clone(), source, fallback: Some(r"C:\Windows\explorer.exe".into()), px: 16 });
+    let end = Instant::now() + Duration::from_secs(10);
+    let mut m = MSG::default();
+    while Instant::now() < end {
+        if unsafe { PeekMessageW(&mut m, Some(notify), WM_APP + 21, WM_APP + 21, PM_REMOVE) }.as_bool() {
+            let r = unsafe { take_icon(m.lParam) };
+            assert_eq!(r.key, key, "kept under the first source's key");
+            assert!(r.image.is_some(), "the exe's icon");
             return;
         }
         std::thread::sleep(Duration::from_millis(10));

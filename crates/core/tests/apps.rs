@@ -19,6 +19,7 @@ fn win(hwnd: Hwnd, k: &str, name: &str) -> WindowInfo {
         title: format!("window {hwnd}"),
         group_key: key(k),
         app_name: name.into(),
+        exe: None,
     }
 }
 
@@ -165,4 +166,12 @@ fn snip_tracker_drops_windows_that_no_longer_exist() {
     assert_eq!(t.retain(|_| false), Some(false));
     assert!(!t.active());
     assert_eq!(t.retain(|_| false), None);
+}
+
+#[test]
+fn a_group_knows_the_exe_of_its_first_window() {
+    let mut m = AppModel::default();
+    m.upsert(WindowInfo { exe: Some(r"C:\Apps\Helium\helium.exe".into()), ..win(1, "Helium.Profile1", "Helium") });
+    m.upsert(WindowInfo { exe: Some(r"C:\other.exe".into()), ..win(2, "Helium.Profile1", "Helium") });
+    assert_eq!(m.groups()[0].exe.as_deref(), Some(r"C:\Apps\Helium\helium.exe"));
 }

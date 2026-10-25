@@ -91,3 +91,12 @@ fn strings_fallback() {
     assert_eq!(strings_for("en-US").quit, "Quit NewWin");
     assert_eq!(strings_for("de-DE").quit, "Quit NewWin");
 }
+
+#[test]
+fn pill_widths_keep_room_for_the_icon() {
+    use newwin_core::layout::{fit_labels, pill_widths};
+    assert_eq!(pill_widths(50.0, 10.0, 16.0, 6.0), (92.0, 36.0));
+    let fit = fit_labels(&[92.0, 92.0], 80.0, 36.0, 4.0, 24.0);
+    let shown = fit.overflow_from.unwrap_or(fit.widths.len());
+    assert!(fit.widths[..shown].iter().all(|&w| w >= 36.0), "{fit:?}");
+}

@@ -151,3 +151,12 @@ impl<T: Clone> Default for IconCache<T> {
 pub fn fade(arrived_ms: u64, now_ms: u64) -> f32 {
     (now_ms.saturating_sub(arrived_ms) as f32 / ICON_FADE_MS as f32).clamp(0.0, 1.0)
 }
+
+/// A second place to look when a group's own source has no icon: an app id no Start entry has
+/// (Chromium browsers tag windows per profile) falls back to the window's exe.
+pub fn fallback_for_group(key: &GroupKey, exe: Option<&str>) -> Option<String> {
+    match key {
+        GroupKey::AppId(_) => exe.map(str::to_string),
+        GroupKey::ExePath(_) => None,
+    }
+}
