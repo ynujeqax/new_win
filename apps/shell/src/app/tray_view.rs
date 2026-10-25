@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use newwin_config::tray_seen::{Noted, TraySeen};
 use newwin_config::{save_atomic, tray_seen_path};
-use newwin_core::tray::{arrange_rows, is_bar_duplicate, missing_known, row_label};
+use newwin_core::tray::{arrange_rows, is_bar_duplicate, known_icon_source, missing_known, row_label};
 use newwin_platform::appinfo::{process_display_name, process_image_path, session_processes};
 use newwin_platform::clock::now_ms;
 use newwin_platform::dpi::scale;
@@ -100,7 +100,11 @@ impl App {
             // app's exe has one.
             let image = match self.tray_icon(icon.hicon) {
                 Some((img, _)) => Some(img),
-                None => process_image_path(icon.pid).and_then(|p| self.shell_icon(&p, None)).map(|(img, _)| img),
+                None => {
+                    // A SYSTEM process (NVIDIA's) cannot be read: its known app's icon.
+                    let source = process_image_path(icon.pid).or_else(|| known_icon_source(icon.uid, icon.callback_message).map(str::to_string));
+                    source.and_then(|p| self.shell_icon(&p, None)).map(|(img, _)| img)
+                }
             };
             pending.push((exe, (TrayRow { label, header: false, icon: image }, icon.key)));
         }

@@ -302,6 +302,9 @@ pub struct KnownIcon {
     pub callback_message: u32,
     pub version: u32,
     pub tip: &'static str,
+    /// Where its icon comes from (1.0.1): NewWin registers it without one, and the process (it
+    /// runs as SYSTEM) cannot be read.
+    pub icon_source: &'static str,
 }
 
 /// Recorded from the app's own registration (live, 2026-10-22).
@@ -312,6 +315,8 @@ pub const KNOWN_ICONS: [KnownIcon; 1] = [KnownIcon {
     callback_message: 0xB00,
     version: 3,
     tip: "NVIDIA Settings",
+    // The app "NVIDIA Settings" opens, with the same logo.
+    icon_source: r"shell:AppsFolder\NVIDIACorp.NVIDIAControlPanel_56jybvy8sckqj!NVIDIACorp.NVIDIAControlPanel",
 }];
 
 impl KnownIcon {
@@ -366,4 +371,10 @@ pub fn arrange_rows<T>(rows: Vec<(String, T)>, order: &[String], hidden: &[Strin
     }
     ranked.sort_by_key(|(p, _)| *p);
     ranked.into_iter().map(|(_, r)| r).chain(rest).collect()
+}
+
+/// The icon source of a tray icon NewWin registers for a known app, matched by `uID` and its
+/// callback message (what [`KnownIcon::registration`] sends).
+pub fn known_icon_source(uid: u32, callback_message: u32) -> Option<&'static str> {
+    KNOWN_ICONS.iter().find(|k| k.uid == uid && k.callback_message == callback_message).map(|k| k.icon_source)
 }

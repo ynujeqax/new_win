@@ -248,3 +248,15 @@ fn a_modify_without_nif_icon_keeps_the_handle() {
     assert_eq!(m.apply(&parse_notify(&icon).unwrap(), 9), Change::Updated);
     assert_eq!(m.icons()[0].hicon, 0x67890);
 }
+
+#[test]
+fn a_known_icon_has_its_apps_icon() {
+    // NVIDIA's tray icon is registered by NewWin itself (no hIcon) and its process cannot be read.
+    let nv = KNOWN_ICONS.iter().find(|k| k.tip == "NVIDIA Settings").unwrap();
+    assert_eq!(
+        known_icon_source(nv.uid, nv.callback_message),
+        Some(r"shell:AppsFolder\NVIDIACorp.NVIDIAControlPanel_56jybvy8sckqj!NVIDIACorp.NVIDIAControlPanel")
+    );
+    assert_eq!(known_icon_source(nv.uid, 0x1234), None);
+    assert_eq!(known_icon_source(1, nv.callback_message), None);
+}
