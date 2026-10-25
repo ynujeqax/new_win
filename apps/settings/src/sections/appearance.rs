@@ -2,6 +2,7 @@
 //! seconds).
 
 use newwin_config::Config;
+use newwin_core::strings::Strings;
 
 use super::{Control, Group, Row, RowId, RowValue, clamp_to};
 
@@ -61,6 +62,12 @@ pub fn apply(c: &mut Config, id: RowId, v: RowValue) {
         (RowId::ShowSeconds, RowValue::Bool(on)) => a.show_seconds = on,
         _ => {}
     }
+}
+
+/// The *Custom* date example: what the bar would show, or *Invalid format* when the template
+/// formats to nothing.
+pub fn date_example(formatted: &str, s: &Strings) -> String {
+    if formatted.is_empty() { s.invalid_date_format.to_owned() } else { formatted.to_owned() }
 }
 
 #[cfg(test)]
@@ -167,5 +174,13 @@ mod tests {
         assert!(r.iter().any(|r| r.control == Control::DateSample("dd.MM".into())));
         assert_eq!(r.iter().find(|r| r.id == RowId::Font).unwrap().control, Control::Font("Segoe UI Variable Text".into()));
         assert_eq!(r.iter().find(|r| r.id == RowId::Font).unwrap().group, Some(Group::Text));
+    }
+
+    #[test]
+    fn an_empty_date_example_says_invalid_format() {
+        let (en, uk) = (newwin_core::strings::strings_for("en-US"), newwin_core::strings::strings_for("uk-UA"));
+        assert_eq!(date_example("", en), "Invalid format");
+        assert_eq!(date_example("", uk), "Неправильний формат");
+        assert_eq!(date_example("25.10", en), "25.10");
     }
 }

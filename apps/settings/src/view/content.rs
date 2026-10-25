@@ -89,7 +89,13 @@ impl AppContent for SettingsView {
                 self.kill_timer(CONFIRM_TIMER);
                 self.refresh_armed(now_ms);
             }
-            (WM_ACTIVATE, w) if (w & 0xFFFF) as u32 != WA_INACTIVE => self.check_shell(),
+            (WM_ACTIVATE, w) => {
+                let active = (w & 0xFFFF) as u32 != WA_INACTIVE;
+                self.body.field.set_window_active(active);
+                if active {
+                    self.check_shell();
+                }
+            }
             _ => return PanelReply::default(),
         }
         PanelReply { repaint: true, ..PanelReply::default() }

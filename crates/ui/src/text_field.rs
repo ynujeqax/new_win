@@ -16,6 +16,8 @@ pub struct TextField {
     pub focused: bool,
     /// When the caret last restarted its blink.
     pub blink_from: u64,
+    /// The window is in the background: no caret and no blink timer, like Windows' own fields.
+    pub window_inactive: bool,
 }
 
 /// What a key or character means to a line editor (`None` = not an editing key).
@@ -62,12 +64,17 @@ impl TextField {
     }
 
     pub fn caret_on(&self, now: u64, blink_ms: Option<u32>) -> bool {
-        caret_visible(self.blink_from, now, blink_ms)
+        !self.window_inactive && caret_visible(self.blink_from, now, blink_ms)
+    }
+
+    /// The window was activated or sent to the background.
+    pub fn set_window_active(&mut self, active: bool) {
+        self.window_inactive = !active;
     }
 
     /// The next moment the caret flips, when focused and blinking.
     pub fn next_blink(&self, now: u64, blink_ms: Option<u32>) -> Option<u64> {
-        self.focused.then(|| next_flip(self.blink_from, now, blink_ms)).flatten()
+        (self.focused && !self.window_inactive).then(|| next_flip(self.blink_from, now, blink_ms)).flatten()
     }
 
     /// `text` is the laid-out content, `hint` the placeholder shown while empty, `clock` the

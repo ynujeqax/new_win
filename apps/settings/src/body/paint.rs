@@ -37,7 +37,7 @@ impl Body {
                         let typed = self.field.edit.text();
                         if typed.is_empty() { Vec::new() } else { vec![lay(typed, &label, field_room)] }
                     }
-                    Control::DateSample(f) => vec![lay(&format_bar_date(f), &small, wide)],
+                    Control::DateSample(f) => vec![lay(&sections::appearance::date_example(&format_bar_date(f), s), &small, wide)],
                     Control::Button => vec![lay(sections::button_label(r.id, self.armed.contains(&r.id), s), &small_bold, wide)],
                     Control::Info(text) => vec![lay(text, &label, wide)],
                     Control::Toggle(_) => Vec::new(),

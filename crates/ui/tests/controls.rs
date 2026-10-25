@@ -244,3 +244,16 @@ fn a_keyboard_move_glides_the_row() {
     assert!(l.animating(1), "no drop: the row glides from its old slot");
     assert!(!l.animating(151));
 }
+
+#[test]
+fn an_inactive_window_hides_the_caret_and_needs_no_timer() {
+    let mut f = TextField { focused: true, ..Default::default() };
+    assert!(f.next_blink(0, Some(530)).is_some());
+    f.set_window_active(false);
+    assert_eq!(f.next_blink(0, Some(530)), None);
+    assert!(!f.caret_on(0, Some(530)));
+    assert!(!f.caret_on(0, None), "no caret, blinking or not");
+    f.set_window_active(true);
+    assert!(f.next_blink(0, Some(530)).is_some());
+    assert!(f.caret_on(0, Some(530)));
+}

@@ -100,6 +100,8 @@ pub struct Strings {
     pub open_config_file: &'static str,
     pub restore_taskbar: &'static str,
     pub click_again_to_restore: &'static str,
+    /// The *Custom* date example when the template formats to nothing.
+    pub invalid_date_format: &'static str,
     pub unit_ms: &'static str,
     pub unit_px: &'static str,
     // Settings sections Items and Tray (M4 §3.3, §3.5)
@@ -202,6 +204,7 @@ static EN: Strings = Strings {
     open_config_file: "Open config file",
     restore_taskbar: "Restore Windows taskbar",
     click_again_to_restore: "Click again to restore",
+    invalid_date_format: "Invalid format",
     unit_ms: "ms",
     unit_px: "px",
     item_layout: "Keyboard layout",
@@ -303,6 +306,7 @@ static UK: Strings = Strings {
     open_config_file: "Відкрити файл налаштувань",
     restore_taskbar: "Повернути таскбар Windows",
     click_again_to_restore: "Клацніть ще раз, щоб повернути",
+    invalid_date_format: "Неправильний формат",
     unit_ms: "мс",
     unit_px: "пкс",
     item_layout: "Розкладка клавіатури",
