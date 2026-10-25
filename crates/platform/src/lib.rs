@@ -11,6 +11,7 @@ pub mod clipboard;
 pub mod clock;
 pub mod dir_watch;
 pub mod dpi;
+pub mod icon_helper;
 pub mod fullscreen;
 pub mod input_hook;
 pub mod keyboard_layout;

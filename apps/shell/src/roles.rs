@@ -8,6 +8,8 @@ pub enum Role {
     RestoreTaskbar,
     /// Ends every NewWin process and shows the native taskbar (installer, uninstaller, Settings).
     Quit,
+    /// Fetches shell icons for the shell over stdin/stdout (1.0.1); started and stopped by it.
+    IconHelper,
 }
 
 /// Anything other than an explicit `--shell` is the watchdog, so a plain double-click
@@ -19,6 +21,8 @@ pub fn role_from_args(args: &[String]) -> Role {
         Role::RestoreTaskbar
     } else if args.iter().any(|a| a == "--quit") {
         Role::Quit
+    } else if args.iter().any(|a| a == "--icon-helper") {
+        Role::IconHelper
     } else {
         Role::Watchdog
     }
@@ -40,5 +44,6 @@ mod tests {
         assert_eq!(role_from_args(&args(&["--bogus"])), Role::Watchdog);
         assert_eq!(role_from_args(&args(&["--restore-taskbar"])), Role::RestoreTaskbar);
         assert_eq!(role_from_args(&args(&["--quit"])), Role::Quit);
+        assert_eq!(role_from_args(&args(&["--icon-helper"])), Role::IconHelper);
     }
 }

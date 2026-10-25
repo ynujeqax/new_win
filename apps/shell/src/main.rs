@@ -38,9 +38,14 @@ fn install_crash_handlers() {
 
 fn main() {
     let _ = newwin_platform::log::init_logging();
-    install_crash_handlers();
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let code = match role_from_args(&args) {
+    let role = role_from_args(&args);
+    // The icon helper never touches the taskbar: its crash must not restore it under a live shell.
+    if role != Role::IconHelper {
+        install_crash_handlers();
+    }
+    let code = match role {
+        Role::IconHelper => run_icon_helper(),
         Role::Watchdog => watchdog::run_watchdog(),
         Role::Shell => app::run_shell(),
         Role::Quit => quit::run_quit(),
@@ -54,4 +59,13 @@ fn main() {
     };
     log::logger().flush();
     std::process::exit(code);
+}
+
+/// `--icon-helper`: answers the shell's icon requests until it closes our input.
+fn run_icon_helper() -> i32 {
+    let _com = newwin_platform::appinfo::ComGuard::init();
+    let stdin = std::io::stdin().lock();
+    let stdout = std::io::stdout().lock();
+    newwin_platform::icon_helper::serve(stdin, std::io::BufWriter::new(stdout));
+    0
 }

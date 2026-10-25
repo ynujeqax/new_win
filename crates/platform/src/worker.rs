@@ -12,6 +12,7 @@ use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
 
 use crate::appinfo::{ComGuard, resolve_name};
 use crate::app_icon::shell_icon;
+use crate::icon_helper::IconClient;
 use crate::apps_index::enumerate_apps;
 
 pub struct NameJob {
@@ -46,6 +47,17 @@ pub struct AppsIndexed {
     pub ms: u32,
 }
 
+/// Where the worker fetches shell icons.
+pub enum IconFetch {
+    /// Here (tests and tools: the shell components stay loaded in this process).
+    InProcess,
+    /// In `exe --icon-helper`, stopped after [`HELPER_IDLE`] without a request (the shell).
+    Helper(std::path::PathBuf),
+}
+
+/// How long the icon helper may sit idle before it is stopped.
+pub const HELPER_IDLE: std::time::Duration = std::time::Duration::from_secs(30);
+
 pub struct Worker {
     tx: mpsc::Sender<Job>,
 }
@@ -63,13 +75,37 @@ impl Worker {
     /// with [`take_resolved`]); the index as `apps_msg` with a `Box<AppsIndexed>` ([`take_apps`]); icons as `icon_msg`
     /// with a `Box<IconReady>` ([`take_icon`]).
     pub fn spawn(notify: HWND, names_msg: u32, apps_msg: u32, icon_msg: u32) -> Self {
+        Self::spawn_with(notify, names_msg, apps_msg, icon_msg, IconFetch::InProcess)
+    }
+
+    /// Like [`Worker::spawn`], fetching icons as `icons` says.
+    pub fn spawn_with(notify: HWND, names_msg: u32, apps_msg: u32, icon_msg: u32, icons: IconFetch) -> Self {
         let (tx, rx) = mpsc::channel::<Job>();
         let notify = notify.0 as isize;
         std::thread::Builder::new()
             .name("newwin-worker".into())
             .spawn(move || {
                 let _com = ComGuard::init();
-                for job in rx {
+                let mut helper = match icons {
+                    IconFetch::InProcess => None,
+                    IconFetch::Helper(exe) => Some(IconClient::new(exe)),
+                };
+                loop {
+                    // While the helper runs, a quiet spell stops it; otherwise just wait.
+                    let job = match helper.as_mut().filter(|h| h.running()) {
+                        Some(h) => match rx.recv_timeout(HELPER_IDLE) {
+                            Ok(job) => job,
+                            Err(mpsc::RecvTimeoutError::Timeout) => {
+                                h.close();
+                                continue;
+                            }
+                            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+                        },
+                        None => match rx.recv() {
+                            Ok(job) => job,
+                            Err(_) => break,
+                        },
+                    };
                     match job {
                         Job::Name(job) => {
                             let name = resolve_name(&job.key, job.exe.as_deref(), job.relaunch_name.as_deref());
@@ -81,7 +117,10 @@ impl Worker {
                             post(notify, apps_msg, AppsIndexed { apps, ms: started.elapsed().as_millis() as u32 });
                         }
                         Job::Icon { key, source, fallback, px } => {
-                            let image = shell_icon(&source, px).or_else(|| fallback.and_then(|f| shell_icon(&f, px)));
+                            let image = match helper.as_mut() {
+                                Some(h) => h.fetch(&source, fallback.as_deref(), px),
+                                None => shell_icon(&source, px).or_else(|| fallback.and_then(|f| shell_icon(&f, px))),
+                            };
                             post(notify, icon_msg, IconReady { key, image });
                         }
                         Job::Run(f) => f(),

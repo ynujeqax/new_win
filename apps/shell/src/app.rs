@@ -659,7 +659,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         if a.config.appearance.glass {
             a.backdrops = Some(Backdrops::spawn(ping, WM_APP_GLASS));
         }
-        a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME, spotlight_view::WM_APP_APPS, WM_APP_ICON)));
+        a.names = Some(AppNames::new(Worker::spawn_with(ping, WM_APP_NAME, spotlight_view::WM_APP_APPS, WM_APP_ICON, icon_fetch())));
         a.watcher = Some(WindowWatcher::start(ping)?);
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
         a.load_windows(enumerate_top_level(), foreground);
@@ -679,6 +679,15 @@ fn start() -> Result<Rc<RefCell<App>>> {
     Ok(app)
 }
 
+/// Shell icons come from `NewWin.exe --icon-helper`, so the components Windows loads for them
+/// stay out of the shell (1.0.1); without our own path, here.
+fn icon_fetch() -> newwin_platform::worker::IconFetch {
+    match std::env::current_exe() {
+        Ok(exe) => newwin_platform::worker::IconFetch::Helper(exe),
+        Err(_) => newwin_platform::worker::IconFetch::InProcess,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -695,3 +704,4 @@ mod tests {
         assert!(is_explorer_restart(Some(0x100d2), None));
     }
 }
+
