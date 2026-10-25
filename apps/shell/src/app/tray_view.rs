@@ -96,10 +96,11 @@ impl App {
                 continue;
             }
             let exe = self.tray_exe(icon.pid);
-            pending.push((exe, (TrayRow { label, header: false }, icon.key)));
+            let image = self.tray_icon(icon.hicon).map(|(img, _)| img);
+            pending.push((exe, (TrayRow { label, header: false, icon: image }, icon.key)));
         }
         let tray = &self.config.tray;
-        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true }];
+        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true, icon: None }];
         self.tray_keys.clear();
         for (row, key) in arrange_rows(pending, &tray.order, &tray.hidden) {
             rows.push(row);

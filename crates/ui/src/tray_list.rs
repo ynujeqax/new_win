@@ -4,9 +4,11 @@
 use std::rc::Rc;
 
 use newwin_core::anim::Tween;
+use newwin_core::app_icon::{ICON_GAP_LOGICAL_PX, ICON_LOGICAL_PX, IconImage};
 use newwin_core::tray::match_range;
 use windows::Win32::UI::Input::KeyboardAndMouse::{VK_BACK, VK_DOWN, VK_RETURN, VK_UP};
 
+use crate::icon_bitmaps::{IconBitmaps, icon_rect};
 use crate::panel::{PanelContent, PanelInput, PanelReply};
 use crate::popup::PopupStyle;
 use crate::{Gfx, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, theme};
@@ -20,6 +22,8 @@ pub struct TrayRow {
     pub label: String,
     /// The NewWin row: always shown, bold, followed by a separator.
     pub header: bool,
+    /// The icon the app gave the tray (1.0.1); the header has none.
+    pub icon: Option<Rc<IconImage>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -58,6 +62,7 @@ pub struct TrayList {
     text: Option<Text>,
     /// Text of each visible entry.
     layouts: Vec<Option<TextLayout>>,
+    icon_bitmaps: IconBitmaps,
     empty: Option<TextLayout>,
     /// Index into `visible()`.
     hover: Option<usize>,
@@ -90,6 +95,7 @@ impl TrayList {
             width: (220.0 * dpi as f32 / 96.0).round(),
             text,
             layouts: Vec::new(),
+            icon_bitmaps: IconBitmaps::default(),
             empty: None,
             hover: None,
             pill_y: Tween::at_rest(0.0),
@@ -102,16 +108,24 @@ impl TrayList {
         (v * self.dpi as f32 / 96.0).round()
     }
 
+    /// Where a row's text starts, from the row's left: after the icon column, for every row.
+    pub fn text_x(&self) -> f32 {
+        self.s(theme::POPUP_ITEM_PAD_X) + self.s(ICON_LOGICAL_PX) + self.s(ICON_GAP_LOGICAL_PX)
+    }
+
     /// New rows from the tray model; false (and nothing redone) when they did not change. The
     /// selection stays on the same row (by its label) if that row is still there.
     pub fn set_rows(&mut self, rows: Vec<TrayRow>) -> bool {
         if rows == self.rows {
             return false;
         }
-        let selected = self.hover.and_then(|k| self.visible().get(k).map(|&(i, _)| self.rows[i].clone()));
+        // A row is the same row by its text: a new icon (an unread badge) keeps the selection.
+        let selected = self.hover.and_then(|k| self.visible().get(k).map(|&(i, _)| (self.rows[i].label.clone(), self.rows[i].header)));
         self.rows = rows;
         self.scroll = Tween::at_rest(self.scroll.target().min(self.max_scroll()));
-        self.hover = selected.and_then(|row| self.visible().iter().position(|&(i, _)| self.rows[i] == row));
+        self.hover = selected.and_then(|(label, header)| {
+            self.visible().iter().position(|&(i, _)| self.rows[i].label == label && self.rows[i].header == header)
+        });
         match self.hover {
             Some(k) => self.pill_y = Tween::at_rest(self.rect(k, self.scroll.target()).y),
             None => self.pill_o = Tween::at_rest(0.0),
@@ -182,7 +196,7 @@ impl TrayList {
     fn rebuild(&mut self) {
         let visible = self.visible();
         let pad_x = self.s(theme::POPUP_ITEM_PAD_X);
-        let frame = 2.0 * self.s(theme::POPUP_PAD) + 2.0 * pad_x;
+        let frame = 2.0 * self.s(theme::POPUP_PAD) + 2.0 * pad_x + self.text_x() - pad_x;
         let (min_w, max_w) = (self.s(220.0), self.s(360.0));
         let Some(t) = self.text.as_mut() else { return };
         let widest = self
@@ -274,6 +288,7 @@ impl PanelContent for TrayList {
         let sep_y = (self.top() - self.s(9.0) / 2.0).round() + 0.5;
         p.line(PointF { x: base.x + pad_x, y: sep_y }, PointF { x: base.right() - pad_x, y: sep_y }, theme::SEPARATOR, 1.0);
         let more_below = scroll + 0.5 < self.max_scroll();
+        let text_x = self.text_x();
         for (k, layout) in self.layouts.iter().enumerate() {
             let Some(t) = layout else { continue };
             let r = self.rect(k, scroll);
@@ -285,7 +300,10 @@ impl PanelContent for TrayList {
             if k > 0 && more_below && r.bottom() + ih > view_bottom + 0.5 {
                 color = color.with_alpha(0.45);
             }
-            p.text(t, PointF { x: r.x + pad_x, y: (r.y + (r.h - t.height()) / 2.0).round() }, color);
+            if let Some(img) = self.visible().get(k).and_then(|&(i, _)| self.rows[i].icon.clone()) {
+                p.icon(&mut self.icon_bitmaps, &img, icon_rect(r.x + pad_x, r.y + r.h / 2.0, self.dpi), color.a);
+            }
+            p.text(t, PointF { x: r.x + text_x, y: (r.y + (r.h - t.height()) / 2.0).round() }, color);
         }
         if self.apps_shown() == 0
             && let Some(t) = &self.empty
@@ -354,9 +372,9 @@ mod tests {
 
     fn list() -> TrayList {
         TrayList::for_test(vec![
-            TrayRow { label: "NewWin".into(), header: true },
-            TrayRow { label: "Telegram".into(), header: false },
-            TrayRow { label: "Steam".into(), header: false },
+            TrayRow { label: "NewWin".into(), header: true, icon: None },
+            TrayRow { label: "Telegram".into(), header: false, icon: None },
+            TrayRow { label: "Steam".into(), header: false, icon: None },
         ])
     }
 
@@ -410,16 +428,38 @@ mod tests {
         l.input(PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN.0), 0);
         assert!(!l.set_rows(l.rows.clone()), "same rows: nothing to do");
         // An app above the selection goes away; the selection stays on Steam.
-        assert!(l.set_rows(vec![TrayRow { label: "NewWin".into(), header: true }, TrayRow { label: "Steam".into(), header: false }]));
+        assert!(l.set_rows(vec![TrayRow { label: "NewWin".into(), header: true, icon: None }, TrayRow { label: "Steam".into(), header: false, icon: None }]));
         let r = l.input(PanelInput::Key(VK_RETURN.0), 0);
         assert_eq!(r.action, Some(action_id(1, TrayOp::Key)), "Enter still picks Steam");
     }
 
+    fn red() -> Rc<IconImage> {
+        Rc::new(IconImage { width: 16, height: 16, bgra: [0, 0, 255, 255].repeat(256) })
+    }
+
+    #[test]
+    fn rows_with_and_without_icons_line_up() {
+        let l = list();
+        assert_eq!(l.text_x(), theme::POPUP_ITEM_PAD_X + 16.0 + 6.0, "one column for the header and every app row");
+    }
+
+    #[test]
+    fn a_new_icon_for_the_same_label_keeps_the_selection() {
+        let mut l = list();
+        l.input(PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN.0), 0);
+        l.input(PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_DOWN.0), 0);
+        let mut rows = l.rows.clone();
+        rows[1].icon = Some(red());
+        assert!(l.set_rows(rows), "a new icon is a change");
+        let r = l.input(PanelInput::Key(VK_RETURN.0), 0);
+        assert_eq!(r.action, Some(action_id(1, TrayOp::Key)), "still on Telegram");
+    }
+
     #[test]
     fn size_grows_with_rows_up_to_fourteen() {
-        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true }];
+        let mut rows = vec![TrayRow { label: "NewWin".into(), header: true, icon: None }];
         let (_, h1) = TrayList::for_test(rows.clone()).size();
-        rows.extend((0..30).map(|i| TrayRow { label: format!("App {i}"), header: false }));
+        rows.extend((0..30).map(|i| TrayRow { label: format!("App {i}"), header: false, icon: None }));
         let (_, h30) = TrayList::for_test(rows.clone()).size();
         rows.truncate(15);
         let (_, h14) = TrayList::for_test(rows).size();
