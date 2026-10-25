@@ -67,6 +67,13 @@ pub fn run_watchdog() -> i32 {
         match newwin_core::watchdog::while_quitting(crashes.on_exit(code, Instant::now()), quitting) {
             ExitDecision::Stop => {
                 log::info!("shell quit, watchdog exiting");
+                // A shell that quit itself has restored the taskbar and removed the state file;
+                // one ended by `--quit` may not have, and that `--quit` may not live to do it.
+                match restore_from_state_file(&state) {
+                    Ok(true) => log::warn!("restored the taskbar the shell left hidden"),
+                    Ok(false) => {}
+                    Err(e) => log::error!("restore at exit failed: {e}"),
+                }
                 return 0;
             }
             ExitDecision::Restart => log::warn!("shell exited with code {code:#x}, restarting"),

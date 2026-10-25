@@ -130,7 +130,10 @@ impl ReorderList {
     /// stores the new order and calls [`ReorderList::commit`].
     pub fn release(&mut self) -> Option<(usize, usize)> {
         let d = self.drag.take()?;
-        self.dropped_offset = (self.row_h > 0.0).then(|| (d.y - d.grab_dy - self.row_top(d.from)) / self.row_h - (d.to as f32 - d.from as f32));
+        // Kept for the `commit` that follows a move only: a click in place has none, and a stale
+        // offset would spoil the next keyboard move's glide.
+        self.dropped_offset = (self.row_h > 0.0 && d.from != d.to)
+            .then(|| (d.y - d.grab_dy - self.row_top(d.from)) / self.row_h - (d.to as f32 - d.from as f32));
         (d.from != d.to).then_some((d.from, d.to))
     }
 
@@ -168,6 +171,11 @@ impl ReorderList {
             };
             t.to(target, now_ms, theme::REORDER_MS);
         }
+    }
+
+    /// How far row `i` is shown from its slot at `now_ms`, in rows (positive = lower).
+    pub fn shift_at(&self, i: usize, now_ms: u64) -> f32 {
+        self.shift.get(i).map_or(0.0, |t| t.value(now_ms))
     }
 
     pub fn animating(&self, now_ms: u64) -> bool {

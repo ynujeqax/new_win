@@ -257,3 +257,15 @@ fn an_inactive_window_hides_the_caret_and_needs_no_timer() {
     assert!(f.next_blink(0, Some(530)).is_some());
     assert!(f.caret_on(0, Some(530)));
 }
+
+#[test]
+fn a_click_in_place_does_not_spoil_the_next_keyboard_glide() {
+    let mut l = ReorderList::new(rows(3));
+    l.set_layout(PointF::default(), 300.0, 30.0, 96);
+    assert!(l.press(PointF { x: 20.0, y: 15.0 }));
+    assert_eq!(l.release(), None, "a click, not a move");
+    l.commit(0, 2, 0);
+    assert_eq!(l.shift_at(2, 0), -2.0, "the moved row starts in its old slot");
+    assert_eq!(l.shift_at(0, 0), 1.0, "the rows it passed start in theirs");
+    assert_eq!(l.shift_at(1, 0), 1.0);
+}

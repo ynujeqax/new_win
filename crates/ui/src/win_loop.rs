@@ -20,6 +20,9 @@ pub(crate) const FRAME_MS: u32 = 16;
 /// The longest a glass-waiting window stays clear.
 pub(crate) const REVEAL_MAX_MS: u32 = 250;
 
+/// Where a press that lost the mouse capture is released: outside any window.
+pub(crate) const CANCEL_POINT: PointF = PointF { x: -1.0e6, y: -1.0e6 };
+
 /// A client point from a mouse message's `lParam`.
 pub(crate) fn point(lp: LPARAM) -> PointF {
     PointF { x: (lp.0 & 0xFFFF) as i16 as f32, y: ((lp.0 >> 16) & 0xFFFF) as i16 as f32 }
@@ -56,6 +59,17 @@ impl Mouse {
             WM_LBUTTONUP => {
                 self.release();
                 PanelInput::Release(point(lp))
+            }
+            // Another window took the mouse while the button was down (the Win key, a toast, UAC):
+            // the button-up never comes, so the press ends here. The point is far outside, so it
+            // cancels like a Windows button does: nothing under the pointer is clicked, a dragged
+            // row lands in the slot it was last shown in.
+            WM_CAPTURECHANGED => {
+                if !self.capturing {
+                    return Some(None);
+                }
+                self.capturing = false;
+                PanelInput::Release(CANCEL_POINT)
             }
             WM_RBUTTONUP => PanelInput::RightRelease(point(lp)),
             WM_MOUSEWHEEL => PanelInput::Wheel(((wp.0 >> 16) & 0xFFFF) as i16),
@@ -147,5 +161,20 @@ pub(crate) fn start_clear(gfx: &Gfx, layer: &mut Layer, hwnd: HWND, y: f32) -> R
 pub(crate) fn end_clear(hwnd: HWND) {
     unsafe {
         let _ = KillTimer(Some(hwnd), REVEAL_TIMER);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_lost_capture_ends_the_press_like_a_release() {
+        let mut m = Mouse { tracking: false, capturing: true };
+        let ev = m.translate(HWND::default(), WM_CAPTURECHANGED, WPARAM(0), LPARAM(0));
+        assert_eq!(ev, Some(Some(PanelInput::Release(CANCEL_POINT))), "released outside: no click");
+        assert!(!m.capturing);
+        // Not holding the capture (our own ReleaseCapture already ran): nothing more.
+        assert_eq!(m.translate(HWND::default(), WM_CAPTURECHANGED, WPARAM(0), LPARAM(0)), Some(None));
     }
 }
