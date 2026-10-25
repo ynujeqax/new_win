@@ -58,6 +58,13 @@ impl Color {
         Self { a, ..self }
     }
 
+    /// `self` at `t` = 0, `to` at `t` = 1.
+    pub fn mix(self, to: Color, t: f32) -> Self {
+        let t = t.clamp(0.0, 1.0);
+        let ch = |a: u8, b: u8| (f32::from(a) + (f32::from(b) - f32::from(a)) * t).round() as u8;
+        Self { r: ch(self.r, to.r), g: ch(self.g, to.g), b: ch(self.b, to.b), a: self.a + (to.a - self.a) * t }
+    }
+
     pub(crate) fn d2d(&self) -> D2D1_COLOR_F {
         D2D1_COLOR_F { r: self.r as f32 / 255.0, g: self.g as f32 / 255.0, b: self.b as f32 / 255.0, a: self.a }
     }

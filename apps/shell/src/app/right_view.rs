@@ -25,6 +25,8 @@ pub(super) const ANIM_TIMER: usize = 5;
 pub(super) const TOOLTIP_TIMER: usize = 6;
 const FRAME_MS: u32 = 16;
 const PILL_FADE_MS: u32 = 120;
+/// Empty space between an 18 px icon's strokes and the edge of its 26 px slot.
+const ICON_AIR: f32 = 5.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct RightSlot {
@@ -54,6 +56,8 @@ pub(super) struct RightView {
     pub lang: Option<super::layout_view::LangView>,
     /// Whose tooltip is showing.
     pub tooltip_item: Option<RightItem>,
+    /// The item the hover pill last went to; it keeps its glow while the pill fades out.
+    pub lit: Option<Target>,
 }
 
 /// The speaker icon's animated state.
@@ -81,6 +85,7 @@ impl RightView {
             net: None,
             lang: None,
             tooltip_item: None,
+            lit: None,
         }
     }
 
@@ -142,7 +147,11 @@ impl RightView {
             let x = x.round() + 0.5;
             p.line(PointF { x, y: (h / 2.0 - s(7.0)).round() }, PointF { x, y: (h / 2.0 + s(7.0)).round() }, theme::SEPARATOR, 1.0);
         };
-        let lit = |t: Target| if hover == Some(t) { theme::TEXT_STRONG } else { theme::TEXT_INACTIVE };
+        // The hovered item brightens with the pill and dims with it on the way out.
+        let lit = |t: Target| {
+            let k = if hover == Some(t) || (!matches!(hover, Some(Target::Tray | Target::Right(_))) && self.lit == Some(t)) { o } else { 0.0 };
+            theme::TEXT_INACTIVE.mix(theme::TEXT_STRONG, k)
+        };
         let c = self.chevron;
         icons::chevron(p, PointF { x: c.x + c.w / 2.0, y: h / 2.0 }, s(16.0), self.chevron_turn.value(now), lit(Target::Tray), stroke);
         sep(p, self.left_sep_x);
@@ -211,7 +220,13 @@ impl App {
             RightItem::Volume => self.right.speaker.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Network => self.right.net.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Search => Some(scale(theme::PILL_HEIGHT, self.dpi).round()),
-            RightItem::Layout => self.right.lang.as_ref().and_then(|l| l.text.as_ref()).map(|t| t.width() + 2.0 * pad),
+            // The layout code sits among icons: the same air around it as around their strokes,
+            // not a text pill's padding, so it is no farther from its neighbour than they are.
+            RightItem::Layout => {
+                let pill_h = scale(theme::PILL_HEIGHT, self.dpi).round();
+                let air = scale(ICON_AIR, self.dpi).round();
+                self.right.lang.as_ref().and_then(|l| l.text.as_ref()).map(|t| (t.width() + 2.0 * air).max(pill_h))
+            }
         }
     }
 
@@ -264,6 +279,9 @@ impl App {
     pub(super) fn on_hover_changed(&mut self, rect: Option<RectF>) {
         let now = now_ms();
         let right_group = matches!(self.hover, Some(Target::Tray | Target::Right(_)));
+        if right_group {
+            self.right.lit = self.hover;
+        }
         self.right.hover_to(rect.filter(|_| right_group), now);
         match self.hover {
             Some(Target::Right(item)) if self.tooltip_text(item).is_some() => {

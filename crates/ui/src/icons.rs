@@ -49,14 +49,16 @@ pub fn ethernet(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
 
 /// Wi-Fi: a dot and three arcs; `bars` (0..=3) of them lit.
 pub fn wifi(p: &mut Painter, c: PointF, s: f32, bars: f32, color: Color, w: f32) {
-    let base = at(c, 0.0, s * 0.32);
-    let dot = s * 0.07;
+    // The fan is centred on its own box (dot bottom to outer arc top), not on the arcs' origin,
+    // and the origin sits on a pixel centre so the arcs stay symmetric and crisp.
+    let (outer, dot) = (s * 0.6, (s * 0.075).max(w * 0.9));
+    let base = PointF { x: c.x.floor() + 0.5, y: (c.y + (outer - dot) / 2.0).floor() + 0.5 };
     p.fill_round_rect(RectF::new(base.x - dot, base.y - dot, 2.0 * dot, 2.0 * dot), dot, color);
     for k in 1..=3u8 {
         let a = lit(bars, k);
         // Unlit arcs stay faintly visible so the shape reads as Wi-Fi at any strength.
         let c2 = color.with_alpha(color.a * (0.25 + 0.75 * a));
-        p.stroke_arc(base, s * (0.08 + 0.2 * f32::from(k)), -135.0, 90.0, c2, w);
+        p.stroke_arc(base, outer * f32::from(k) / 3.0 + dot * (1.0 - f32::from(k) / 3.0), -137.0, 94.0, c2, w);
     }
 }
 
