@@ -234,7 +234,7 @@ impl SystemCommand {
 /// The system commands, in the order they are listed, named in the UI language.
 pub fn system_candidates(s: &Strings) -> Vec<Candidate> {
     use SystemCommand::*;
-    [(Settings, s.settings), (ShutDown, s.shut_down), (Restart, s.restart), (Sleep, s.sleep), (Lock, s.lock), (SignOut, s.sign_out)]
+    [(Settings, s.spotlight_newwin_settings), (ShutDown, s.shut_down), (Restart, s.restart), (Sleep, s.sleep), (Lock, s.lock), (SignOut, s.sign_out)]
         .into_iter()
         .map(|(cmd, name)| {
             let mut c = Candidate { name: name.to_string(), id: String::new(), kind: Kind::System(cmd), file_path: None, packaged: false };
@@ -285,7 +285,8 @@ pub fn is_listed(name: &str, file_path: Option<&str>) -> bool {
     }
     let Some(path) = file_path else { return true };
     let file = path.rsplit(['\\', '/']).next().unwrap_or(path).to_lowercase();
-    if file.starts_with("unins") {
+    // The installer's *NewWin Settings* shortcut: the NewWin Settings command already stands for it.
+    if file.starts_with("unins") || file == "newwinsettings.exe" {
         return false;
     }
     let ext = file.rsplit_once('.').map(|(_, e)| e).unwrap_or("");

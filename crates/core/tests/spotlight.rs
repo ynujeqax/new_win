@@ -109,7 +109,9 @@ fn system_commands_in_order_with_usage_keys() {
     let s = newwin_core::strings::strings_for("en-US");
     let c = system_candidates(s);
     let names: Vec<_> = c.iter().map(|c| c.name.as_str()).collect();
-    assert_eq!(names, ["Settings", "Shut down", "Restart", "Sleep", "Lock", "Sign out"]);
+    assert_eq!(names, ["NewWin Settings", "Shut down", "Restart", "Sleep", "Lock", "Sign out"], "NewWin's own, not Windows' Settings app");
+    let uk = system_candidates(newwin_core::strings::strings_for("uk-UA"));
+    assert_eq!(uk[0].name, "Налаштування NewWin");
     let keys: Vec<_> = c.iter().map(Candidate::usage_key).collect();
     assert_eq!(keys, ["system:settings", "system:shut_down", "system:restart", "system:sleep", "system:lock", "system:sign_out"]);
     assert!(c.iter().all(|c| !c.can_run_as_admin() && c.id == c.usage_key()));
@@ -162,6 +164,10 @@ fn uninstallers_and_documents_are_not_listed() {
     assert!(!is_listed("  ", None));
     assert!(is_listed("Steam", Some(r"C:\Programs\Steam\Steam.exe")));
     assert!(is_listed("Settings", None));
+    // The installer's Start-menu shortcut: Spotlight already has the NewWin Settings command.
+    assert!(!is_listed("NewWin Settings", Some(r"C:\Programs\NewWin\NewWinSettings.exe")));
+    assert!(!is_listed("NewWin Settings", Some(r"c:\x\newwinsettings.EXE")));
+    assert!(is_listed("Settings", Some(r"C:\Windows\ImmersiveControlPanel\SystemSettings.exe")));
 }
 
 #[test]

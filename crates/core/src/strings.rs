@@ -29,6 +29,8 @@ pub struct Strings {
     pub desktop: &'static str,
     // NewWin itself
     pub newwin_settings: &'static str,
+    /// The Spotlight command that opens NewWin's settings (not Windows' *Settings* app).
+    pub spotlight_newwin_settings: &'static str,
     pub restart_newwin: &'static str,
     pub quit: &'static str,
     // Tray, volume and network (M2)
@@ -140,6 +142,7 @@ static EN: Strings = Strings {
     restart: "Restart",
     desktop: "Desktop",
     newwin_settings: "NewWin settings…",
+    spotlight_newwin_settings: "NewWin Settings",
     restart_newwin: "Restart NewWin",
     quit: "Quit NewWin",
     settings_ellipsis: "Settings…",
@@ -242,6 +245,7 @@ static UK: Strings = Strings {
     restart: "Перезавантажити",
     desktop: "Робочий стіл",
     newwin_settings: "Налаштування NewWin…",
+    spotlight_newwin_settings: "Налаштування NewWin",
     restart_newwin: "Перезапустити NewWin",
     quit: "Вийти з NewWin",
     settings_ellipsis: "Налаштування…",
