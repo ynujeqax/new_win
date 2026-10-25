@@ -38,7 +38,7 @@ fn watch_starts_and_stops() {
 #[test]
 fn worker_posts_apps() {
     let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "apps-worker").unwrap();
-    let w = Worker::spawn(notify, WM_APP + 4, WM_APP + 16);
+    let w = Worker::spawn(notify, WM_APP + 4, WM_APP + 16, WM_APP + 21);
     w.submit_job(Job::Apps);
     let end = Instant::now() + Duration::from_secs(10);
     let mut m = MSG::default();
@@ -56,7 +56,7 @@ fn worker_posts_apps() {
 #[test]
 fn worker_runs_closures() {
     let notify = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW, WS_POPUP, RECT::default(), "apps-run").unwrap();
-    let w = Worker::spawn(notify, WM_APP + 4, WM_APP + 16);
+    let w = Worker::spawn(notify, WM_APP + 4, WM_APP + 16, WM_APP + 21);
     let (tx, rx) = std::sync::mpsc::channel();
     w.submit_job(Job::Run(Box::new(move || tx.send(7).unwrap())));
     assert_eq!(rx.recv_timeout(Duration::from_secs(5)), Ok(7));

@@ -62,6 +62,8 @@ const WM_APP_TRAY: u32 = WM_APP + 7;
 const WM_APP_REORDER: u32 = WM_APP + 12;
 /// Settings' *Restore Windows taskbar*: the same as *Quit NewWin*.
 pub(super) const WM_APP_QUIT: u32 = WM_APP + 20;
+/// An app icon from the worker (`IconReady`).
+pub(super) const WM_APP_ICON: u32 = WM_APP + 21;
 
 /// `TaskbarCreated` also comes from our own tray host (start, quit, restart handling). Explorer
 /// restarted only if its tray (`current`) is a different window than the one we forward to
@@ -643,7 +645,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         if a.config.appearance.glass {
             a.backdrops = Some(Backdrops::spawn(ping, WM_APP_GLASS));
         }
-        a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME, spotlight_view::WM_APP_APPS)));
+        a.names = Some(AppNames::new(Worker::spawn(ping, WM_APP_NAME, spotlight_view::WM_APP_APPS, WM_APP_ICON)));
         a.watcher = Some(WindowWatcher::start(ping)?);
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
         a.load_windows(enumerate_top_level(), foreground);

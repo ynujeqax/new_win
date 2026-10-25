@@ -1,6 +1,7 @@
 //! Thin, safe wrappers over the Win32 APIs NewWin needs.
 
 pub mod activate;
+pub mod app_icon;
 pub mod appbar;
 pub mod appinfo;
 pub mod apps_index;

@@ -23,7 +23,7 @@ pub struct IconImage {
 
 /// Straight BGRA to premultiplied, in place.
 pub fn premultiply(bgra: &mut [u8]) {
-    for px in bgra.chunks_exact_mut(4) {
+    for px in bgra.as_chunks_mut::<4>().0 {
         let a = u32::from(px[3]);
         for c in &mut px[..3] {
             *c = ((u32::from(*c) * a + 127) / 255) as u8;
@@ -33,8 +33,8 @@ pub fn premultiply(bgra: &mut [u8]) {
 
 /// An image with no alpha at all (an old icon format) is meant to be opaque.
 pub fn opaque_if_no_alpha(bgra: &mut [u8]) {
-    if bgra.chunks_exact(4).all(|px| px[3] == 0) {
-        for px in bgra.chunks_exact_mut(4) {
+    if bgra.as_chunks::<4>().0.iter().all(|px| px[3] == 0) {
+        for px in bgra.as_chunks_mut::<4>().0 {
             px[3] = 255;
         }
     }

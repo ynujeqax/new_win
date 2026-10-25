@@ -4,12 +4,14 @@
 use std::sync::mpsc;
 use std::time::Instant;
 
+use newwin_core::app_icon::{IconImage, IconKey};
 use newwin_core::apps::GroupKey;
 use newwin_core::spotlight::Candidate;
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
 
 use crate::appinfo::{ComGuard, resolve_name};
+use crate::app_icon::shell_icon;
 use crate::apps_index::enumerate_apps;
 
 pub struct NameJob {
@@ -27,8 +29,15 @@ pub enum Job {
     Name(NameJob),
     /// Rebuild the Spotlight index; posts [`AppsIndexed`].
     Apps,
+    /// An app icon as Explorer shows it; posts [`IconReady`].
+    Icon { key: IconKey, source: String, px: u32 },
     /// Anything else that must not block the UI (writing `usage.toml`).
     Run(Box<dyn FnOnce() + Send>),
+}
+
+pub struct IconReady {
+    pub key: IconKey,
+    pub image: Option<IconImage>,
 }
 
 pub struct AppsIndexed {
@@ -50,8 +59,9 @@ fn post<T>(notify: isize, msg: u32, value: T) {
 
 impl Worker {
     /// Names are posted to `notify` as `names_msg` with a `Box<ResolvedName>` in LPARAM (take them
-    /// with [`take_resolved`]); the index as `apps_msg` with a `Box<AppsIndexed>` ([`take_apps`]).
-    pub fn spawn(notify: HWND, names_msg: u32, apps_msg: u32) -> Self {
+    /// with [`take_resolved`]); the index as `apps_msg` with a `Box<AppsIndexed>` ([`take_apps`]); icons as `icon_msg`
+    /// with a `Box<IconReady>` ([`take_icon`]).
+    pub fn spawn(notify: HWND, names_msg: u32, apps_msg: u32, icon_msg: u32) -> Self {
         let (tx, rx) = mpsc::channel::<Job>();
         let notify = notify.0 as isize;
         std::thread::Builder::new()
@@ -68,6 +78,10 @@ impl Worker {
                             let started = Instant::now();
                             let apps = enumerate_apps().map_err(|e| e.to_string());
                             post(notify, apps_msg, AppsIndexed { apps, ms: started.elapsed().as_millis() as u32 });
+                        }
+                        Job::Icon { key, source, px } => {
+                            let image = shell_icon(&source, px);
+                            post(notify, icon_msg, IconReady { key, image });
                         }
                         Job::Run(f) => f(),
                     }
@@ -96,4 +110,10 @@ pub unsafe fn take_resolved(lp: LPARAM) -> Box<ResolvedName> {
 /// `lp` must be the LPARAM of an apps message posted by [`Worker`], taken exactly once.
 pub unsafe fn take_apps(lp: LPARAM) -> Box<AppsIndexed> {
     unsafe { Box::from_raw(lp.0 as *mut AppsIndexed) }
+}
+
+/// # Safety
+/// `lp` must be the LPARAM of an icon message posted by [`Worker`], taken exactly once.
+pub unsafe fn take_icon(lp: LPARAM) -> Box<IconReady> {
+    unsafe { Box::from_raw(lp.0 as *mut IconReady) }
 }
