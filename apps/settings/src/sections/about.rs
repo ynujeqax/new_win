@@ -116,6 +116,12 @@ mod tests {
     }
 
     #[test]
+    fn about_shows_version_1_0_0() {
+        let rows = rows(&Config::default());
+        assert!(matches!(&rows[0].control, Control::Info(v) if v == "1.0.0"));
+    }
+
+    #[test]
     fn about_buttons_leave_the_config_alone() {
         let mut c = Config::default();
         for id in [RowId::OpenLogs, RowId::OpenConfig, RowId::RestoreTaskbar] {

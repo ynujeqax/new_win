@@ -27,3 +27,4 @@ windows = { workspace = true, features = [
 
 [build-dependencies]
 embed-manifest = "1.5.1"
+embed-resource = "3"

@@ -10,5 +10,8 @@ fn main() {
         )
         .expect("unable to embed manifest");
     }
+    embed_resource::compile("newwin.rc", embed_resource::NONE).manifest_required().expect("unable to embed the icon");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=newwin.rc");
+    println!("cargo:rerun-if-changed=../../assets/newwin.ico");
 }
