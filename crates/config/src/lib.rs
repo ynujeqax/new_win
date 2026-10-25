@@ -283,6 +283,22 @@ pub fn to_toml(c: &Config) -> String {
     format!("{CONFIG_HEADER}\n\n{body}")
 }
 
+/// Removes the `*.tmp` files in `dir` last written more than `older_than` ago: what a crash in
+/// the middle of [`save_atomic`] left. A younger one may be a save in progress. Returns how many.
+pub fn clean_stale_tmp(dir: &Path, older_than: std::time::Duration) -> usize {
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    let now = std::time::SystemTime::now();
+    entries
+        .flatten()
+        .filter(|e| e.path().extension().is_some_and(|x| x.eq_ignore_ascii_case("tmp")))
+        .filter(|e| {
+            let modified = e.metadata().and_then(|m| m.modified());
+            modified.is_ok_and(|t| now.duration_since(t).is_ok_and(|age| age > older_than))
+        })
+        .filter(|e| std::fs::remove_file(e.path()).is_ok())
+        .count()
+}
+
 /// Writes `text` next to `path`, flushes it to disk and renames it over, so neither a crash nor a
 /// power cut leaves half a file. Each call has its own temp file (`<name>.<pid>.<n>.tmp`), so two
 /// writers at once (main thread and worker) never share one: the last rename wins whole. The temp

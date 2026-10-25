@@ -501,6 +501,12 @@ pub fn run_shell() -> i32 {
         log::info!("shell already running, exiting");
         return 0;
     }
+    if let Some(dir) = newwin_config::default_path().parent() {
+        let n = newwin_config::clean_stale_tmp(dir, std::time::Duration::from_secs(60));
+        if n > 0 {
+            log::info!("removed {n} stale temp files");
+        }
+    }
     // Shell APIs (window AppUserModelIDs, Run dialog, show desktop) need COM on the UI thread.
     let _com = ComGuard::init();
     match start() {

@@ -194,3 +194,24 @@ fn save_atomic_replaces_the_file_and_leaves_no_temp() {
     assert_eq!(std::fs::read_to_string(&p).unwrap(), "b");
     assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1);
 }
+
+#[test]
+fn stale_tmp_files_go_fresh_ones_stay() {
+    use std::time::{Duration, SystemTime};
+    let dir = std::env::temp_dir().join(format!("newwin-stale-tmp-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let old = SystemTime::now() - Duration::from_secs(120);
+    for (name, stale) in [("config.toml.1.0.tmp", true), ("config.toml.1.1.tmp", false), ("config.toml", true)] {
+        let p = dir.join(name);
+        std::fs::write(&p, "x").unwrap();
+        if stale {
+            std::fs::File::options().write(true).open(&p).unwrap().set_modified(old).unwrap();
+        }
+    }
+    assert_eq!(newwin_config::clean_stale_tmp(&dir, Duration::from_secs(60)), 1);
+    assert!(!dir.join("config.toml.1.0.tmp").exists());
+    assert!(dir.join("config.toml.1.1.tmp").exists());
+    assert!(dir.join("config.toml").exists());
+    std::fs::remove_dir_all(&dir).unwrap();
+}

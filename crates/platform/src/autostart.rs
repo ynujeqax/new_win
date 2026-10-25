@@ -9,7 +9,11 @@ const VALUE: &str = "NewWin";
 
 /// The quoted path of the running exe, as the Run value wants it.
 pub fn autostart_command() -> Option<String> {
-    let exe = std::env::current_exe().ok()?;
+    run_value_for(&std::env::current_exe().ok()?)
+}
+
+/// `exe` quoted, so a path with spaces starts as one program.
+pub fn run_value_for(exe: &std::path::Path) -> Option<String> {
     Some(format!("\"{}\"", exe.to_str()?))
 }
 
