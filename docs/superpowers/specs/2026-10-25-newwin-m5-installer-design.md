@@ -16,7 +16,7 @@
 
 ### 2.1. Збірка
 
-- Скрипт `installer/newwin.iss`, Inno Setup **6.7.x** (темний майстер з'явився в 6.6). Компілятор `ISCC.exe` ставиться на машину розробника окремо, у репозиторій не входить.
+- Скрипт `installer/newwin.iss`, Inno Setup **7.1** (темний майстер з'явився в 6.6; 7.1 погоджено з користувачем 2026-10-25). Компілятор `ISCC.exe` ставиться на машину розробника окремо, у репозиторій не входить.
 - `scripts/build-installer.ps1`: зупиняє запущений NewWin так само, як інсталятор (§3), виконує `cargo build --release`, бере версію з `Cargo.toml` і викликає `ISCC.exe /DAppVersion=<версія>`. Результат: `target\installer\NewWin-Setup-<версія>.exe`.
 - Версія workspace: **0.1.0 → 1.0.0**. *About* у Settings показує її з `CARGO_PKG_VERSION`.
 
