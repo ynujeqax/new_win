@@ -1,6 +1,7 @@
 //! Pure NewWin logic: no Win32, fully unit-testable.
 
 pub mod anim;
+pub mod app_icon;
 pub mod apps;
 pub mod audio;
 pub mod clock;
