@@ -54,6 +54,9 @@ impl App {
 
     pub(super) fn on_icon_ready(&mut self, r: IconReady) {
         self.store_icon(r.key, r.image.map(Rc::new));
+        if self.spotlight.is_some() {
+            self.fill_spotlight_icons();
+        }
         self.paint();
         self.keep_animating();
     }
@@ -74,5 +77,30 @@ impl App {
     /// An icon is still fading in.
     pub(super) fn icons_animating(&self, now: u64) -> bool {
         self.icon_arrived.values().any(|&at| now.saturating_sub(at) < ICON_FADE_MS)
+    }
+}
+
+impl App {
+    /// Gives the open Spotlight the icons of the rows it shows; asks for the missing ones.
+    pub(super) fn fill_spotlight_icons(&mut self) {
+        let Some(shown) = self.spotlight.as_ref().and_then(|p| p.read(|v| v.shown())) else { return };
+        let px = self.icon_px();
+        let mut ready = Vec::new();
+        for (index, source) in shown {
+            let Some(source) = source else { continue };
+            if self.shell_icon(&source, None).is_some() {
+                let key = IconKey::Shell { source, px };
+                if let Lookup::Ready(img) = self.icons.get(&key) {
+                    ready.push((index, img, self.icon_arrived.get(&key).copied().unwrap_or(0)));
+                }
+            }
+        }
+        if let Some(p) = &self.spotlight {
+            p.update(|v| {
+                for (index, img, at) in ready {
+                    v.set_icon(index, img, at);
+                }
+            });
+        }
     }
 }

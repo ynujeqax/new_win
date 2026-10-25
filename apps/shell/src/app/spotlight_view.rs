@@ -163,6 +163,7 @@ impl App {
             SpotlightOp::Open => self.launch_candidate(index, false),
             SpotlightOp::Admin => self.launch_candidate(index, true),
             SpotlightOp::Menu => self.open_spotlight_menu(index),
+            SpotlightOp::Icons => self.fill_spotlight_icons(),
         }
     }
 
@@ -338,11 +339,14 @@ impl App {
         match r.apps {
             Ok(apps) => {
                 log::info!("apps indexed: {} in {} ms", apps.len(), r.ms);
+                // Apps that had no icon may have one now.
+                self.icons.forget_missing_shell();
                 self.apps = apps;
                 self.rebuild_catalog();
                 let catalog = self.catalog.clone();
                 if let Some(p) = &self.spotlight {
                     p.update(|v| v.set_catalog(catalog));
+                    self.fill_spotlight_icons();
                 }
             }
             Err(e) => log::warn!("app index failed, keeping the old one: {e}"),

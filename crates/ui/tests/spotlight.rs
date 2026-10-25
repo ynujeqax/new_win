@@ -208,3 +208,34 @@ fn view_draws_with_text() {
     typed(&mut v, "zzz");
     draw(&mut v, 40);
 }
+
+#[test]
+fn shown_lists_the_visible_rows_with_their_icon_source() {
+    let mut c = vec![
+        Candidate { name: "Claude".into(), id: "Claude_pzs8!Claude".into(), kind: Kind::App, file_path: None, packaged: true },
+        Candidate { name: "Claude".into(), id: r"{A77F}\Claude.lnk".into(), kind: Kind::App, file_path: None, packaged: false },
+    ];
+    c.extend(system_candidates(strings_for("en")));
+    let c = Rc::new(c);
+    let mut v = SpotlightView::for_test(c.clone(), 8);
+    typed(&mut v, "cl");
+    let shown = v.shown();
+    assert!(shown.contains(&(0, Some(r"shell:AppsFolder\Claude_pzs8!Claude".into()))), "{shown:?}");
+    assert!(shown.contains(&(1, Some(r"shell:AppsFolder\{A77F}\Claude.lnk".into()))), "{shown:?}");
+    let mut v = SpotlightView::for_test(c.clone(), 8);
+    typed(&mut v, "lock");
+    assert_eq!(v.shown(), [(index_of(&c, "Lock", true), None)]);
+}
+
+#[test]
+fn a_query_asks_the_owner_for_icons() {
+    let mut v = view();
+    let reply = v.input(PanelInput::Char('s'), 0);
+    assert_eq!(reply.action, Some(action_id(0, SpotlightOp::Icons)));
+}
+
+#[test]
+fn names_line_up_with_or_without_an_icon() {
+    let v = view();
+    assert_eq!(v.name_x(), theme::POPUP_ITEM_PAD_X + 16.0 + 6.0, "the same column for every row, icon or not");
+}

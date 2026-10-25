@@ -6,10 +6,12 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use newwin_core::anim::Tween;
+use newwin_core::app_icon::{ICON_FADE_MS, ICON_GAP_LOGICAL_PX, ICON_LOGICAL_PX, IconImage, fade as icon_fade, source_for_candidate};
 use newwin_core::spotlight::{Candidate, Confirm, Hit, Kind, SystemCommand, rank};
 use newwin_core::text_edit::{Edit, TextEdit};
 use windows::Win32::UI::Input::KeyboardAndMouse::{VK_DOWN, VK_RETURN, VK_UP};
 
+use crate::icon_bitmaps::{IconBitmaps, icon_rect};
 use crate::panel::{PanelContent, PanelInput, PanelReply, radius_for};
 use crate::popup::PopupStyle;
 use crate::text_field::{caret_visible, edit_for, next_flip};
@@ -20,6 +22,8 @@ pub enum SpotlightOp {
     Open = 0,
     Admin = 1,
     Menu = 2,
+    /// The results changed: the owner looks up their icons ([`SpotlightView::shown`]).
+    Icons = 3,
 }
 
 /// Panel action id: `index` is into the catalog the view shows.
@@ -31,6 +35,7 @@ pub fn decode_action(id: u32) -> (usize, SpotlightOp) {
     let op = match id & 3 {
         1 => SpotlightOp::Admin,
         2 => SpotlightOp::Menu,
+        3 => SpotlightOp::Icons,
         _ => SpotlightOp::Open,
     };
     ((id >> 2) as usize, op)
@@ -84,6 +89,9 @@ pub struct SpotlightView {
     rows: Vec<RowText>,
     /// The armed row's label is drawn instead of its name (catalog index, layout).
     armed_text: Option<(usize, TextLayout)>,
+    /// App icons by catalog index, with when each arrived (it fades in).
+    icons: HashMap<usize, (Rc<IconImage>, u64)>,
+    icon_bitmaps: IconBitmaps,
 }
 
 impl SpotlightView {
@@ -148,6 +156,8 @@ impl SpotlightView {
             empty_text: None,
             rows: Vec::new(),
             armed_text: None,
+            icons: HashMap::new(),
+            icon_bitmaps: IconBitmaps::default(),
         }
     }
 
@@ -163,6 +173,21 @@ impl SpotlightView {
         &self.hits
     }
 
+    /// Each shown row's catalog index and where its icon comes from (none for system commands).
+    pub fn shown(&self) -> Vec<(usize, Option<String>)> {
+        self.hits.iter().filter_map(|h| self.catalog.get(h.index).map(|c| (h.index, source_for_candidate(c)))).collect()
+    }
+
+    /// The icon of catalog entry `index`, arrived at `arrived_ms` (0: shown at once).
+    pub fn set_icon(&mut self, index: usize, img: Rc<IconImage>, arrived_ms: u64) {
+        self.icons.insert(index, (img, arrived_ms));
+    }
+
+    /// Where a row's name starts, from the row's left: after the icon column, for every row.
+    pub fn name_x(&self) -> f32 {
+        self.s(theme::POPUP_ITEM_PAD_X) + self.s(ICON_LOGICAL_PX).round() + self.s(ICON_GAP_LOGICAL_PX).round()
+    }
+
     /// The selected row.
     pub fn selected(&self) -> Option<usize> {
         self.selected
@@ -175,6 +200,8 @@ impl SpotlightView {
     /// A new index (apps installed or removed): re-ranks, keeping the same entry selected when it
     /// is still shown.
     pub fn set_catalog(&mut self, c: Rc<Vec<Candidate>>) {
+        // Icons are kept by index, which a new catalog changes.
+        self.icons.clear();
         let keep = self.selected.and_then(|r| self.hits.get(r)).and_then(|h| self.catalog.get(h.index)).map(|c| c.id.clone());
         self.catalog = c;
         self.rank();
@@ -226,6 +253,7 @@ impl SpotlightView {
     fn rebuild(&mut self) {
         let pad_x = self.s(theme::POPUP_ITEM_PAD_X);
         let row_w = self.row_rect(0).w - 2.0 * pad_x;
+        let name_w = self.row_rect(0).w - self.name_x() - pad_x;
         let field_room = self.width() - self.s(44.0) - self.s(16.0);
         // (name, bold ranges, kind label) of each row.
         type Row<'a> = (String, Vec<(usize, usize)>, &'a str);
@@ -250,7 +278,7 @@ impl SpotlightView {
             .map(|(name, ranges, kind)| {
                 let kind = t.cache.layout(kind, &t.small, row_w / 3.0).ok();
                 let kind_w = kind.as_ref().map_or(0.0, |k| k.width() + pad_x);
-                RowText { name: t.cache.layout_ranges(name, &t.regular, row_w - kind_w, ranges).ok(), kind }
+                RowText { name: t.cache.layout_ranges(name, &t.regular, (name_w - kind_w).max(1.0), ranges).ok(), kind }
             })
             .collect();
         self.armed_text = armed.and_then(|(index, label)| t.cache.layout(&label, &t.regular, row_w).ok().map(|l| (index, l)));
@@ -282,7 +310,8 @@ impl SpotlightView {
         self.rows_o = Tween::at_rest(0.0);
         self.rows_o.to(1.0, now, theme::ROW_FADE_MS);
         self.rebuild();
-        PanelReply { repaint: true, resize: true, ..Default::default() }
+        let icons = (!self.hits.is_empty()).then(|| action_id(0, SpotlightOp::Icons));
+        PanelReply { repaint: true, resize: true, action: icons, ..Default::default() }
     }
 
     fn edit(&mut self, e: Edit, now: u64) -> PanelReply {
@@ -427,17 +456,22 @@ impl PanelContent for SpotlightView {
                 p.text(t, PointF { x: base.x + pad_x, y: (base.y + (base.h - t.height()) / 2.0).round() }, theme::TEXT_INACTIVE.with_alpha(fade));
             }
             let armed = self.armed_text.as_ref().filter(|_| self.confirm.armed(now).is_some());
+            let name_x = self.name_x();
             for (r, row) in self.rows.iter().enumerate() {
                 let rect = self.row_rect(r);
                 let strong = self.selected == Some(r);
                 let index = self.hits.get(r).map(|h| h.index);
+                if let Some((img, at)) = index.and_then(|i| self.icons.get(&i)) {
+                    let dst = icon_rect(rect.x + pad_x, rect.y + rect.h / 2.0, self.dpi);
+                    p.icon(&mut self.icon_bitmaps, img, dst, icon_fade(*at, now) * fade);
+                }
                 let name = match armed {
                     Some((i, label)) if Some(*i) == index => Some(label),
                     _ => row.name.as_ref(),
                 };
                 if let Some(t) = name {
                     let color = if strong { theme::TEXT_STRONG } else { theme::TEXT };
-                    p.text(t, PointF { x: rect.x + pad_x, y: (rect.y + (rect.h - t.height()) / 2.0).round() }, color.with_alpha(fade));
+                    p.text(t, PointF { x: rect.x + name_x, y: (rect.y + (rect.h - t.height()) / 2.0).round() }, color.with_alpha(fade));
                 }
                 if let Some(k) = &row.kind {
                     let at = PointF { x: rect.right() - pad_x - k.width(), y: (rect.y + (rect.h - k.height()) / 2.0).round() };
@@ -496,6 +530,7 @@ impl PanelContent for SpotlightView {
 
     fn animating(&self, now: u64) -> bool {
         [self.pill_y, self.hover_y, self.hover_o, self.rows_o].iter().any(|t| t.running(now))
+            || self.icons.values().any(|(_, at)| now.saturating_sub(*at) < ICON_FADE_MS)
     }
 
     fn wake_at(&self, now: u64) -> Option<u64> {
