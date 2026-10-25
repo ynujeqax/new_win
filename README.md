@@ -30,17 +30,17 @@ And it has to be invisible in another sense too: it should never lag, never free
 ## Features
 
 **The bar**
-- Running apps on the left; the active one is bold, in a soft glass pill that glides between apps.
+- Running apps on the left with their Windows icons; the active one is bold, in a soft glass pill that glides between apps.
 - Keyboard layout (`ENG` / `UKR`), network (Ethernet, Wi-Fi with real signal bars, offline), volume, search, date and time on the right.
 - **Auto-hide** (appears on hover, apps get the whole screen) or **Pinned** (reserves its space like the native taskbar; maximised windows never slide under it).
 
 **Spotlight** — replaces Start
 - Press <kbd>Win</kbd>: a centred glass panel, type to search apps and system commands.
-- Results are text only, the matched part in bold, ranked by how often you launch things.
+- Results with their app icons (two apps with one name are told apart), the matched part in bold, ranked by how often you launch things.
 - <kbd>↵</kbd> open · <kbd>Ctrl</kbd> + <kbd>↵</kbd> run as administrator · <kbd>Esc</kbd> close.
 
 **Tray**
-- `⌃` opens a text list of background apps (NVIDIA, Discord, …), named after their tray tooltips.
+- `⌃` opens a list of background apps (NVIDIA, Discord, …) with their tray icons, named after their tray tooltips.
 - Left click does what the icon does; right click opens the app's **own native menu** — no look-alikes.
 - Reorder and hide apps from Settings.
 
