@@ -95,7 +95,7 @@ pub struct App {
     tray_keys: Vec<newwin_core::tray::IconKey>,
     /// Fallback row names by process id.
     tray_names: std::collections::HashMap<u32, String>,
-    /// Exe file name per pid (empty: unreadable), like `tray_names`.
+    /// Exe path per pid (empty: unreadable), like `tray_names`.
     tray_exes: std::collections::HashMap<u32, String>,
     /// While the tray is held open under an app's menu: that app, and a foreground watch.
     held_pid: u32,
@@ -473,6 +473,8 @@ impl App {
                 None
             }
             WM_ENDSESSION if wp.0 != 0 => {
+                // A launch counted in the last two seconds is still waiting for its save timer.
+                self.save_usage_now();
                 self.save_tray_seen_if_dirty();
                 self.restore_taskbar();
                 Some(LRESULT(0))

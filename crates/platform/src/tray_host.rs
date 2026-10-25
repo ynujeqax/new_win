@@ -98,7 +98,11 @@ fn on_notify(hwnd: HWND, bytes: &[u8]) -> isize {
         let _ = s.copies.send(bytes.to_vec());
         (change, s.notify, s.msg)
     });
-    let Some((change, notify, msg)) = applied else { return 0 };
+    let Some((change, notify, msg)) = applied else {
+        // The model is busy (a re-entrant message): our copy would never be freed.
+        copy.into_iter().for_each(destroy_icon);
+        return 0;
+    };
     log::debug!("tray {:?} {change:?} key={:?} tip={:?} pid={pid} callback={:#x} flags={:#x} version={}", d.command, d.key, d.tip, d.callback_message, d.flags, d.version);
     if change == Change::Ignored {
         return 0;
@@ -334,7 +338,10 @@ impl TrayHost {
     /// Explorer restarted: its tray is a new window, and apps will register again.
     pub fn explorer_restarted(&self) {
         self.target.store(resolve(&self.forward), Ordering::Relaxed);
-        with_host(self.hwnd, |s| s.model.clear());
+        with_host(self.hwnd, |s| {
+            s.model.icons().iter().for_each(|i| destroy_icon(i.hicon));
+            s.model.clear();
+        });
         self.ensure_on_top();
         self.announce();
     }

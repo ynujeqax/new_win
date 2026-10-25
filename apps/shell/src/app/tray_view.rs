@@ -35,9 +35,14 @@ impl App {
         self.note_seen_icons();
     }
 
-    /// The exe file name of an icon's process, read once per pid; empty when unreadable.
+    /// The exe path of an icon's process, read once per pid; empty when unreadable.
+    fn tray_exe_path(&mut self, pid: u32) -> String {
+        self.tray_exes.entry(pid).or_insert_with(|| process_image_path(pid).unwrap_or_default()).clone()
+    }
+
+    /// Its exe file name, likewise.
     fn tray_exe(&mut self, pid: u32) -> String {
-        self.tray_exes.entry(pid).or_insert_with(|| exe_file_name(pid)).clone()
+        exe_file_name(&self.tray_exe_path(pid))
     }
 
     /// Records every icon's app in `tray_seen.toml` (the name is the row label, the first icon of
@@ -102,7 +107,8 @@ impl App {
                 Some((img, _)) => Some(img),
                 None => {
                     // A SYSTEM process (NVIDIA's) cannot be read: its known app's icon.
-                    let source = process_image_path(icon.pid).or_else(|| known_icon_source(icon.uid, icon.callback_message).map(str::to_string));
+                    let path = self.tray_exe_path(icon.pid);
+                    let source = Some(path).filter(|p| !p.is_empty()).or_else(|| known_icon_source(icon.uid, icon.callback_message).map(str::to_string));
                     source.and_then(|p| self.shell_icon(&p, None)).map(|(img, _)| img)
                 }
             };
@@ -292,9 +298,9 @@ pub(super) fn retain_pids<V>(map: &mut HashMap<u32, V>, pids: &[u32]) {
     map.retain(|pid, _| pids.contains(pid));
 }
 
-/// The exe file name of a process, empty when it cannot be read (gone, denied).
-fn exe_file_name(pid: u32) -> String {
-    process_image_path(pid).and_then(|p| p.rsplit(['\\', '/']).next().map(str::to_string)).unwrap_or_default()
+/// The file name of an exe path; empty for an empty path (the process was gone or denied).
+fn exe_file_name(path: &str) -> String {
+    path.rsplit(['\\', '/']).next().unwrap_or_default().to_string()
 }
 
 /// Icons of apps that registered with explorer before us and never will with us (NVIDIA): found

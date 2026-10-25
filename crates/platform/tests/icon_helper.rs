@@ -55,3 +55,18 @@ fn serve_answers_each_request_in_order() {
     assert_eq!(read_reply(&mut r).unwrap(), None, "no such file");
     assert!(read_reply(&mut r).unwrap().is_some(), "the fallback");
 }
+
+/// A helper that never answers (a shell extension stuck in it) is ended, and the worker goes on.
+#[test]
+fn a_helper_that_never_replies_is_ended_after_the_timeout() {
+    use std::time::{Duration, Instant};
+    use newwin_platform::icon_helper::IconClient;
+    let powershell = std::path::PathBuf::from(std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into()))
+        .join(r"System32\WindowsPowerShell\v1.0\powershell.exe");
+    let args = ["-NoProfile", "-Command", "Start-Sleep 60"].map(String::from).to_vec();
+    let mut client = IconClient::with_command(powershell, args, Duration::from_millis(1500));
+    let started = Instant::now();
+    assert_eq!(client.fetch(r"C:\Windows\explorer.exe", None, 16), None);
+    assert!(!client.running(), "the hung helper is gone");
+    assert!(started.elapsed() < Duration::from_secs(5), "one timeout, no retry: {:?}", started.elapsed());
+}

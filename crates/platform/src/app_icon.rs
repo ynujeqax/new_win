@@ -98,6 +98,9 @@ impl Canvas {
     fn new(px: u32) -> Option<Canvas> {
         unsafe {
             let dc = CreateCompatibleDC(None);
+            if dc.is_invalid() {
+                return None;
+            }
             let mut bits = std::ptr::null_mut();
             let Ok(bitmap) = CreateDIBSection(Some(dc), &info(px, px), DIB_RGB_COLORS, &mut bits, None, 0) else {
                 let _ = DeleteDC(dc);
