@@ -1,10 +1,15 @@
 //! Drawing primitives in physical pixels.
 
-use windows::Win32::Graphics::Direct2D::Common::{D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN, D2D1_GRADIENT_STOP};
+use windows::Win32::Graphics::Direct2D::Common::{D2D_RECT_F, D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN, D2D1_GRADIENT_STOP};
 use windows::Win32::Graphics::Direct2D::*;
 use windows::core::Interface;
 use windows_numerics::Vector2;
 
+use std::rc::Rc;
+
+use newwin_core::app_icon::IconImage;
+
+use crate::icon_bitmaps::IconBitmaps;
 use crate::{Color, PointF, RectF, TextLayout};
 
 pub struct Painter<'a> {
@@ -170,5 +175,15 @@ impl<'a> Painter<'a> {
     pub fn text(&mut self, t: &TextLayout, origin: PointF, c: Color) {
         let Some(b) = self.brush(c) else { return };
         unsafe { self.dc.DrawTextLayout(Vector2 { X: origin.x, Y: origin.y }, &t.layout, &b, D2D1_DRAW_TEXT_OPTIONS_NONE) };
+    }
+
+    /// An app icon in `dst` (physical px), at `opacity`; its bitmap comes from `cache`.
+    pub fn icon(&mut self, cache: &mut IconBitmaps, img: &Rc<IconImage>, dst: RectF, opacity: f32) {
+        if opacity <= 0.0 {
+            return;
+        }
+        let Some(bitmap) = cache.bitmap(self.dc, img) else { return };
+        let d = D2D_RECT_F { left: dst.x.round(), top: dst.y.round(), right: (dst.x + dst.w).round(), bottom: (dst.y + dst.h).round() };
+        unsafe { self.dc.DrawBitmap(&bitmap, Some(&d), opacity.min(1.0), D2D1_INTERPOLATION_MODE_LINEAR, None, None) };
     }
 }
