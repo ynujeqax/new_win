@@ -1,21 +1,31 @@
 <p align="center">
-  <img src="docs/assets/bar.svg" alt="NewWin — a liquid-glass top bar for Windows 11" width="100%">
+  <img src="docs/assets/hero.svg" alt="NewWin — a liquid-glass top bar for Windows 11" width="100%">
 </p>
 
 <p align="center">
   <b>A minimal, monochrome, liquid-glass top bar that replaces the Windows 11 taskbar and Start menu.</b><br>
-  Native Rust · Win32 · Direct2D · DirectComposition — no Electron, no web views, no runtime.
+  Native Rust · Win32 · Direct2D · DirectComposition. No Electron, no web views, no runtime.
+</p>
+
+<p align="center">
+  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.1-fff?style=for-the-badge&labelColor=111"></a>
 </p>
 
 <p align="center">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011-111?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/rust-2024%20edition-111?style=flat-square&logo=rust">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.1-111?style=flat-square">
+  <img alt="RAM" src="https://img.shields.io/badge/RAM-~8%20MB-111?style=flat-square">
   <img alt="Idle CPU" src="https://img.shields.io/badge/idle%20CPU-0.002%25-111?style=flat-square">
-  <img alt="RAM" src="https://img.shields.io/badge/RAM-~11%20MB-111?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-492%20passing-111?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-111?style=flat-square">
 </p>
 
 <p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#performance">Performance</a> ·
+  <a href="#architecture">Architecture</a> ·
   <a href="README.uk.md">Українською</a>
 </p>
 
@@ -23,70 +33,102 @@
 
 ## Why
 
-Built for an OLED monitor and a black wallpaper: **no static pixels, no colour, no clutter.** The bar hides above the screen edge and slides in only when the mouse touches a 1–2 px strip at the top. Windows get 100 % of the screen. Everything is text and thin vector lines, set in liquid glass with its own blur and a lens-like rim.
+Built for an OLED monitor and a black wallpaper: **no static pixels, no clutter, colour only where it carries meaning.** The bar hides above the screen edge and slides in only when the mouse touches a 1–2 px strip at the top, so windows get 100 % of the screen. It is text, thin vector lines and the apps' own icons, set in liquid glass with its own blur and a lens-like rim.
 
-And it has to be invisible in another sense too: it should never lag, never freeze, never crash — and if it does, you are never left without a taskbar.
+It has to be invisible in another way too. It should never lag, freeze or crash, and if it ever does, you still get a taskbar back.
 
 ## Features
 
-**The bar**
-- Running apps on the left with their Windows icons; the active one is bold, in a soft glass pill that glides between apps.
-- Keyboard layout (`ENG` / `UKR`), network (Ethernet, Wi-Fi with real signal bars, offline), volume, search, date and time on the right.
-- **Auto-hide** (appears on hover, apps get the whole screen) or **Pinned** (reserves its space like the native taskbar; maximised windows never slide under it).
+<table>
+  <tr>
+    <td width="58%"><img src="docs/assets/spotlight.svg" alt="Spotlight"></td>
+    <td width="42%"><img src="docs/assets/tray.svg" alt="Tray panel"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Spotlight</b>: press <kbd>Win</kbd>, type, <kbd>↵</kbd></sub></td>
+    <td align="center"><sub><b>Tray</b>: background apps with their own menus</sub></td>
+  </tr>
+</table>
 
-**Spotlight** — replaces Start
-- Press <kbd>Win</kbd>: a centred glass panel, type to search apps and system commands.
-- Results with their app icons (two apps with one name are told apart), the matched part in bold, ranked by how often you launch things.
-- <kbd>↵</kbd> open · <kbd>Ctrl</kbd> + <kbd>↵</kbd> run as administrator · <kbd>Esc</kbd> close.
+### The bar
+- **Running apps** on the left, each with its Windows icon. The active one is bold, in a soft glass pill that glides between apps.
+- Click to switch, minimise or restore; middle click to close; an app with several windows shows a list. Right click gives *New window* and *Close*.
+- **Right side:** keyboard layout (`ENG` / `UKR`), network (Ethernet, Wi-Fi with real signal bars, offline), volume (scroll to change, middle click to mute, click for a slider and output device), search, then date and time (click for the notification centre).
+- **Auto-hide** (appears on hover) or **Pinned** (reserves its space like the native taskbar, so maximised windows never slide under it). It also stays out of the way of full-screen apps.
+- Right click on empty space opens the full **Win+X menu**: Device Manager, PowerShell (admin), Task Manager, Run, shut down, and the rest.
 
-**Tray**
-- `⌃` opens a list of background apps (NVIDIA, Discord, …) with their tray icons, named after their tray tooltips.
-- Left click does what the icon does; right click opens the app's **own native menu** — no look-alikes.
-- Reorder and hide apps from Settings.
+### Spotlight: replaces Start
+- <kbd>Win</kbd> or <kbd>Ctrl</kbd> + <kbd>Esc</kbd> opens a centred glass panel. Type to search apps and system commands (*Shut down*, *Restart*, *Sleep*, *Lock*, *Sign out*, *NewWin Settings*).
+- Results carry their app icons. Two apps with the same name are told apart, and the matched part is bold.
+- Ranked by how often you launch things. New apps show up live as they are installed.
+- <kbd>↵</kbd> open · <kbd>Ctrl</kbd> + <kbd>↵</kbd> run as administrator · right click: *Open file location* · <kbd>Esc</kbd> close.
 
-**Settings** — `NewWinSettings.exe`
-- Same glass, six sections: *Bar · Appearance · Items · Spotlight · Tray · About*.
-- Toggles, sliders, segmented choices, a font picker that draws each family in itself, drag-to-reorder lists.
-- No Save button: every change reaches the bar live, in well under a second.
-- Settings are plain TOML — edit `config.toml` by hand and the bar picks it up instantly; a typo shows a banner instead of breaking anything.
+### Tray
+- `⌃` opens a list of background apps (Discord, Steam, NVIDIA, …) with their tray icons, named after their tray tooltips.
+- A left click does what the icon does. A right click opens the **app's own native menu**, never a look-alike.
+- Reorder and hide apps in Settings.
 
-**Safety net**
-- A tiny watchdog (~1 MB) restarts the shell if it crashes or hangs; after 3 crashes in a minute it gives the native taskbar back.
-- `NewWin.exe --restore-taskbar` or *Restore Windows taskbar* in Settings puts Windows back the way it was.
-- All files are written atomically; release builds use `panic = "abort"` and never trust data read from disk or other processes.
+<p align="center">
+  <img src="docs/assets/settings.svg" alt="NewWin Settings" width="72%">
+</p>
+
+### Settings: `NewWinSettings.exe`
+- The same glass, in six sections: *Bar · Appearance · Items · Spotlight · Tray · About*.
+- Toggles, sliders, segmented choices, a font picker that draws each family in its own face, and drag-to-reorder lists.
+- **No Save button.** Every change reaches the bar live, in well under a second.
+- Settings are plain TOML. Edit `config.toml` by hand and the bar picks it up instantly; a typo shows a banner instead of breaking anything.
+- English and Ukrainian, following the Windows display language.
+
+### Safety net
+- A tiny watchdog (~1 MB) restarts the shell if it crashes or hangs. After 3 crashes in a minute it gives the native taskbar back.
+- `NewWin.exe --quit`, *Quit NewWin* in the bar's menu, or *Restore Windows taskbar* in Settings puts Windows back the way it was. So does uninstalling.
+- Shell icons are fetched by a short-lived helper process that exits after 30 s idle. A stuck shell extension costs at most 5 s and never freezes the bar.
+- All files are written atomically. Release builds use `panic = "abort"` and never trust data read from disk or from other processes.
+
+## Install
+
+1. Download **`NewWin-Setup-1.0.1.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
+2. Run it. No admin rights are needed: NewWin installs for your user only, into `%LOCALAPPDATA%\Programs\NewWin` (you can pick another folder). Setup is not code-signed yet, so SmartScreen may warn: **More info → Run anyway**.
+3. NewWin starts right away, and with Windows from then on. Running a newer Setup over it updates it and keeps your settings.
+
+Silent install, for scripts: `NewWin-Setup-1.0.1.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
+
+**Uninstall** from *Settings → Apps → Installed apps → NewWin*. The Windows taskbar comes back, and everything NewWin wrote is removed, settings and logs included.
+
+You can open Settings from the tray (`⌃` → **NewWin**), from the bar's menu, from Spotlight (`settings`), or by launching `NewWin.exe` again.
+
+### Keys and clicks
+
+| | |
+|---|---|
+| <kbd>Win</kbd> · <kbd>Ctrl</kbd> + <kbd>Esc</kbd> | Spotlight (on by default; see Settings → Spotlight) |
+| Click an app | Switch to it · minimise if active · list if several windows |
+| Middle click an app | Close it |
+| Right click empty bar | Win+X menu, NewWin Settings, Restart / Quit NewWin |
+| Scroll / middle click on volume | Change volume / mute |
+| Click the date | Notification centre |
+| Click `ENG` | Next keyboard layout |
 
 ## Performance
 
-Measured on the author's machine (Windows 11, 16 logical CPUs), see [acceptance notes](docs/superpowers/notes/2026-10-23-m4-acceptance.md):
+Measured on the author's machine (Windows 11, 16 logical CPUs). See the [acceptance notes](docs/superpowers/notes).
 
 | | Result |
 |---|---|
-| CPU, 10 minutes idle | **0.0016 %** (shell) · 0.0003 % (watchdog) |
-| Memory (private working set) | **~11 MB** shell · 1.3 MB watchdog |
+| Memory, shell (private working set, 1.0.1) | **~8 MB**, 19 threads |
+| Memory, icon helper (only while fetching icons) | 2.6 MB; exits 30 s after its last request |
+| Memory, watchdog | 1.3 MB |
+| CPU, 10 minutes idle (1.0.0) | **0.0016 %** shell · 0.0003 % watchdog |
 | Bar first frame | 55 ms |
-| Spotlight first frame | 1–2 ms |
+| Spotlight / tray panel first frame | ~1 ms |
 | Settings first frame | 10–13 ms |
 | Ranking 1 000 apps | < 1 ms |
 
-No polling: everything is event-driven (WinEvents, change notifications, shell hooks). The GPU device for glass is warmed on demand and released after 60 s of idle.
+Nothing polls: everything is event-driven (WinEvents, change notifications, shell hooks). The GPU device for the glass is warmed on demand and released after 60 s idle.
 
-## Getting started
+## Build from source
 
-> **Status:** personal project, Windows 11 only, single monitor.
-
-### Install
-
-1. Get `NewWin-Setup-<version>.exe` — from [Releases](https://github.com/ynujeqax/new_win/releases), or build it yourself (below).
-2. Run it. No admin rights are needed: NewWin installs for your user only, into `%LOCALAPPDATA%\Programs\NewWin` (you can pick another folder). Setup is not code-signed yet, so SmartScreen may warn: **More info → Run anyway**.
-3. NewWin starts right away and with Windows from then on. Running a newer Setup over it updates it and keeps your settings.
-
-**Uninstall** from *Settings → Apps → Installed apps → NewWin*. The Windows taskbar comes back and everything NewWin wrote is removed, settings and logs included.
-
-Open Settings from the tray (`⌃` → **NewWin**), the bar's menu, Spotlight (`settings` or *NewWin Settings*), or by launching `NewWin.exe` again. *Start with Windows* lives in Settings → Bar; *Restore Windows taskbar* in Settings → About quits NewWin and brings the native taskbar back.
-
-### Build from source
-
-**Requirements:** Windows 11, [Rust](https://rustup.rs) stable (MSVC toolchain); [Inno Setup 7](https://jrsoftware.org/isdl.php) for the installer.
+**Requirements:** Windows 11, [Rust](https://rustup.rs) stable (MSVC toolchain), and [Inno Setup 7](https://jrsoftware.org/isdl.php) for the installer.
 
 ```powershell
 git clone https://github.com/ynujeqax/new_win.git
@@ -114,30 +156,34 @@ The native taskbar is hidden while NewWin runs. To quit NewWin and get it back a
 ## Architecture
 
 ```
-NewWin.exe (watchdog) ──spawns──▶ NewWin.exe --shell ◀──config.toml──▶ NewWinSettings.exe
-      │ restarts on crash,              │ bar · Spotlight · tray               glass settings window
-      │ restores the taskbar            │ (one UI thread + small workers)      (separate process)
+NewWin.exe  (watchdog)                     restarts the shell on a crash or hang,
+   │                                       gives the taskbar back after 3 crashes
+   └─▶ NewWin.exe --shell                  bar · Spotlight · tray host · panels
+          │   one UI thread + small workers (glass, input hook, worker)
+          ├─▶ NewWin.exe --icon-helper     shell icons over stdin/stdout, exits when idle
+          └─◀ config.toml ─▶ NewWinSettings.exe    glass settings window, separate process
 ```
 
 | Crate | Role |
 |---|---|
-| [`crates/core`](crates/core) | Pure logic: ranking, layout, strings (en/uk), decisions — no Win32, fully unit-tested |
+| [`crates/core`](crates/core) | Pure logic: ranking, layout, the tray protocol, strings (en/uk), decisions. No Win32, fully unit-tested |
 | [`crates/config`](crates/config) | Config types, bounds, diffing, atomic TOML files |
-| [`crates/platform`](crates/platform) | Win32 / WinRT: windows, tray host, audio, network, watchers, launching |
+| [`crates/platform`](crates/platform) | Win32 / WinRT: windows, tray host, icons, audio, network, watchers, launching |
 | [`crates/ui`](crates/ui) | Direct2D / DirectComposition rendering, liquid glass, controls, windows |
-| [`apps/shell`](apps/shell) | The bar, Spotlight, tray panel and the watchdog |
+| [`apps/shell`](apps/shell) | The bar, Spotlight, tray panel, watchdog and icon helper (`NewWin.exe`) |
 | [`apps/settings`](apps/settings) | `NewWinSettings.exe` |
 
-Design documents for every milestone live in [`docs/superpowers/specs`](docs/superpowers/specs), the implementation plans in [`docs/superpowers/plans`](docs/superpowers/plans), and the measurement / acceptance notes in [`docs/superpowers/notes`](docs/superpowers/notes).
+Every milestone has a design document in [`docs/superpowers/specs`](docs/superpowers/specs), an implementation plan in [`docs/superpowers/plans`](docs/superpowers/plans), and measurement and acceptance notes in [`docs/superpowers/notes`](docs/superpowers/notes).
 
 ## Roadmap
 
-- [x] **M1** — shell core: bar, auto-hide / pinned, running apps, clock, watchdog
-- [x] **Liquid glass** — own blur, lens rim, capsule shape
-- [x] **M2** — tray, network, volume, keyboard layout
-- [x] **M3** — Spotlight
-- [x] **M4** — Settings window, live config
-- [x] **M5** — installer, uninstall that restores the taskbar, polish
+- [x] **M1**: shell core (bar, auto-hide / pinned, running apps, clock, watchdog)
+- [x] **Liquid glass**: own blur, lens rim, capsule shape
+- [x] **M2**: tray, network, volume, keyboard layout
+- [x] **M3**: Spotlight
+- [x] **M4**: Settings window, live config
+- [x] **M5**: installer, an uninstall that restores the taskbar, polish
+- [x] **1.0.1**: colour app icons on the bar, in Spotlight and in the tray
 - [ ] Multiple monitors
 
 ## Development
@@ -148,7 +194,7 @@ cargo clippy --workspace --all-targets
 powershell -File scripts\measure.ps1 -Minutes 10   # idle CPU / RAM budget check
 ```
 
-Glass is invisible to DXGI screenshots, so visual checks are done by eye.
+The glass is invisible to DXGI screenshots, so visual checks are done by eye. The pictures in this README are drawn to match the real UI.
 
 ## License
 

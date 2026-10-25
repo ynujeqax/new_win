@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="NewWin: a liquid-glass capsule bar at the top of a black screen, with running apps and their icons on the left and keyboard layout, network, volume, search, date and time on the right">
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0" r="0.75">
+      <stop offset="0" stop-color="#1b1d24"/>
+      <stop offset="0.55" stop-color="#07080a"/>
+      <stop offset="1" stop-color="#000"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.11"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.42"/>
+      <stop offset="0.16" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="0.84" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.42"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-60%" width="110%" height="300%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
+      <feOffset dy="10"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.75"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="i1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a3c"/><stop offset="1" stop-color="#e2366b"/></linearGradient>
+    <linearGradient id="i2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ea8ff"/><stop offset="1" stop-color="#1f6fe0"/></linearGradient>
+    <linearGradient id="i3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3f4b"/><stop offset="1" stop-color="#1c1f26"/></linearGradient>
+    <linearGradient id="i4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ee38a"/><stop offset="1" stop-color="#1fa955"/></linearGradient>
+    <linearGradient id="i5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cff"/><stop offset="1" stop-color="#5a46e6"/></linearGradient>
+  </defs>
+
+  <rect width="1280" height="400" rx="20" fill="url(#glow)"/>
+
+  <!-- the bar -->
+  <g filter="url(#shadow)">
+    <rect x="28" y="26" width="1224" height="52" rx="26" fill="url(#glass)"/>
+    <rect x="28" y="26" width="1224" height="26" rx="13" fill="url(#sheen)" opacity="0.5"/>
+    <rect x="28.5" y="26.5" width="1223" height="51" rx="25.5" fill="none" stroke="url(#rim)"/>
+  </g>
+
+  <g font-family="Segoe UI Variable Text, Segoe UI, system-ui, -apple-system, sans-serif" font-size="16">
+    <!-- tray chevron and separator -->
+    <path d="M56 56l7-7 7 7" fill="none" stroke="#ececec" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="86" y="41" width="1" height="22" fill="#fff" opacity="0.14"/>
+
+    <!-- active app: pill, icon, bold name -->
+    <rect x="100" y="38" width="112" height="28" rx="14" fill="#fff" opacity="0.16"/>
+    <rect x="111" y="44" width="16" height="16" rx="4" fill="url(#i1)"/>
+    <circle cx="119" cy="52" r="4" fill="none" stroke="#fff" stroke-width="1.6"/>
+    <text x="135" y="57.5" fill="#fff" font-weight="600">Firefox</text>
+
+    <!-- other apps -->
+    <rect x="225" y="44" width="16" height="16" rx="4" fill="url(#i2)"/>
+    <path d="M230 49l-2.5 3 2.5 3M236 49l2.5 3-2.5 3" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="249" y="57.5" fill="#9a9a9a">Code</text>
+
+    <rect x="303" y="44" width="16" height="16" rx="4" fill="url(#i3)" stroke="#fff" stroke-opacity="0.25"/>
+    <path d="M306.5 49l3 3-3 3M311 55.5h4.5" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="327" y="57.5" fill="#9a9a9a">Terminal</text>
+
+    <rect x="410" y="44" width="16" height="16" rx="8" fill="url(#i4)"/>
+    <path d="M413.5 50.5c3-1 6-1 9 .6M414 53.3c2.4-.8 4.9-.8 7.4.5M414.6 56c1.8-.5 3.6-.5 5.4.4" fill="none" stroke="#0b2a17" stroke-width="1.3" stroke-linecap="round"/>
+    <text x="434" y="57.5" fill="#9a9a9a">Spotify</text>
+
+    <rect x="508" y="44" width="16" height="16" rx="4" fill="url(#i5)"/>
+    <path d="M512 55.5v-6l4 3.5 4-3.5v6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="532" y="57.5" fill="#9a9a9a">Discord</text>
+
+    <!-- right side -->
+    <text x="836" y="57.5" fill="#ececec">ENG</text>
+    <g fill="none" stroke="#ececec" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <!-- wi-fi with three bars -->
+      <path d="M887 49.5a13 13 0 0 1 18 0M890 53a8 8 0 0 1 12 0M893.2 56.4a3.4 3.4 0 0 1 5.6 0"/>
+      <!-- volume -->
+      <path d="M930 49h-4v6h4l6 5V44zM940.5 49a4.5 4.5 0 0 1 0 6M943.5 46.5a8 8 0 0 1 0 11"/>
+      <!-- search -->
+      <circle cx="975" cy="50" r="6"/>
+      <path d="M979.5 54.5l4.5 4.5"/>
+    </g>
+    <rect x="1006" y="41" width="1" height="22" fill="#fff" opacity="0.14"/>
+    <text x="1024" y="57.5" fill="#ececec">Mon Oct 26</text>
+    <text x="1144" y="57.5" fill="#fff" font-weight="700">09:41</text>
+  </g>
+
+
+  <!-- title -->
+  <g font-family="Segoe UI Variable Display, Segoe UI, system-ui, -apple-system, sans-serif" text-anchor="middle">
+    <text x="640" y="222" font-size="64" font-weight="600" fill="#fff" letter-spacing="-1.5">NewWin</text>
+    <text x="640" y="268" font-size="21" fill="#9a9a9a">A liquid-glass top bar that replaces the Windows 11 taskbar and Start menu</text>
+    <text x="640" y="330" font-size="14" fill="#6f6f6f" letter-spacing="2.2">RUST · WIN32 · DIRECT2D · DIRECTCOMPOSITION · NO RUNTIME · ~8 MB RAM</text>
+  </g>
+</svg>

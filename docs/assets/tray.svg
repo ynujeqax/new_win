@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 460" width="520" height="460" role="img" aria-label="The tray panel under the bar's chevron: NewWin, then Discord, Steam, NVIDIA Settings, Telegram Desktop and OneDrive, each with its own icon">
+  <defs>
+    <radialGradient id="bg" cx="0.2" cy="0" r="1">
+      <stop offset="0" stop-color="#17191f"/>
+      <stop offset="1" stop-color="#000"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.45"/>
+      <stop offset="0.35" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="barrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.42"/>
+      <stop offset="0.3" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.04"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="16"/>
+      <feOffset dy="12"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.8"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="nw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2e36"/><stop offset="1" stop-color="#0c0d10"/></linearGradient>
+    <linearGradient id="dc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cff"/><stop offset="1" stop-color="#5a46e6"/></linearGradient>
+    <linearGradient id="st" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a6fb0"/><stop offset="1" stop-color="#11284a"/></linearGradient>
+    <linearGradient id="nv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fd14f"/><stop offset="1" stop-color="#5a9e1f"/></linearGradient>
+    <linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#2393d8"/></linearGradient>
+    <linearGradient id="od" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fb4ff"/><stop offset="1" stop-color="#1d6fd6"/></linearGradient>
+  </defs>
+
+  <rect width="520" height="460" rx="20" fill="url(#bg)"/>
+
+  <!-- a piece of the bar, running off the right edge -->
+  <rect x="24" y="22" width="520" height="52" rx="26" fill="url(#glass)"/>
+  <rect x="24.5" y="22.5" width="519" height="51" rx="25.5" fill="none" stroke="url(#barrim)"/>
+  <rect x="40" y="35" width="34" height="26" rx="13" fill="#fff" opacity="0.16"/>
+  <path d="M50 52l7-7 7 7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 57 48.5)"/>
+  <rect x="86" y="37" width="1" height="22" fill="#fff" opacity="0.14"/>
+  <g font-family="Segoe UI Variable Text, Segoe UI, system-ui, -apple-system, sans-serif" font-size="16" fill="#9a9a9a">
+    <text x="104" y="53.5">Firefox</text>
+    <text x="186" y="53.5">Code</text>
+    <text x="250" y="53.5">Terminal</text>
+  </g>
+
+  <!-- the panel -->
+  <g filter="url(#shadow)">
+    <rect x="24" y="84" width="300" height="300" rx="16" fill="url(#glass)"/>
+    <rect x="24.5" y="84.5" width="299" height="299" rx="15.5" fill="none" stroke="url(#rim)"/>
+  </g>
+
+  <g font-family="Segoe UI Variable Text, Segoe UI, system-ui, -apple-system, sans-serif" font-size="15">
+    <!-- NewWin header -->
+    <rect x="44" y="104" width="16" height="16" rx="4" fill="url(#nw)" stroke="#fff" stroke-opacity="0.3"/>
+    <rect x="47" y="107" width="10" height="2.4" rx="1.2" fill="#fff"/>
+    <text x="70" y="117" fill="#fff" font-weight="600">NewWin</text>
+    <rect x="40" y="134" width="268" height="1" fill="#fff" opacity="0.12"/>
+
+    <!-- rows -->
+    <rect x="32" y="143" width="284" height="36" rx="8" fill="#fff" opacity="0.10"/>
+    <rect x="44" y="153" width="16" height="16" rx="4" fill="url(#dc)"/>
+    <path d="M48 164.5v-6l4 3.5 4-3.5v6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="70" y="166" fill="#fff">Discord</text>
+
+    <rect x="44" y="189" width="16" height="16" rx="8" fill="url(#st)"/>
+    <circle cx="54.5" cy="194.5" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/>
+    <circle cx="48.8" cy="200.5" r="1.6" fill="#fff"/>
+    <path d="M49.6 199.8l3.2-3.6" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
+    <text x="70" y="202" fill="#ececec">Steam</text>
+
+    <rect x="44" y="225" width="16" height="16" rx="4" fill="url(#nv)"/>
+    <path d="M47 233c3-4.5 7-4.5 10 0-3 4.5-7 4.5-10 0z" fill="none" stroke="#fff" stroke-width="1.3"/>
+    <circle cx="52" cy="233" r="1.6" fill="#fff"/>
+    <text x="70" y="238" fill="#ececec">NVIDIA Settings</text>
+
+    <rect x="44" y="261" width="16" height="16" rx="8" fill="url(#tg)"/>
+    <path d="M47.5 268.8l8.5-3.6-1.6 8.2-2.6-2.2-1.6 1.5v-2.4l3.6-3.2-4.6 2.6z" fill="#fff"/>
+    <text x="70" y="274" fill="#ececec">Telegram Desktop</text>
+
+    <rect x="44" y="297" width="16" height="16" rx="4" fill="url(#od)"/>
+    <path d="M48 309.5h8.5a2.6 2.6 0 0 0 .2-5.2 3.6 3.6 0 0 0-6.9-.9 2.9 2.9 0 0 0-1.8 6.1z" fill="#fff"/>
+    <text x="70" y="310" fill="#ececec">OneDrive</text>
+
+    <text x="44" y="356" font-size="12" fill="#6f6f6f">Left click: the app · Right click: its own menu</text>
+  </g>
+</svg>
