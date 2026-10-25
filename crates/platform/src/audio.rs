@@ -21,7 +21,7 @@ pub const AUDIO_DEVICES: usize = 2;
 const EVENT_CONTEXT: GUID = GUID::from_u128(0x5f3c_8a1e_2b7d_4c90_9e61_0a4d_b2c3_e7f8);
 
 /// `CPolicyConfigClient`: undocumented, but the only way to change the default device
-/// (checked on 26100 by `examples/audio_switch_probe.rs`).
+/// (checked on Windows 11 build 26100).
 const CLSID_POLICY_CONFIG: GUID = GUID::from_u128(0x870af99c_171d_4f9e_af0d_e63df40c2bc9);
 
 #[interface("f8679f50-850a-41cf-9c72-430f290290c8")]

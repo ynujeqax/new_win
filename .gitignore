@@ -1,3 +1,10 @@
 /target/
 .superpowers/
 .obsidian/
+# Working notes, specs and plans of the development process; local only.
+/docs/superpowers/
+# Experiments and debugging aids; local only.
+/crates/*/examples/
+/scripts/anim-window.ps1
+/scripts/repro-covered-bar.ps1
+/scripts/suspend-process.ps1

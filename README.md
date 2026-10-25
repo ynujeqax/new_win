@@ -111,7 +111,7 @@ You can open Settings from the tray (`⌃` → **NewWin**), from the bar's menu,
 
 ## Performance
 
-Measured on the author's machine (Windows 11, 16 logical CPUs). See the [acceptance notes](docs/superpowers/notes).
+Measured on the author's machine (Windows 11, 16 logical CPUs).
 
 | | Result |
 |---|---|
@@ -172,8 +172,6 @@ NewWin.exe  (watchdog)                     restarts the shell on a crash or hang
 | [`crates/ui`](crates/ui) | Direct2D / DirectComposition rendering, liquid glass, controls, windows |
 | [`apps/shell`](apps/shell) | The bar, Spotlight, tray panel, watchdog and icon helper (`NewWin.exe`) |
 | [`apps/settings`](apps/settings) | `NewWinSettings.exe` |
-
-Every milestone has a design document in [`docs/superpowers/specs`](docs/superpowers/specs), an implementation plan in [`docs/superpowers/plans`](docs/superpowers/plans), and measurement and acceptance notes in [`docs/superpowers/notes`](docs/superpowers/notes).
 
 ## Roadmap
 

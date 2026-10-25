@@ -115,7 +115,7 @@ impl Layer {
                     shift.AddVisual(&backdrop, false, None)?;
                     container.AddVisual(&shift, false, None)?;
                     root.AddVisual(&container, false, None)?;
-                    // Content above the glass, as verified in the own_blur_probe spike.
+                    // Content above the glass.
                     root.AddVisual(&content, true, &container)?;
                     Some(GlassParts { clip, shift, backdrop, image: None })
                 } else {

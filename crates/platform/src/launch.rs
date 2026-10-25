@@ -100,7 +100,7 @@ pub fn run(t: SystemTarget) -> Result<()> {
 }
 
 /// Win+N: Windows' notification center with the calendar (works with the taskbar hidden,
-/// checked by `examples/win_n_probe.rs`). Tagged, so our own hook ignores it.
+/// checked live). Tagged, so our own hook ignores it.
 pub fn open_notification_center() {
     const VK_LWIN: u16 = 0x5B;
     const VK_N: u16 = 0x4E;

@@ -111,7 +111,7 @@
 
 ## Швидкодія
 
-Заміряно на машині автора (Windows 11, 16 логічних ядер). Див. [нотатки приймання](docs/superpowers/notes).
+Заміряно на машині автора (Windows 11, 16 логічних ядер).
 
 | | Результат |
 |---|---|
@@ -172,8 +172,6 @@ NewWin.exe  (сторож)                       перезапускає shell 
 | [`crates/ui`](crates/ui) | Рендеринг Direct2D / DirectComposition, «рідке скло», елементи керування, вікна |
 | [`apps/shell`](apps/shell) | Бар, Spotlight, панель трею, сторож і помічник іконок (`NewWin.exe`) |
 | [`apps/settings`](apps/settings) | `NewWinSettings.exe` |
-
-Для кожного етапу є дизайн-документ у [`docs/superpowers/specs`](docs/superpowers/specs), план реалізації в [`docs/superpowers/plans`](docs/superpowers/plans), а заміри й приймання — у [`docs/superpowers/notes`](docs/superpowers/notes).
 
 ## План
 
