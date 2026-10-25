@@ -271,3 +271,21 @@ fn finds_a_message_only_window_by_class() {
     unsafe { SetParent(h, Some(HWND_MESSAGE)).unwrap() };
     assert_eq!(find_process_window(&[std::process::id()], "NewWin.MessageOnlyTest"), Some(h));
 }
+
+#[test]
+fn an_icon_the_app_destroys_right_away_still_draws() {
+    // Apps often call DestroyIcon right after Shell_NotifyIcon (explorer copies the icon).
+    let (fake, _) = fake_explorer();
+    let (h, _) = host(Forward::Window(fake));
+    let app_icon = unsafe { CopyIcon(LoadIconW(None, IDI_APPLICATION).unwrap()) }.unwrap();
+    let mut b = nid(0, 11, 1, NIF_TIP | NIF_ICON, "Telegram");
+    b[28..32].copy_from_slice(&(app_icon.0 as usize as u32).to_le_bytes());
+    assert_eq!(copydata(h.hwnd(), 1, &b), 1);
+    unsafe { DestroyIcon(app_icon).unwrap() };
+    let held = h.icons()[0].hicon;
+    assert_ne!(held, 0);
+    assert!(newwin_platform::app_icon::hicon_image(held, 16).is_some(), "the host keeps its own copy");
+    // Deleting the icon frees the copy.
+    copydata(h.hwnd(), 1, &nid(2, 11, 1, 0, ""));
+    assert!(newwin_platform::app_icon::hicon_image(held, 16).is_none(), "the copy is gone with the icon");
+}

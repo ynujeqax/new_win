@@ -79,10 +79,22 @@ fn makelong(lo: i32, hi: i32) -> isize {
 
 /// `dwData == 1`: update the model, queue a copy for explorer, answer from the model.
 fn on_notify(hwnd: HWND, bytes: &[u8]) -> isize {
-    let Ok(d) = parse_notify(bytes) else { return 0 };
+    let Ok(mut d) = parse_notify(bytes) else { return 0 };
     let pid = pid_of(HWND(d.hwnd as usize as *mut _));
+    // The app may destroy its icon as soon as this returns (explorer copies it): keep our own.
+    let copy = d.hicon.filter(|&h| h != 0).map(copy_icon);
+    if copy.is_some() {
+        d.hicon = copy;
+    }
     let applied = with_host(hwnd, |s| {
+        let before = s.model.get(&d.key).map(|i| i.hicon);
         let change = s.model.apply(&d, pid);
+        let after = s.model.get(&d.key).map(|i| i.hicon);
+        // The copy it replaced (or the icon's, when deleted), and a copy the model did not take.
+        if before != after {
+            before.into_iter().for_each(destroy_icon);
+        }
+        copy.filter(|&c| after != Some(c)).into_iter().for_each(destroy_icon);
         let _ = s.copies.send(bytes.to_vec());
         (change, s.notify, s.msg)
     });
@@ -276,7 +288,17 @@ impl TrayHost {
 
     /// Drops icons whose window is gone; true if any.
     pub fn prune(&self) -> bool {
-        with_host(self.hwnd, |s| s.model.prune(|h| unsafe { IsWindow(Some(HWND(h as usize as *mut _))) }.as_bool())).unwrap_or(false)
+        with_host(self.hwnd, |s| {
+            let before: Vec<(IconKey, u32)> = s.model.icons().iter().map(|i| (i.key, i.hicon)).collect();
+            let pruned = s.model.prune(|h| unsafe { IsWindow(Some(HWND(h as usize as *mut _))) }.as_bool());
+            for (key, hicon) in before {
+                if s.model.get(&key).is_none() {
+                    destroy_icon(hicon);
+                }
+            }
+            pruned
+        })
+        .unwrap_or(false)
     }
 
     /// The rectangle answered to `Shell_NotifyIconGetRect` (screen px).
@@ -442,4 +464,18 @@ pub fn find_process_window(pids: &[u32], class: &str) -> Option<HWND> {
         }
     }
     None
+}
+
+/// NewWin's own copy of an app's tray icon (0 when it cannot be copied: the handle is gone).
+fn copy_icon(hicon: u32) -> u32 {
+    unsafe { CopyIcon(HICON(hicon as i32 as isize as *mut _)) }.map_or(0, |c| c.0 as usize as u32)
+}
+
+/// Frees a copy made by [`copy_icon`]; 0 is nothing.
+fn destroy_icon(hicon: u32) {
+    if hicon != 0 {
+        unsafe {
+            let _ = DestroyIcon(HICON(hicon as i32 as isize as *mut _));
+        }
+    }
 }
