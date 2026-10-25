@@ -222,3 +222,29 @@ fn arrange_keeps_unknown_order_and_rows_without_exe() {
     let rows = vec![("a.exe".into(), 1), ("".into(), 2), ("b.exe".into(), 3), ("c.exe".into(), 4)];
     assert_eq!(arrange_rows(rows, &["c.exe".into(), "b.exe".into(), "zzz.exe".into()], &["".into()]), vec![4, 3, 1, 2]);
 }
+
+fn with_icon(mut b: Vec<u8>, hicon: u32) -> Vec<u8> {
+    b[28..32].copy_from_slice(&hicon.to_le_bytes());
+    b
+}
+
+#[test]
+fn the_icon_handle_is_parsed() {
+    let mut m = TrayModel::default();
+    let add = with_icon(nid(0, FULL, 5, 1, NIF_MESSAGE | NIF_ICON, 0x8001, "", (0, 0), 0, None), 0x0001_2345);
+    assert_eq!(m.apply(&parse_notify(&add).unwrap(), 9), Change::Added);
+    assert_eq!(m.icons()[0].hicon, 0x12345);
+}
+
+#[test]
+fn a_modify_without_nif_icon_keeps_the_handle() {
+    let mut m = TrayModel::default();
+    let add = with_icon(nid(0, FULL, 5, 1, NIF_ICON, 0, "", (0, 0), 0, None), 0x0001_2345);
+    m.apply(&parse_notify(&add).unwrap(), 9);
+    let tip = with_icon(nid(1, FULL, 5, 1, NIF_TIP, 0, "Telegram", (0, 0), 0, None), 0x0BAD);
+    m.apply(&parse_notify(&tip).unwrap(), 9);
+    assert_eq!(m.icons()[0].hicon, 0x12345, "no NIF_ICON: the field is not read");
+    let icon = with_icon(nid(1, FULL, 5, 1, NIF_ICON, 0, "", (0, 0), 0, None), 0x0006_7890);
+    assert_eq!(m.apply(&parse_notify(&icon).unwrap(), 9), Change::Updated);
+    assert_eq!(m.icons()[0].hicon, 0x67890);
+}

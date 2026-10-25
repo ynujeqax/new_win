@@ -6,6 +6,7 @@
 pub const TRAY_SIGNATURE: u32 = 0x3475_3423;
 
 pub const NIF_MESSAGE: u32 = 0x1;
+pub const NIF_ICON: u32 = 0x2;
 pub const NIF_TIP: u32 = 0x4;
 pub const NIF_STATE: u32 = 0x8;
 pub const NIF_GUID: u32 = 0x20;
@@ -24,6 +25,7 @@ const OFF_HWND: usize = 12;
 const OFF_ID: usize = 16;
 const OFF_FLAGS: usize = 20;
 const OFF_CALLBACK: usize = 24;
+const OFF_ICON: usize = 28;
 const OFF_TIP: usize = 32;
 const OFF_STATE: usize = 288;
 const OFF_STATE_MASK: usize = 292;
@@ -55,6 +57,8 @@ pub struct NotifyData {
     pub key: IconKey,
     pub flags: u32,
     pub callback_message: u32,
+    /// `hIcon` (32-bit; icon handles are shared by the whole session), with `NIF_ICON` only.
+    pub hicon: Option<u32>,
     pub tip: Option<String>,
     pub state: u32,
     pub state_mask: u32,
@@ -119,6 +123,7 @@ pub fn parse_notify(bytes: &[u8]) -> Result<NotifyData, ParseError> {
         key: guid.map_or(IconKey::Id { hwnd, id }, IconKey::Guid),
         flags,
         callback_message: u32_at(b, OFF_CALLBACK).unwrap_or(0),
+        hicon: (flags & NIF_ICON != 0).then(|| u32_at(b, OFF_ICON).unwrap_or(0)),
         tip,
         state: u32_at(b, OFF_STATE).unwrap_or(0),
         state_mask: u32_at(b, OFF_STATE_MASK).unwrap_or(0),
@@ -134,6 +139,8 @@ pub struct TrayIcon {
     pub uid: u32,
     pub pid: u32,
     pub callback_message: u32,
+    /// The icon the app gave the tray (0: none yet).
+    pub hicon: u32,
     pub tip: String,
     pub version: u32,
     pub hidden: bool,
@@ -166,6 +173,9 @@ impl TrayIcon {
         if d.flags & NIF_MESSAGE != 0 {
             self.callback_message = d.callback_message;
         }
+        if let Some(h) = d.hicon {
+            self.hicon = h;
+        }
         if d.flags & NIF_TIP != 0 {
             self.tip = d.tip.clone().unwrap_or_default();
         }
@@ -193,6 +203,7 @@ impl TrayModel {
                     uid: d.id,
                     pid,
                     callback_message: 0,
+                    hicon: 0,
                     tip: String::new(),
                     version: 0,
                     hidden: false,
@@ -314,6 +325,7 @@ impl KnownIcon {
             key,
             flags: NIF_MESSAGE | NIF_TIP,
             callback_message: self.callback_message,
+            hicon: None,
             tip: Some(self.tip.to_string()),
             state: 0,
             state_mask: 0,
