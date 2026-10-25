@@ -64,24 +64,35 @@
 
 ## Як запустити
 
-> **Статус:** особистий проєкт, лише Windows 11 і один монітор. Інсталятора ще немає — збирається з коду.
+> **Статус:** особистий проєкт, лише Windows 11 і один монітор.
 
-**Потрібно:** Windows 11, [Rust](https://rustup.rs) stable (MSVC).
+### Встановлення
+
+1. Візьміть `NewWin-Setup-<версія>.exe` — з [Releases](https://github.com/ynujeqax/new_win/releases) або зберіть сам (нижче).
+2. Запустіть його. Права адміністратора не потрібні: NewWin ставиться лише для вашого користувача, у `%LOCALAPPDATA%\Programs\NewWin` (папку можна змінити). Інсталятор поки без цифрового підпису, тож SmartScreen може попередити: **Докладніше → Усе одно запустити**.
+3. NewWin запускається одразу, а далі — разом із Windows. Новіший інсталятор поверх старого оновлює програму й зберігає налаштування.
+
+**Видалення** — у *Параметри → Програми → Інстальовані програми → NewWin*. Таскбар Windows повертається, а все, що записав NewWin, зникає, разом із налаштуваннями й журналами.
+
+Налаштування відкриваються з трею (`⌃` → **NewWin**), меню бару, Spotlight (`settings` або *NewWin Settings*) або повторним запуском `NewWin.exe`. *Start with Windows* — у Settings → Bar; *Restore Windows taskbar* у Settings → About закриває NewWin і повертає рідний таскбар.
+
+### Збірка з коду
+
+**Потрібно:** Windows 11, [Rust](https://rustup.rs) stable (MSVC); для інсталятора — [Inno Setup 7](https://jrsoftware.org/isdl.php).
 
 ```powershell
 git clone https://github.com/ynujeqax/new_win.git
 cd new_win
 cargo build --release --workspace
-.\target\release\NewWin.exe
+.\target\release\NewWin.exe                 # запуск із папки збірки
+.\scripts\build-installer.ps1               # або зібрати target\installer\NewWin-Setup-<версія>.exe
 ```
 
-Поки NewWin працює, рідний таскбар схований. Повернути його будь-коли:
+Поки NewWin працює, рідний таскбар схований. Закрити NewWin і повернути таскбар будь-коли:
 
 ```powershell
-.\target\release\NewWin.exe --restore-taskbar
+.\target\release\NewWin.exe --quit
 ```
-
-Налаштування відкриваються з трею (`⌃` → **NewWin**), меню бару, Spotlight (`settings`) або повторним запуском `NewWin.exe`. *Start with Windows* — у Settings → Bar.
 
 ### Файли
 
@@ -118,7 +129,7 @@ NewWin.exe (сторож) ──запускає──▶ NewWin.exe --shell ◀
 - [x] **M2** — трей, мережа, гучність, розкладка
 - [x] **M3** — Spotlight
 - [x] **M4** — вікно налаштувань, живий конфіг
-- [ ] Інсталятор (`.exe` з вибором папки)
+- [x] **M5** — інсталятор, видалення з поверненням таскбару, полірування
 - [ ] Кілька моніторів
 
 ## Розробка

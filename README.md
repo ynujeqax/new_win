@@ -72,24 +72,35 @@ No polling: everything is event-driven (WinEvents, change notifications, shell h
 
 ## Getting started
 
-> **Status:** personal project, Windows 11 only, single monitor. There is no installer yet — you build it yourself.
+> **Status:** personal project, Windows 11 only, single monitor.
 
-**Requirements:** Windows 11, [Rust](https://rustup.rs) stable (MSVC toolchain).
+### Install
+
+1. Get `NewWin-Setup-<version>.exe` — from [Releases](https://github.com/ynujeqax/new_win/releases), or build it yourself (below).
+2. Run it. No admin rights are needed: NewWin installs for your user only, into `%LOCALAPPDATA%\Programs\NewWin` (you can pick another folder). Setup is not code-signed yet, so SmartScreen may warn: **More info → Run anyway**.
+3. NewWin starts right away and with Windows from then on. Running a newer Setup over it updates it and keeps your settings.
+
+**Uninstall** from *Settings → Apps → Installed apps → NewWin*. The Windows taskbar comes back and everything NewWin wrote is removed, settings and logs included.
+
+Open Settings from the tray (`⌃` → **NewWin**), the bar's menu, Spotlight (`settings` or *NewWin Settings*), or by launching `NewWin.exe` again. *Start with Windows* lives in Settings → Bar; *Restore Windows taskbar* in Settings → About quits NewWin and brings the native taskbar back.
+
+### Build from source
+
+**Requirements:** Windows 11, [Rust](https://rustup.rs) stable (MSVC toolchain); [Inno Setup 7](https://jrsoftware.org/isdl.php) for the installer.
 
 ```powershell
 git clone https://github.com/ynujeqax/new_win.git
 cd new_win
 cargo build --release --workspace
-.\target\release\NewWin.exe
+.\target\release\NewWin.exe                 # run it from the build folder
+.\scripts\build-installer.ps1               # or make target\installer\NewWin-Setup-<version>.exe
 ```
 
-The native taskbar is hidden while NewWin runs. To get it back at any time:
+The native taskbar is hidden while NewWin runs. To quit NewWin and get it back at any time:
 
 ```powershell
-.\target\release\NewWin.exe --restore-taskbar
+.\target\release\NewWin.exe --quit
 ```
-
-Open Settings from the tray (`⌃` → **NewWin**), the bar's menu, Spotlight (`settings`), or by launching `NewWin.exe` again. *Start with Windows* lives in Settings → Bar.
 
 ### Files
 
@@ -126,7 +137,7 @@ Design documents for every milestone live in [`docs/superpowers/specs`](docs/sup
 - [x] **M2** — tray, network, volume, keyboard layout
 - [x] **M3** — Spotlight
 - [x] **M4** — Settings window, live config
-- [ ] Installer (`.exe` with folder choice)
+- [x] **M5** — installer, uninstall that restores the taskbar, polish
 - [ ] Multiple monitors
 
 ## Development
