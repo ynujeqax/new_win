@@ -11,8 +11,9 @@ use windows::Win32::Foundation::{COLORREF, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::Graphics::Gdi::{BeginPaint, CreateSolidBrush, DeleteObject, EndPaint, FillRect, InvalidateRect, PAINTSTRUCT};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::HiDpi::{DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext};
+use windows::Win32::Graphics::Dwm::{DWMWA_TRANSITIONS_FORCEDISABLED, DwmSetWindowAttribute};
 use windows::Win32::UI::WindowsAndMessaging::*;
-use windows::core::w;
+use windows::core::{BOOL, w};
 
 const MSG_GLASS: u32 = WM_APP + 6;
 const RED: u32 = 0x0000_00FF;
@@ -44,7 +45,9 @@ struct Scene {
 }
 
 impl Scene {
-    /// A 400x100 topmost window at (300, 300) and a message-only window receiving frames.
+    /// A 440x140 topmost window at (280, 280), covering the whole capture area of [`Scene::region`]
+    /// (296..704 x 296..404) so nothing else on screen shows in a frame, and a message-only window
+    /// receiving frames. DWM transitions are off: a window fading in or out would change the frames.
     fn new() -> Scene {
         let screen = SCREEN.lock().unwrap_or_else(|e| e.into_inner());
         unsafe {
@@ -55,10 +58,13 @@ impl Scene {
             COLOR.store(RED, Ordering::Relaxed);
             let painted = CreateWindowExW(
                 WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
-                w!("NewWinBackdropTest"), w!("red"), WS_POPUP | WS_VISIBLE,
-                300, 300, 400, 100, None, None, Some(inst.into()), None,
+                w!("NewWinBackdropTest"), w!("red"), WS_POPUP,
+                280, 280, 440, 140, None, None, Some(inst.into()), None,
             )
             .unwrap();
+            let off = BOOL::from(true);
+            let _ = DwmSetWindowAttribute(painted, DWMWA_TRANSITIONS_FORCEDISABLED, (&raw const off).cast(), size_of::<BOOL>() as u32);
+            let _ = ShowWindow(painted, SW_SHOWNA);
             let notify = CreateWindowExW(Default::default(), w!("STATIC"), w!("notify"), WINDOW_STYLE(0), 0, 0, 0, 0, Some(HWND_MESSAGE), None, Some(inst.into()), None).unwrap();
             let s = Scene { painted, notify, _screen: screen };
             s.pump(Duration::from_millis(300));

@@ -3,15 +3,42 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use newwin_config::tray_seen::*;
 
-fn temp_file(text: Option<&str>) -> PathBuf {
+/// A file in a directory of its own, removed with it when the test ends (even on a panic).
+struct TempFile {
+    dir: PathBuf,
+    path: PathBuf,
+}
+
+impl std::ops::Deref for TempFile {
+    type Target = std::path::Path;
+    fn deref(&self) -> &std::path::Path {
+        &self.path
+    }
+}
+
+impl AsRef<std::path::Path> for TempFile {
+    fn as_ref(&self) -> &std::path::Path {
+        &self.path
+    }
+}
+
+impl Drop for TempFile {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.dir);
+    }
+}
+
+fn temp_file(text: Option<&str>) -> TempFile {
     static N: AtomicU32 = AtomicU32::new(0);
     let dir = std::env::temp_dir().join(format!("newwin-trayseen-test-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+    // A directory left by an earlier run with the same pid must not count as this test's file.
+    let _ = std::fs::remove_dir_all(&dir);
     let path = dir.join("tray_seen.toml");
     if let Some(t) = text {
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(&path, t).unwrap();
     }
-    path
+    TempFile { dir, path }
 }
 
 #[test]

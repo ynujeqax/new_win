@@ -56,12 +56,38 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    /// A fresh directory per test; the file inside does not exist yet.
-    fn temp_file(name: &str) -> PathBuf {
+    /// `config.toml` in a fresh directory of its own (the file does not exist yet); the directory
+    /// goes when the test ends, even on a panic.
+    struct TempFile {
+        dir: PathBuf,
+        path: PathBuf,
+    }
+
+    impl std::ops::Deref for TempFile {
+        type Target = Path;
+        fn deref(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl AsRef<Path> for TempFile {
+        fn as_ref(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for TempFile {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.dir);
+        }
+    }
+
+    fn temp_file(name: &str) -> TempFile {
         let dir = std::env::temp_dir().join(format!("newwin-settings-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        dir.join("config.toml")
+        let path = dir.join("config.toml");
+        TempFile { dir, path }
     }
 
     fn mtime(path: &Path) -> std::time::SystemTime {
