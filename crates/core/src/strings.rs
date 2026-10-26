@@ -1,6 +1,8 @@
 //! UI strings. The language follows the Windows display language; English is the fallback.
 
 pub struct Strings {
+    /// The Ukrainian strings (settings pages and emoji are then named in Ukrainian).
+    pub ukrainian: bool,
     // App item menu
     pub new_window: &'static str,
     pub close: &'static str,
@@ -50,6 +52,7 @@ pub struct Strings {
     pub kind_system: &'static str,
     pub kind_calculator: &'static str,
     pub kind_conversion: &'static str,
+    pub kind_settings_page: &'static str,
     pub press_again_shut_down: &'static str,
     pub press_again_restart: &'static str,
     pub spotlight_keys: &'static str,
@@ -120,6 +123,7 @@ pub struct Strings {
 }
 
 static EN: Strings = Strings {
+    ukrainian: false,
     new_window: "New window",
     close: "Close",
     close_all_windows: "Close all windows",
@@ -163,6 +167,7 @@ static EN: Strings = Strings {
     kind_system: "System",
     kind_calculator: "Calculator",
     kind_conversion: "Conversion",
+    kind_settings_page: "Settings",
     press_again_shut_down: "Press ↵ again to shut down",
     press_again_restart: "Press ↵ again to restart",
     spotlight_keys: "↑↓ select · ↵ open · Ctrl ↵ run as administrator · Esc close",
@@ -226,6 +231,7 @@ static EN: Strings = Strings {
 };
 
 static UK: Strings = Strings {
+    ukrainian: true,
     new_window: "Нове вікно",
     close: "Закрити",
     close_all_windows: "Закрити всі вікна",
@@ -269,6 +275,7 @@ static UK: Strings = Strings {
     kind_system: "Система",
     kind_calculator: "Калькулятор",
     kind_conversion: "Конвертер",
+    kind_settings_page: "Параметри",
     press_again_shut_down: "Натисніть ↵ ще раз, щоб завершити роботу",
     press_again_restart: "Натисніть ↵ ще раз, щоб перезавантажити",
     spotlight_keys: "↑↓ вибір · ↵ відкрити · Ctrl ↵ від імені адміністратора · Esc закрити",

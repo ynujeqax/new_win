@@ -33,6 +33,8 @@ pub enum SystemCommand {
 pub enum Kind {
     App,
     System(SystemCommand),
+    /// A Windows Settings page: index into [`crate::settings_pages::PAGES`].
+    SettingsPage(usize),
 }
 
 /// One thing Spotlight can find: an app from `shell:AppsFolder` or a system command.
@@ -46,6 +48,9 @@ pub struct Candidate {
     pub file_path: Option<String>,
     /// A packaged (UWP) app.
     pub packaged: bool,
+    /// More words it is found by (a settings page's other-language name and synonyms); a match
+    /// through one bolds nothing.
+    pub words: Vec<String>,
 }
 
 impl Candidate {
@@ -64,6 +69,7 @@ impl Candidate {
                     SystemCommand::SignOut => "sign_out",
                 }
             ),
+            Kind::SettingsPage(i) => format!("settings:{}", crate::settings_pages::PAGES.get(i).map_or("", |p| p.uri.trim_start_matches("ms-settings:"))),
         }
     }
 
@@ -194,15 +200,27 @@ fn rank_one(query: &str, cands: &[Candidate], launches: &dyn Fn(&str) -> u32) ->
     if q.is_empty() {
         return Vec::new();
     }
-    // (sort key, hit): level, more launches, apps before system commands, name, position.
-    type Key = (MatchLevel, Reverse<u32>, bool, Vec<char>, usize);
+    // (sort key, hit): level, more launches, apps then settings pages then system commands, name,
+    // position.
+    type Key = (MatchLevel, Reverse<u32>, u8, Vec<char>, usize);
     let mut found: Vec<(Key, Hit)> = Vec::new();
     for (i, c) in cands.iter().enumerate() {
         let name = folded(&c.name);
-        if let Some(m) = match_folded(&name, &q) {
-            let system = matches!(c.kind, Kind::System(_));
-            found.push(((m.level, Reverse(launches(&c.usage_key())), system, name.chars, i), Hit { index: i, ranges: m.ranges }));
-        }
+        let by_name = match_folded(&name, &q);
+        // A word only counts when it matches better than the name; it has nothing to bold.
+        let by_word = c.words.iter().filter_map(|w| match_folded(&folded(w), &q)).map(|m| m.level).min();
+        let m = match (by_name, by_word) {
+            (Some(n), Some(w)) if w < n.level => Match { level: w, ranges: Vec::new() },
+            (Some(n), _) => n,
+            (None, Some(w)) => Match { level: w, ranges: Vec::new() },
+            (None, None) => continue,
+        };
+        let order = match c.kind {
+            Kind::App => 0,
+            Kind::SettingsPage(_) => 1,
+            Kind::System(_) => 2,
+        };
+        found.push(((m.level, Reverse(launches(&c.usage_key())), order, name.chars, i), Hit { index: i, ranges: m.ranges }));
     }
     found.sort_by(|a, b| a.0.cmp(&b.0));
     found.into_iter().map(|(_, h)| h).collect()
@@ -237,7 +255,7 @@ pub fn system_candidates(s: &Strings) -> Vec<Candidate> {
     [(Settings, s.spotlight_newwin_settings), (ShutDown, s.shut_down), (Restart, s.restart), (Sleep, s.sleep), (Lock, s.lock), (SignOut, s.sign_out)]
         .into_iter()
         .map(|(cmd, name)| {
-            let mut c = Candidate { name: name.to_string(), id: String::new(), kind: Kind::System(cmd), file_path: None, packaged: false };
+            let mut c = Candidate { name: name.to_string(), id: String::new(), kind: Kind::System(cmd), file_path: None, packaged: false, words: Vec::new() };
             c.id = c.usage_key();
             c
         })

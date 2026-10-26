@@ -102,7 +102,7 @@ fn spotlight() {
     use newwin_core::spotlight::{Candidate, Kind};
     use newwin_ui::panel::{PanelContent, PanelInput};
     let gfx = Gfx::new().unwrap();
-    let app = |n: &str| Candidate { name: n.into(), id: format!("id:{n}"), kind: Kind::App, file_path: None, packaged: false };
+    let app = |n: &str| Candidate { name: n.into(), id: format!("id:{n}"), kind: Kind::App, file_path: None, packaged: false, words: Vec::new() };
     let catalog = std::rc::Rc::new(vec![app("Steam"), app("Steam Support Center"), app("Settings"), app("Snipping Tool"), app("Services")]);
     let labels = newwin_ui::spotlight::SpotlightLabels {
         hint: "Search apps".into(),

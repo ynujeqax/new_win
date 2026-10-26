@@ -58,7 +58,7 @@ pub fn enumerate_apps() -> Result<Vec<Candidate>> {
         if !is_listed(&name, file_path.as_deref()) || out.iter().any(|c| c.id.eq_ignore_ascii_case(&id)) {
             continue;
         }
-        out.push(Candidate { name, id, kind: Kind::App, file_path, packaged });
+        out.push(Candidate { name, id, kind: Kind::App, file_path, packaged, words: Vec::new() });
     }
     Ok(out)
 }

@@ -3,7 +3,7 @@ use newwin_core::apps::GroupKey;
 use newwin_core::spotlight::{Candidate, Kind, SystemCommand};
 
 fn app(id: &str) -> Candidate {
-    Candidate { name: "x".into(), id: id.into(), kind: Kind::App, file_path: None, packaged: false }
+    Candidate { name: "x".into(), id: id.into(), kind: Kind::App, file_path: None, packaged: false, words: Vec::new() }
 }
 
 fn tray(h: u32) -> IconKey {

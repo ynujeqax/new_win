@@ -11,7 +11,7 @@ const UP: u16 = 0x26;
 const DOWN: u16 = 0x28;
 
 fn app(name: &str, file: Option<&str>, packaged: bool) -> Candidate {
-    Candidate { name: name.into(), id: format!("id:{name}"), kind: Kind::App, file_path: file.map(str::to_string), packaged }
+    Candidate { name: name.into(), id: format!("id:{name}"), kind: Kind::App, file_path: file.map(str::to_string), packaged, words: Vec::new() }
 }
 
 fn catalog() -> Rc<Vec<Candidate>> {
@@ -214,8 +214,8 @@ fn view_draws_with_text() {
 #[test]
 fn shown_lists_the_visible_rows_with_their_icon_source() {
     let mut c = vec![
-        Candidate { name: "Claude".into(), id: "Claude_pzs8!Claude".into(), kind: Kind::App, file_path: None, packaged: true },
-        Candidate { name: "Claude".into(), id: r"{A77F}\Claude.lnk".into(), kind: Kind::App, file_path: None, packaged: false },
+        Candidate { name: "Claude".into(), id: "Claude_pzs8!Claude".into(), kind: Kind::App, file_path: None, packaged: true, words: Vec::new() },
+        Candidate { name: "Claude".into(), id: r"{A77F}\Claude.lnk".into(), kind: Kind::App, file_path: None, packaged: false, words: Vec::new() },
     ];
     c.extend(system_candidates(strings_for("en")));
     let c = Rc::new(c);

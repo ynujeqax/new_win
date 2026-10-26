@@ -15,6 +15,7 @@ pub mod layout;
 pub mod media;
 pub mod network;
 pub mod quit;
+pub mod settings_pages;
 pub mod spotlight;
 pub mod steam;
 pub mod strings;

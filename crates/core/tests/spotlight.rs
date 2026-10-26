@@ -1,7 +1,7 @@
 use newwin_core::spotlight::*;
 
 fn app(name: &str) -> Candidate {
-    Candidate { name: name.into(), id: name.into(), kind: Kind::App, file_path: None, packaged: false }
+    Candidate { name: name.into(), id: name.into(), kind: Kind::App, file_path: None, packaged: false, words: Vec::new() }
 }
 
 fn none(_: &str) -> u32 {
