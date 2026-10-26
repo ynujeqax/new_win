@@ -164,3 +164,25 @@ pub fn run_settings(exe: &std::path::Path) -> std::io::Result<()> {
     }
     std::process::Command::new(exe).spawn().map(|_| ())
 }
+
+/// `%VARIABLES%` in a path replaced with their values; the text as is when Windows cannot.
+pub fn expand_env(path: &str) -> String {
+    use windows::Win32::System::Environment::ExpandEnvironmentStringsW;
+    let src = HSTRING::from(path);
+    let mut buf = vec![0u16; 1024];
+    let n = unsafe { ExpandEnvironmentStringsW(&src, Some(&mut buf)) } as usize;
+    if n == 0 || n > buf.len() {
+        return path.to_string();
+    }
+    String::from_utf16_lossy(&buf[..n - 1])
+}
+
+/// Opens a URL or a `ms-settings:` page with whatever handles it (the default browser).
+pub fn open_uri(uri: &str) -> Result<()> {
+    shell_execute("open", uri, "")
+}
+
+/// Opens a folder or file, `%VARIABLES%` expanded.
+pub fn open_path(path: &str) -> Result<()> {
+    shell_execute("open", &expand_env(path), "")
+}
