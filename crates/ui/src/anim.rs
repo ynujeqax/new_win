@@ -24,6 +24,35 @@ fn ease_out(gfx: &Gfx, from: f32, to: f32, ms: u32) -> Result<IDCompositionAnima
     Ok(anim)
 }
 
+/// Ease-out "back": overshoots `to` slightly before settling, like a spring.
+/// v(u) = from + Δ·((c+3)u − (2c+3)u² + (c+1)u³), u = t/T; peaks about 2.5 % past `to` for c = 0.8.
+fn ease_out_back(gfx: &Gfx, from: f32, to: f32, ms: u32) -> Result<IDCompositionAnimation> {
+    const C: f64 = 0.8;
+    let anim = unsafe { gfx.devices()?.dcomp.CreateAnimation()? };
+    let t = (ms.max(1) as f64) / 1000.0;
+    let d = (to - from) as f64;
+    unsafe {
+        anim.AddCubic(0.0, from, (d * (C + 3.0) / t) as f32, (-d * (2.0 * C + 3.0) / (t * t)) as f32, (d * (C + 1.0) / (t * t * t)) as f32)?;
+        anim.End(t, to)?;
+    }
+    Ok(anim)
+}
+
+/// Scales `v` about `center` from `from` to `to`; `spring` overshoots a little on the way
+/// (opening), otherwise it eases out (closing).
+pub fn scale(gfx: &Gfx, v: &IDCompositionVisual2, from: f32, to: f32, ms: u32, center: (f32, f32), spring: bool) -> Result<()> {
+    let t = unsafe { gfx.devices()?.dcomp.CreateScaleTransform()? };
+    let curve = |a: f32, b: f32| if spring { ease_out_back(gfx, a, b, ms) } else { ease_out(gfx, a, b, ms) };
+    unsafe {
+        t.SetCenterX2(center.0)?;
+        t.SetCenterY2(center.1)?;
+        t.SetScaleX(&curve(from, to)?)?;
+        t.SetScaleY(&curve(from, to)?)?;
+        v.SetTransform(&t)?;
+    }
+    gfx.commit()
+}
+
 pub fn slide_y(gfx: &Gfx, v: &IDCompositionVisual2, from: f32, to: f32, ms: u32) -> Result<()> {
     let anim = ease_out(gfx, from, to, ms)?;
     unsafe { v.SetOffsetY(&anim)? };

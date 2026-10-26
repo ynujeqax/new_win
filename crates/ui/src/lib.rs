@@ -19,6 +19,7 @@ pub mod popup;
 pub mod preview;
 pub mod reorder_list;
 pub mod scroll;
+pub mod shadow;
 pub mod segmented;
 pub mod slider;
 pub mod spotlight;
@@ -31,7 +32,7 @@ pub mod text_field;
 pub mod theme;
 pub mod toggle;
 
-pub use anim::{ease_out_progress, fade, set_offset_opacity, slide_y, slide_y_both};
+pub use anim::{ease_out_progress, fade, scale, set_offset_opacity, slide_y, slide_y_both};
 pub use geom::{Color, PointF, RectF};
 pub use glass::{glass_tint, paint_glass};
 pub use gfx::Gfx;

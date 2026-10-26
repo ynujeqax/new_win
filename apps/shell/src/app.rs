@@ -22,6 +22,7 @@ use newwin_platform::windows_watch::{AppNames, WindowWatcher, enumerate_top_leve
 use newwin_platform::worker::{Worker, take_resolved};
 use newwin_ui::backdrop::{Backdrops, Region};
 use newwin_ui::popup::Popup;
+use newwin_ui::shadow::Shadow;
 use newwin_ui::tooltip::Tooltip;
 use newwin_ui::{Backdrop, Gfx, Layer, PointF, TextCache};
 use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, FILETIME, GetLastError, HWND, LPARAM, LRESULT, RECT, WPARAM};
@@ -117,6 +118,8 @@ pub struct App {
     ping: HWND,
     bar: HWND,
     bar_layer: Option<Layer>,
+    /// The soft shadow under the floating bar.
+    bar_shadow: Option<Shadow>,
     bar_rect: RECT,
     monitor: RECT,
     dpi: u32,
@@ -224,6 +227,20 @@ impl App {
         if let Some(layer) = self.bar_layer.as_mut() {
             let _ = layer.resize((r.right - r.left) as u32, (r.bottom - r.top) as u32);
             let _ = layer.set_corner_radius(scale(self.config.appearance.corner_radius, dpi));
+        }
+        let radius = scale(self.config.appearance.corner_radius, dpi);
+        match self.bar_shadow.as_mut() {
+            Some(sh) => sh.follow(r, radius),
+            None if self.bar_layer.is_some() => {
+                self.bar_shadow = Shadow::new(&self.gfx, self.bar, r, radius, dpi).map_err(|e| log::warn!("bar shadow: {e}")).ok();
+                // Visible exactly when the bar is.
+                if unsafe { IsWindowVisible(self.bar) }.as_bool()
+                    && let Some(sh) = self.bar_shadow.as_mut()
+                {
+                    sh.set_offset_opacity(0.0, 1.0);
+                }
+            }
+            None => {}
         }
         self.set_catcher(self.catcher_mode);
         self.reserve_space();
@@ -586,6 +603,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         ping: HWND::default(),
         bar: HWND::default(),
         bar_layer: None,
+        bar_shadow: None,
         bar_rect: RECT::default(),
         monitor: RECT::default(),
         dpi: 96,

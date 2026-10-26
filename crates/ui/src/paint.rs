@@ -1,7 +1,8 @@
 //! Drawing primitives in physical pixels.
 
-use windows::Win32::Graphics::Direct2D::Common::{D2D_RECT_F, D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN};
+use windows::Win32::Graphics::Direct2D::Common::{D2D_RECT_F, D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN, D2D1_GRADIENT_STOP};
 use windows::Win32::Graphics::Direct2D::*;
+use windows::core::Interface;
 use windows_numerics::Vector2;
 
 use std::rc::Rc;
@@ -56,6 +57,21 @@ impl<'a> Painter<'a> {
 
     pub fn fill_round_rect(&mut self, r: RectF, radius: f32, c: Color) {
         let Some(b) = self.brush(c) else { return };
+        let rr = D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: radius, radiusY: radius };
+        unsafe { self.dc.FillRoundedRectangle(&rr, &b) };
+    }
+
+    /// Like [`Self::fill_round_rect`], shading from `top` at the top edge to `bottom` at the bottom.
+    pub fn fill_round_rect_v(&mut self, r: RectF, radius: f32, top: Color, bottom: Color) {
+        let stops = [D2D1_GRADIENT_STOP { position: 0.0, color: top.d2d() }, D2D1_GRADIENT_STOP { position: 1.0, color: bottom.d2d() }];
+        let brush = unsafe {
+            // The two-argument form lives on the plain render target.
+            let Ok(rt) = self.dc.cast::<ID2D1RenderTarget>() else { return };
+            let Ok(coll) = rt.CreateGradientStopCollection(&stops, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP) else { return };
+            let props = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES { startPoint: Vector2 { X: 0.0, Y: r.y }, endPoint: Vector2 { X: 0.0, Y: r.y + r.h } };
+            self.dc.CreateLinearGradientBrush(&props, None, &coll)
+        };
+        let Ok(b) = brush else { return };
         let rr = D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: radius, radiusY: radius };
         unsafe { self.dc.FillRoundedRectangle(&rr, &b) };
     }

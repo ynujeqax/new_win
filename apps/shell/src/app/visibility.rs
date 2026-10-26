@@ -122,11 +122,18 @@ impl App {
                     let _ = ShowWindow(self.bar, SW_SHOWNOACTIVATE);
                 }
             }
+            if let Some(sh) = self.bar_shadow.as_mut() {
+                sh.stay_under();
+                sh.animate(from_y, 0.0, from_opacity, 1.0, theme::REVEAL_MS);
+            }
             slide_y_both(&self.gfx, &visual, backdrop.as_ref(), from_y, 0.0, theme::REVEAL_MS)
                 .and_then(|_| fade(&self.gfx, &visual, from_opacity, 1.0, theme::REVEAL_MS))
         } else {
             self.hide_started = Some(std::time::Instant::now());
             unsafe { SetTimer(Some(self.bar), HIDE_WINDOW_TIMER, theme::HIDE_MS + 20, None) };
+            if let Some(sh) = self.bar_shadow.as_mut() {
+                sh.animate(0.0, hidden, 1.0, 0.0, theme::HIDE_MS);
+            }
             slide_y_both(&self.gfx, &visual, backdrop.as_ref(), 0.0, hidden, theme::HIDE_MS).and_then(|_| fade(&self.gfx, &visual, 1.0, 0.0, theme::HIDE_MS))
         };
         if let Err(e) = r {
@@ -227,6 +234,10 @@ impl App {
                         if fs {
                             let _ = SetWindowPos(self.bar, Some(HWND_BOTTOM), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                         }
+                    }
+                    // The shadow goes with the bar, under a full-screen app too.
+                    if let Some(sh) = &self.bar_shadow {
+                        sh.stay_under();
                     }
                 }
                 self.feed(VisInput::Fullscreen(fs));

@@ -19,6 +19,7 @@ use windows::core::Result;
 use crate::backdrop::Frame;
 use crate::popup::{CLOSED, PICKED, REGIONS};
 use crate::win_loop::{Frames, Mouse, REVEAL_TIMER, end_clear, start_clear};
+use crate::shadow::Shadow;
 use crate::{Backdrop, Gfx, Layer, Painter, PointF, RectF, fade, paint_glass, slide_y_both, theme};
 
 const CLOSE_TIMER: usize = 2;
@@ -104,6 +105,7 @@ struct State<C> {
     shown: std::time::Instant,
     /// Shown but clear until its first glass frame (`show_after_glass`).
     waiting: bool,
+    shadow: Option<Shadow>,
 }
 
 pub struct Panel<C: PanelContent + 'static> {
@@ -145,6 +147,7 @@ impl<C: PanelContent + 'static> Panel<C> {
             held: false,
             shown: started,
             waiting: wait_glass,
+            shadow: None,
         }));
         let hwnd = create_window(
             &WindowSpec {
@@ -162,6 +165,7 @@ impl<C: PanelContent + 'static> Panel<C> {
             let mut layer = Layer::new(gfx, hwnd, Backdrop::Glass, size.0 as u32, size.1 as u32)?;
             layer.set_corner_radius(radius_for(size.1, dpi))?;
             s.layer = Some(layer);
+            s.shadow = Shadow::new(gfx, hwnd, r, radius_for(size.1, dpi), dpi).map_err(|e| log::warn!("panel shadow: {e}")).ok();
             s.paint();
             if wait_glass {
                 s.hide_until_glass();
@@ -173,6 +177,9 @@ impl<C: PanelContent + 'static> Panel<C> {
         unsafe {
             let _ = ShowWindow(hwnd, SW_SHOW);
             let _ = SetForegroundWindow(hwnd);
+        }
+        if let Some(sh) = &state.borrow().shadow {
+            sh.stay_under();
         }
         Ok(Panel { state, hwnd })
     }
@@ -221,6 +228,7 @@ impl<C: PanelContent + 'static> Drop for Panel<C> {
     fn drop(&mut self) {
         if let Ok(mut s) = self.state.try_borrow_mut() {
             s.closed = true;
+            s.shadow = None;
         }
         unsafe {
             if IsWindow(Some(self.hwnd)).as_bool() {
@@ -266,10 +274,12 @@ impl<C: PanelContent + 'static> GlassWindow for Panel<C> {
     }
 
     fn set_capturable(&self, on: bool) {
-        if let Ok(s) = self.state.try_borrow()
-            && let Some(layer) = s.layer.as_ref()
-        {
+        let Ok(s) = self.state.try_borrow() else { return };
+        if let Some(layer) = s.layer.as_ref() {
             layer.set_capturable(on);
+        }
+        if let Some(sh) = &s.shadow {
+            sh.set_capturable(on);
         }
     }
 
@@ -333,6 +343,15 @@ impl<C: PanelContent> State<C> {
         let (Ok(root), Ok(inner)) = (layer.visual(), layer.backdrop_visual()) else { return };
         let (from, to, o0, o1, ms) = if show { (drop, 0.0, 0.0, 1.0, theme::PANEL_SHOW_MS) } else { (0.0, drop, 1.0, 0.0, theme::PANEL_HIDE_MS) };
         let r = slide_y_both(&self.gfx, &root, inner.as_ref(), from, to, ms).and_then(|_| fade(&self.gfx, &root, o0, o1, ms));
+        // Opening springs up from a little smaller; closing shrinks a touch as it fades.
+        let (s0, s1) = if show { (theme::OPEN_SCALE, 1.0) } else { (1.0, theme::CLOSE_SCALE) };
+        if let Err(e) = crate::scale(&self.gfx, &root, s0, s1, ms, (self.size.0 / 2.0, 0.0), show) {
+            log::warn!("panel scale failed: {e}");
+        }
+        if let Some(sh) = self.shadow.as_mut() {
+            sh.animate(from, to, o0, o1, ms);
+            sh.scale(s0, s1, ms, show);
+        }
         if let Err(e) = r {
             log::warn!("panel animation failed: {e}");
         }
@@ -374,6 +393,9 @@ impl<C: PanelContent> State<C> {
             let (mon, _) = primary_monitor();
             let r = panel_rect(PointF { x: cx, y: wr.top as f32 }, size, mon);
             let _ = SetWindowPos(self.hwnd, None, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOACTIVATE | SWP_NOZORDER);
+            if let Some(sh) = self.shadow.as_mut() {
+                sh.follow(r, radius_for(size.1, self.dpi));
+            }
         }
         if let Some(layer) = self.layer.as_mut() {
             let _ = layer.resize(size.0 as u32, size.1 as u32);

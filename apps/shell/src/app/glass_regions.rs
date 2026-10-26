@@ -73,6 +73,9 @@ impl App {
         if let Some(layer) = self.bar_layer.as_ref() {
             layer.set_capturable(active);
         }
+        if let Some(sh) = &self.bar_shadow {
+            sh.set_capturable(active);
+        }
         for g in self.glass_windows() {
             g.set_capturable(active);
         }

@@ -19,6 +19,7 @@ use windows::core::Result;
 
 use crate::backdrop::Frame;
 use crate::win_loop::{REVEAL_TIMER, end_clear, start_clear};
+use crate::shadow::Shadow;
 use crate::{Backdrop, Color, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyle, paint_glass, theme};
 
 pub const PICKED: isize = 1;
@@ -152,6 +153,7 @@ struct State {
     font_family: String,
     font_size: f32,
     dpi: u32,
+    shadow: Option<Shadow>,
 }
 
 pub struct Popup {
@@ -226,6 +228,7 @@ impl Popup {
             font_family: style.font_family.clone(),
             font_size: style.font_size_px,
             dpi: style.dpi,
+            shadow: None,
         }));
         let hwnd = create_window(
             &WindowSpec {
@@ -244,8 +247,11 @@ impl Popup {
                 s.root = hwnd;
             }
             let mut layer = Layer::new(gfx, hwnd, Backdrop::Glass, w as u32, h as u32)?;
-            layer.set_corner_radius((theme::POPUP_RADIUS * style.dpi as f32 / 96.0).round())?;
+            let radius = (theme::POPUP_RADIUS * style.dpi as f32 / 96.0).round();
+            layer.set_corner_radius(radius)?;
             s.layer = Some(layer);
+            let rect = RECT { left: x, top: y, right: x + w as i32, bottom: y + h as i32 };
+            s.shadow = Shadow::new(gfx, hwnd, rect, radius, style.dpi).map_err(|e| log::warn!("menu shadow: {e}")).ok();
             s.paint();
             if wait_glass {
                 s.hide_until_glass();
@@ -261,6 +267,9 @@ impl Popup {
                 let ok = SetForegroundWindow(hwnd).as_bool();
                 log::debug!("popup {hwnd:?} shown, SetForegroundWindow={ok} foreground={:?}", GetForegroundWindow());
             }
+        }
+        if let Some(sh) = &state.borrow().shadow {
+            sh.stay_under();
         }
         Ok(Popup { state, hwnd })
     }
@@ -314,6 +323,9 @@ impl Popup {
         let Ok(s) = self.state.try_borrow() else { return };
         if let Some(layer) = s.layer.as_ref() {
             layer.set_capturable(capturable);
+        }
+        if let Some(sh) = &s.shadow {
+            sh.set_capturable(capturable);
         }
         if let Some((_, child)) = &s.child {
             child.set_capturable(capturable);
@@ -420,6 +432,15 @@ impl State {
             crate::slide_y_both(&self.gfx, &root, inner.as_ref(), drop, 0.0, MENU_SHOW_MS)?;
             crate::fade(&self.gfx, &root, 0.0, 1.0, MENU_SHOW_MS)
         });
+        let center = (self.size.0 / 2.0, 0.0);
+        if let Ok(root) = self.layer.as_mut().map_or(Err(windows::core::Error::empty()), |l| l.visual()) {
+            let _ = crate::scale(&self.gfx, &root, theme::OPEN_SCALE, 1.0, MENU_SHOW_MS, center, true);
+        }
+        if let Some(sh) = self.shadow.as_mut() {
+            sh.set_offset_opacity(drop, 0.0);
+            sh.animate(drop, 0.0, 0.0, 1.0, MENU_SHOW_MS);
+            sh.scale(theme::OPEN_SCALE, 1.0, MENU_SHOW_MS, true);
+        }
         if let Err(e) = shown {
             log::warn!("popup cannot reveal: {e}");
         }
@@ -434,6 +455,14 @@ impl State {
             crate::slide_y_both(&self.gfx, &root, inner.as_ref(), 0.0, drop / 2.0, MENU_HIDE_MS)?;
             crate::fade(&self.gfx, &root, 1.0, 0.0, MENU_HIDE_MS)
         });
+        let center = (self.size.0 / 2.0, 0.0);
+        if let Ok(root) = self.layer.as_mut().map_or(Err(windows::core::Error::empty()), |l| l.visual()) {
+            let _ = crate::scale(&self.gfx, &root, 1.0, theme::CLOSE_SCALE, MENU_HIDE_MS, center, false);
+        }
+        if let Some(sh) = self.shadow.as_mut() {
+            sh.animate(0.0, drop / 2.0, 1.0, 0.0, MENU_HIDE_MS);
+            sh.scale(1.0, theme::CLOSE_SCALE, MENU_HIDE_MS, false);
+        }
         r.is_ok()
     }
 

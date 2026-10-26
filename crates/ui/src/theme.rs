@@ -33,12 +33,17 @@ pub const HIDE_MS: u32 = 180;
 /// and without one.
 pub const GLASS_TINT: Color = Color::rgba(8, 8, 10, 0.38);
 pub const GLASS_TINT_SOLID: Color = Color::rgba(8, 8, 10, 0.88);
+/// How much lighter the tint is at the top (and darker at the bottom) than in the middle.
+pub const GLASS_DEPTH: f32 = 0.09;
 
 // M2 (spec: M2 §2.1, §3)
 pub const PANEL_RADIUS: f32 = 16.0;
 pub const PANEL_SHOW_MS: u32 = 240;
 pub const PANEL_HIDE_MS: u32 = 170;
 pub const PANEL_DROP_PX: f32 = 10.0;
+/// Panels and menus open from this size, springing to full size; they close to `CLOSE_SCALE`.
+pub const OPEN_SCALE: f32 = 0.94;
+pub const CLOSE_SCALE: f32 = 0.97;
 pub const HOVER_GLIDE_MS: u32 = 180;
 pub const ICON_STROKE: f32 = 1.35;
 pub const TOOLTIP_DELAY_MS: u32 = 500;
