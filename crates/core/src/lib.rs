@@ -23,3 +23,4 @@ pub mod text_edit;
 pub mod tray;
 pub mod visibility;
 pub mod watchdog;
+pub mod web;
