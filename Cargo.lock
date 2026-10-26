@@ -86,7 +86,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "newwin-config"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "serde",
  "toml",
@@ -94,11 +94,11 @@ dependencies = [
 
 [[package]]
 name = "newwin-core"
-version = "1.0.4"
+version = "1.0.5"
 
 [[package]]
 name = "newwin-platform"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "log",
  "newwin-config",
@@ -109,7 +109,7 @@ dependencies = [
 
 [[package]]
 name = "newwin-settings"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "embed-manifest",
  "embed-resource",
@@ -123,7 +123,7 @@ dependencies = [
 
 [[package]]
 name = "newwin-shell"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "embed-manifest",
  "embed-resource",
@@ -137,7 +137,7 @@ dependencies = [
 
 [[package]]
 name = "newwin-ui"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "log",
  "newwin-core",
