@@ -8,16 +8,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.5-fff?style=for-the-badge&labelColor=111"></a>
+  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.6-fff?style=for-the-badge&labelColor=111"></a>
 </p>
 
 <p align="center">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011-111?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/rust-2024%20edition-111?style=flat-square&logo=rust">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.5-111?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.6-111?style=flat-square">
   <img alt="RAM" src="https://img.shields.io/badge/RAM-~18%20MB-111?style=flat-square">
   <img alt="Idle CPU" src="https://img.shields.io/badge/idle%20CPU-0.002%25-111?style=flat-square">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-520%20passing-111?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-609%20passing-111?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-111?style=flat-square">
 </p>
 
@@ -55,6 +55,11 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
   <br><sub><b>New in 1.0.3–1.0.5</b>: a calculator and unit converter in Spotlight, now playing, a calendar under the date</sub>
 </p>
 
+<p align="center">
+  <img src="docs/assets/spotlight-1.0.6.png" alt="Spotlight finding emoji, a Windows settings page and a currency conversion">
+  <br><sub><b>New in 1.0.6</b>: Spotlight as a command centre: emoji, Windows settings pages, currencies, web search, quick links (real renders)</sub>
+</p>
+
 ### The bar
 - **Running apps** on the left, each with its Windows icon. The active one is bold, in a soft glass pill that glides between apps.
 - Click to switch, minimise or restore; middle click to close; an app with several windows shows a list. Right click gives *New window* and *Close*.
@@ -70,6 +75,11 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
 - Results carry their app icons. Two apps with the same name are told apart, and the matched part is bold.
 - Ranked by how often you launch things. New apps show up live as they are installed.
 - **Calculator and unit converter**, offline: `12*(3+4)`, `100 + 10%`, `sqrt 2`, `sin 30`, `10 km in mi`, `23c to f`, `5 км в м`. Length, mass, temperature, volume, area, speed, data and time. <kbd>↵</kbd> copies the answer.
+- **Windows settings pages**: `bluetooth`, `display`, `wifi`, `sound`, `updates`, `startup`… about 85 pages, found by name or everyday words in English and Ukrainian (`монітор`, `яскравість`).
+- **Currencies** at the National Bank of Ukraine's rate: `100 usd in uah`, `50 € в грн`, `5 доларів у гривні`, `2*15 eur to pln`. The rate's date is shown; it works offline with the last rates. Turn it off and NewWin never goes online.
+- **Emoji**: type `:` and a name in English or Ukrainian (`:heart`, `:серце`, `:thumbs up`), <kbd>↵</kbd> copies it. The ones you copy most come first.
+- **Web search**: the last row searches DuckDuckGo (or Google, Bing, Brave, Startpage) in your default browser; when nothing else is found it is the only row, so <kbd>↵</kbd> searches at once.
+- **Quick links**: your own words for sites and folders (`gh` → GitHub, `dl` → Downloads), set in Settings. An exact word puts its link first.
 - <kbd>↵</kbd> open · <kbd>Ctrl</kbd> + <kbd>↵</kbd> run as administrator · right click: *Open file location* · <kbd>Esc</kbd> close.
 
 ### Tray
@@ -84,6 +94,7 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
 ### Settings: `NewWinSettings.exe`
 - The same glass, in six sections: *Bar · Appearance · Items · Spotlight · Tray · About*.
 - Toggles, sliders, segmented choices, a font picker that draws each family in its own face, and drag-to-reorder lists.
+- Spotlight: the web search engine (or off), currency rates on or off, and quick links: type `gh https://github.com`, press <kbd>↵</kbd>.
 - **No Save button.** Every change reaches the bar live, in well under a second.
 - Settings are plain TOML. Edit `config.toml` by hand and the bar picks it up instantly; a typo shows a banner instead of breaking anything.
 - English and Ukrainian, following the Windows display language.
@@ -96,11 +107,11 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
 
 ## Install
 
-1. Download **`NewWin-Setup-1.0.5.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
+1. Download **`NewWin-Setup-1.0.6.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
 2. Run it. No admin rights are needed: NewWin installs for your user only, into `%LOCALAPPDATA%\Programs\NewWin` (you can pick another folder). Setup is not code-signed yet, so SmartScreen may warn: **More info → Run anyway**.
 3. NewWin starts right away, and with Windows from then on. Running a newer Setup over it updates it and keeps your settings.
 
-Silent install, for scripts: `NewWin-Setup-1.0.5.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
+Silent install, for scripts: `NewWin-Setup-1.0.6.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
 
 **Uninstall** from *Settings → Apps → Installed apps → NewWin*. The Windows taskbar comes back, and everything NewWin wrote is removed, settings and logs included.
 
@@ -116,6 +127,7 @@ You can open Settings from the tray (`⌃` → **NewWin**), from the bar's menu,
 | Right click empty bar | Win+X menu, NewWin Settings, Restart / Quit NewWin |
 | Scroll / middle click on volume | Change volume / mute |
 | Click the date | Calendar · right or middle click: notification centre |
+| `:` and a name in Spotlight | Emoji; <kbd>↵</kbd> copies |
 | Click / middle click now playing | Media panel / play or pause |
 | Click `ENG` | Next keyboard layout |
 
@@ -196,7 +208,7 @@ NewWin.exe  (watchdog)                     restarts the shell on a crash or hang
 - [x] **1.0.3**: clean glass without a rim, slower motion you can actually see, layouts roll over like the clock
 - [x] **1.0.4**: calculator and unit converter in Spotlight, soft shadows, panels and menus that spring open, smooth glass corners
 - [x] **1.0.5**: now playing and a media panel, a calendar under the date, tooltips that fade out, one spacing for every panel, menu and tooltip
-- [ ] **1.0.6, Spotlight as a command centre**: Windows settings pages, web search, currencies, emoji, quick links
+- [x] **1.0.6, Spotlight as a command centre**: Windows settings pages, web search, currencies, emoji, quick links
 - [ ] **1.0.7, Network and sound**: pick a Wi-Fi network in our own panel, per-app volume, Bluetooth headphones in one click
 - [ ] **1.0.8, Files and clipboard**: file search in Spotlight (Windows index, or Everything if installed), clipboard history
 - [ ] **1.1, Multiple monitors**: a bar on every monitor, apps on the screen their windows are on
