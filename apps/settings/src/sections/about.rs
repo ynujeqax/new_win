@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn about_shows_version_1_0_1() {
         let rows = rows(&Config::default());
-        assert!(matches!(&rows[0].control, Control::Info(v) if v == "1.0.3"));
+        assert!(matches!(&rows[0].control, Control::Info(v) if v == "1.0.4"));
     }
 
     #[test]
