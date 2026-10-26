@@ -39,3 +39,45 @@ impl Tween {
         self.to
     }
 }
+
+/// A highlight that glides between items and fades in and out (the bar's active and hover
+/// pills). Positions are along x: `x` is the left edge, `w` the width.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GlidePill {
+    x: Tween,
+    w: Tween,
+    o: Tween,
+}
+
+impl GlidePill {
+    pub fn hidden() -> GlidePill {
+        GlidePill { x: Tween::at_rest(0.0), w: Tween::at_rest(0.0), o: Tween::at_rest(0.0) }
+    }
+
+    /// Heads for `x`, `w`. A pill that was (nearly) invisible appears in place instead of gliding
+    /// in from wherever it was last.
+    pub fn show(&mut self, x: f32, w: f32, now_ms: u64, glide_ms: u32, fade_ms: u32) {
+        if self.o.value(now_ms) < 0.05 {
+            self.x = Tween::at_rest(x);
+            self.w = Tween::at_rest(w);
+        } else {
+            self.x.to(x, now_ms, glide_ms);
+            self.w.to(w, now_ms, glide_ms);
+        }
+        self.o.to(1.0, now_ms, fade_ms);
+    }
+
+    pub fn hide(&mut self, now_ms: u64, fade_ms: u32) {
+        self.o.to(0.0, now_ms, fade_ms);
+    }
+
+    /// (x, w, opacity) while any of it shows.
+    pub fn at(&self, now_ms: u64) -> Option<(f32, f32, f32)> {
+        let o = self.o.value(now_ms);
+        (o > 0.0).then(|| (self.x.value(now_ms), self.w.value(now_ms), o))
+    }
+
+    pub fn running(&self, now_ms: u64) -> bool {
+        self.x.running(now_ms) || self.w.running(now_ms) || self.o.running(now_ms)
+    }
+}

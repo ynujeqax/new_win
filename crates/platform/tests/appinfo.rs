@@ -26,13 +26,14 @@ fn appsfolder_names_come_from_the_shell() {
 
 #[test]
 fn placeholder_names() {
-    // Exe keys are lowercased; the original-case path, when known, gives the nicer stem.
-    assert_eq!(placeholder_name(&GroupKey::exe(r"C:\Apps\Foo Bar.exe"), None), "foo bar");
+    // Exe keys are lowercased; the original-case path, when known, gives the nicer stem, and the
+    // first letter is always a capital.
+    assert_eq!(placeholder_name(&GroupKey::exe(r"C:\Apps\Foo Bar.exe"), None), "Foo bar");
     assert_eq!(placeholder_name(&GroupKey::exe(r"C:\Apps\Foo Bar.exe"), Some(r"C:\Apps\Foo Bar.exe")), "Foo Bar");
     assert_eq!(placeholder_name(&GroupKey::AppId("Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".into()), None), "App");
     assert_eq!(
         placeholder_name(&GroupKey::AppId("Chrome".into()), Some(r"C:\Program Files\Google\Chrome\chrome.exe")),
-        "chrome"
+        "Chrome"
     );
 }
 
@@ -42,7 +43,7 @@ fn resolve_name_prefers_shell_then_file_description_then_stem() {
     assert_eq!(resolve_name(&GroupKey::AppId("Microsoft.Windows.Explorer".into()), None, None), "File Explorer");
     assert_eq!(resolve_name(&GroupKey::exe(r"C:\Windows\System32\notepad.exe"), None, None), "Notepad");
     assert_eq!(resolve_name(&GroupKey::AppId("Unknown!X".into()), Some(r"C:\Windows\System32\notepad.exe"), None), "Notepad");
-    assert_eq!(resolve_name(&GroupKey::exe(r"C:\nowhere\tool.exe"), None, None), "tool");
+    assert_eq!(resolve_name(&GroupKey::exe(r"C:\nowhere\tool.exe"), None, None), "Tool");
 }
 
 #[test]

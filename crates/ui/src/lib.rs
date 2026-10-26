@@ -16,6 +16,7 @@ mod paint;
 pub mod panel;
 pub mod nav;
 pub mod popup;
+pub mod preview;
 pub mod reorder_list;
 pub mod scroll;
 pub mod segmented;

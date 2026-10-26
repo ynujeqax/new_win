@@ -15,6 +15,10 @@ use newwin_ui::{Painter, PointF, RectF, TextLayout, theme};
 use super::App;
 use crate::bar::{paint_background, text_style};
 
+/// The active app's pill glides a little slower than the hover one: it travels farther.
+const ACTIVE_GLIDE_MS: u32 = 180;
+const PILL_FADE_MS: u32 = 120;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Target {
     Group(usize),
@@ -173,6 +177,20 @@ impl App {
         let sources: Vec<Option<(String, Option<String>)>> = self.items.iter().map(|it| it.icon.clone()).collect();
         let icons: Vec<Option<super::icons_view::Shown>> =
             sources.iter().map(|s| s.as_ref().and_then(|(src, fb)| self.shell_icon(src, fb.as_deref()))).collect();
+        // The highlights follow the active app and the pointer, gliding when either moves.
+        let now = now_ms();
+        let active = self.model.active_group();
+        let rect_of = |want: &dyn Fn(Target) -> bool| self.items.iter().find(|it| want(it.target)).map(|it| it.rect);
+        let active_rect = rect_of(&|t| matches!(t, Target::Group(g) if Some(g) == active));
+        let hover_rect = rect_of(&|t| self.hover == Some(t) && matches!(t, Target::Group(_) | Target::Overflow)).filter(|r| Some(*r) != active_rect);
+        match active_rect {
+            Some(r) => self.active_pill.show(r.x, r.w, now, ACTIVE_GLIDE_MS, PILL_FADE_MS),
+            None => self.active_pill.hide(now, PILL_FADE_MS),
+        }
+        match hover_rect {
+            Some(r) => self.hover_pill.show(r.x, r.w, now, theme::HOVER_GLIDE_MS, PILL_FADE_MS),
+            None => self.hover_pill.hide(now, PILL_FADE_MS),
+        }
         let Some(layer) = self.bar_layer.as_mut() else { return };
         let (w, h) = layer.size();
         let (w, h) = (w as f32, h as f32);
@@ -181,19 +199,19 @@ impl App {
         let (pad, icon_w, icon_gap) = (scale(theme::PILL_PAD_X, dpi).round(), scale(ICON_LOGICAL_PX, dpi).round(), scale(ICON_GAP_LOGICAL_PX, dpi).round());
         let bitmaps = &mut self.icon_bitmaps;
         let radius = scale(theme::PILL_RADIUS, dpi).round();
-        let active = self.model.active_group();
         let (items, hover, glass, right) = (&self.items, self.hover, self.bar_glass, &self.right);
-        let now = now_ms();
+        let pills = [(self.hover_pill, theme::HOVER_PILL), (self.active_pill, theme::ACTIVE_PILL)];
+        let pill_h = scale(theme::PILL_HEIGHT, dpi).round();
         let r = layer.draw(None, |p: &mut Painter| {
             paint_background(p, w, h, dpi, a, glass);
+            for (pill, color) in pills {
+                if let Some((x, pw, o)) = pill.at(now) {
+                    p.fill_round_rect(RectF::new(x, ((h - pill_h) / 2.0).round(), pw, pill_h), radius, color.with_alpha(color.a * o));
+                }
+            }
             for (it, icon) in items.iter().zip(&icons) {
                 let is_active = matches!(it.target, Target::Group(g) if Some(g) == active);
                 let is_hover = hover == Some(it.target);
-                if is_active {
-                    p.fill_round_rect(it.rect, radius, theme::ACTIVE_PILL);
-                } else if is_hover {
-                    p.fill_round_rect(it.rect, radius, theme::HOVER_PILL);
-                }
                 let color = if is_active {
                     theme::TEXT_STRONG
                 } else if is_hover {

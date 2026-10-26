@@ -12,7 +12,7 @@ use windows::core::{BOOL, Result, w};
 
 use crate::appinfo::{
     process_creation_time,
-    implicit_app_id, placeholder_name, process_app_id, process_image_path, window_app_id, window_relaunch_name,
+    implicit_app_id, placeholder_name, process_app_id, steam_game_name, process_image_path, window_app_id, window_relaunch_name,
 };
 use crate::worker::{NameJob, ResolvedName, Worker};
 
@@ -59,7 +59,12 @@ impl AppNames {
         {
             w.submit(NameJob { key: key.clone(), exe: exe.map(str::to_string), relaunch_name: relaunch_name() });
         }
-        placeholder_name(key, exe)
+        // A Steam game's store name is a quick file read: no "Cs2" flash before "Counter-Strike 2".
+        let exe_path = match key {
+            GroupKey::ExePath(p) => Some(p.as_str()),
+            GroupKey::AppId(_) => exe,
+        };
+        exe_path.filter(|p| newwin_core::steam::game_dir(p).is_some()).and_then(steam_game_name).unwrap_or_else(|| placeholder_name(key, exe))
     }
 
     pub fn store(&mut self, r: &ResolvedName) {

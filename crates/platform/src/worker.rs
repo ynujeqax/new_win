@@ -1,6 +1,7 @@
 //! Background thread for slow work (app names, the Spotlight index, file writes); results come
 //! back as posted messages.
 
+use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::time::Instant;
 
@@ -62,6 +63,28 @@ pub struct Worker {
     tx: mpsc::Sender<Job>,
 }
 
+fn run(job: Job, helper: &mut Option<IconClient>, notify: isize, names_msg: u32, apps_msg: u32, icon_msg: u32) {
+    match job {
+        Job::Name(job) => {
+            let name = resolve_name(&job.key, job.exe.as_deref(), job.relaunch_name.as_deref());
+            post(notify, names_msg, ResolvedName { key: job.key, name });
+        }
+        Job::Apps => {
+            let started = Instant::now();
+            let apps = enumerate_apps().map_err(|e| e.to_string());
+            post(notify, apps_msg, AppsIndexed { apps, ms: started.elapsed().as_millis() as u32 });
+        }
+        Job::Icon { key, source, fallback, px } => {
+            let image = match helper.as_mut() {
+                Some(h) => h.fetch(&source, fallback.as_deref(), px),
+                None => shell_icon(&source, px).or_else(|| fallback.and_then(|f| shell_icon(&f, px))),
+            };
+            post(notify, icon_msg, IconReady { key, image });
+        }
+        Job::Run(f) => f(),
+    }
+}
+
 fn post<T>(notify: isize, msg: u32, value: T) {
     let boxed = Box::into_raw(Box::new(value));
     let posted = unsafe { PostMessageW(Some(HWND(notify as *mut _)), msg, WPARAM(0), LPARAM(boxed as isize)) };
@@ -90,7 +113,16 @@ impl Worker {
                     IconFetch::InProcess => None,
                     IconFetch::Helper(exe) => Some(IconClient::new(exe)),
                 };
+                let mut backlog = VecDeque::new();
                 loop {
+                    // Names go before everything else queued: a window shows its exe name ("cs2")
+                    // until its name arrives, while icons for Spotlight can be dozens deep.
+                    backlog.extend(rx.try_iter());
+                    let next = backlog.iter().position(|j| matches!(j, Job::Name(_))).or((!backlog.is_empty()).then_some(0));
+                    if let Some(job) = next.and_then(|i| backlog.remove(i)) {
+                        run(job, &mut helper, notify, names_msg, apps_msg, icon_msg);
+                        continue;
+                    }
                     // While the helper runs, a quiet spell stops it; otherwise just wait.
                     let job = match helper.as_mut().filter(|h| h.running()) {
                         Some(h) => match rx.recv_timeout(HELPER_IDLE) {
@@ -106,25 +138,7 @@ impl Worker {
                             Err(_) => break,
                         },
                     };
-                    match job {
-                        Job::Name(job) => {
-                            let name = resolve_name(&job.key, job.exe.as_deref(), job.relaunch_name.as_deref());
-                            post(notify, names_msg, ResolvedName { key: job.key, name });
-                        }
-                        Job::Apps => {
-                            let started = Instant::now();
-                            let apps = enumerate_apps().map_err(|e| e.to_string());
-                            post(notify, apps_msg, AppsIndexed { apps, ms: started.elapsed().as_millis() as u32 });
-                        }
-                        Job::Icon { key, source, fallback, px } => {
-                            let image = match helper.as_mut() {
-                                Some(h) => h.fetch(&source, fallback.as_deref(), px),
-                                None => shell_icon(&source, px).or_else(|| fallback.and_then(|f| shell_icon(&f, px))),
-                            };
-                            post(notify, icon_msg, IconReady { key, image });
-                        }
-                        Job::Run(f) => f(),
-                    }
+                    backlog.push_back(job);
                 }
             })
             .expect("cannot spawn worker thread");

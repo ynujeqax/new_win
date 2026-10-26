@@ -259,7 +259,8 @@ impl App {
     /// Repaints while a tween runs; stops waking once all are at rest.
     pub(super) fn keep_animating(&mut self) {
         let now = now_ms();
-        if self.right.animating(now) || self.icons_animating(now) {
+        let pills = self.active_pill.running(now) || self.hover_pill.running(now);
+        if pills || self.right.animating(now) || self.icons_animating(now) {
             unsafe { SetTimer(Some(self.bar), ANIM_TIMER, FRAME_MS, None) };
         }
     }

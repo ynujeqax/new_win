@@ -197,12 +197,18 @@ fn file_stem(path: &str) -> Option<String> {
     Path::new(path).file_stem().map(|s| s.to_string_lossy().into_owned())
 }
 
-/// Shown until the real name is resolved: exe file stem, else the AUMID's last segment.
+/// Shown until the real name is resolved: exe file stem, else the AUMID's last segment, with a
+/// capital first letter ("Claude", not "claude", for the moment before the real name).
 pub fn placeholder_name(key: &GroupKey, exe: Option<&str>) -> String {
-    match (key, exe.and_then(file_stem)) {
+    let raw = match (key, exe.and_then(file_stem)) {
         (_, Some(stem)) => stem,
         (GroupKey::ExePath(p), None) => file_stem(p).unwrap_or_else(|| p.clone()),
         (GroupKey::AppId(id), None) => id.rsplit(['!', '.', '\\']).next().unwrap_or(id).to_string(),
+    };
+    let mut chars = raw.chars();
+    match chars.next() {
+        Some(first) if first.is_lowercase() => first.to_uppercase().chain(chars).collect(),
+        _ => raw,
     }
 }
 

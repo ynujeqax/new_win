@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use newwin_config::Config;
+use newwin_core::anim::GlidePill;
 use newwin_core::apps::{AppModel, SnipTracker};
 use newwin_core::strings::{Strings, strings_for};
 use newwin_core::visibility::{Catcher, VisInput, Visibility};
@@ -137,6 +138,9 @@ pub struct App {
     items: Vec<BarItem>,
     overflow_from: Option<usize>,
     hover: Option<Target>,
+    /// The app pills' highlights: the active app's, and the one under the pointer.
+    active_pill: GlidePill,
+    hover_pill: GlidePill,
     popup: Option<(Popup, MenuCtx)>,
     panel: Option<ShellPanel>,
     tooltip: Option<Tooltip>,
@@ -596,6 +600,8 @@ fn start() -> Result<Rc<RefCell<App>>> {
         items: Vec::new(),
         overflow_from: None,
         hover: None,
+        active_pill: GlidePill::hidden(),
+        hover_pill: GlidePill::hidden(),
         popup: None,
         panel: None,
         tooltip: None,

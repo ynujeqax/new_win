@@ -51,7 +51,7 @@ pub fn ethernet(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
 pub fn wifi(p: &mut Painter, c: PointF, s: f32, bars: f32, color: Color, w: f32) {
     // The fan is centred on its own box (dot bottom to outer arc top), not on the arcs' origin,
     // and the origin sits on a pixel centre so the arcs stay symmetric and crisp.
-    let (outer, dot) = (s * 0.6, (s * 0.075).max(w * 0.9));
+    let (outer, dot) = (s * 0.64, (s * 0.08).max(w * 0.9));
     let base = PointF { x: c.x.floor() + 0.5, y: (c.y + (outer - dot) / 2.0).floor() + 0.5 };
     p.fill_round_rect(RectF::new(base.x - dot, base.y - dot, 2.0 * dot, 2.0 * dot), dot, color);
     for k in 1..=3u8 {
@@ -72,12 +72,12 @@ pub fn slash(p: &mut Painter, c: PointF, s: f32, progress: f32, color: Color, w:
     p.line(at(c, -d, -d), at(c, -d + 2.0 * d * progress, -d + 2.0 * d * progress), color, w);
 }
 
-/// A speaker with `waves` (0..=3) sound waves and a `mute` slash (0..=1).
+/// A speaker with `waves` (0..=3) sound waves; `mute` (0..=1) swaps the waves for a cross.
 pub fn speaker(p: &mut Painter, c: PointF, s: f32, waves: f32, mute: f32, color: Color, w: f32) {
-    let x0 = c.x - s * 0.40;
-    let (box_h, cone_h) = (s * 0.12, s * 0.28);
-    let neck = x0 + s * 0.14;
-    let mouth = x0 + s * 0.32;
+    let x0 = c.x - s * 0.42;
+    let (box_h, cone_h) = (s * 0.13, s * 0.3);
+    let neck = x0 + s * 0.15;
+    let mouth = x0 + s * 0.34;
     let body = [
         PointF { x: x0, y: c.y - box_h },
         PointF { x: neck, y: c.y - box_h },
@@ -87,14 +87,21 @@ pub fn speaker(p: &mut Painter, c: PointF, s: f32, waves: f32, mute: f32, color:
         PointF { x: x0, y: c.y + box_h },
     ];
     p.stroke_polygon(&body, color, w);
+    let mute = mute.clamp(0.0, 1.0);
     let origin = PointF { x: mouth, y: c.y };
     for k in 1..=3u8 {
-        let a = lit(waves, k);
+        let a = lit(waves, k) * (1.0 - mute);
         if a > 0.0 {
-            p.stroke_arc(origin, s * (0.04 + 0.14 * f32::from(k)), -45.0, 90.0, color.with_alpha(color.a * a), w);
+            p.stroke_arc(origin, s * (0.17 * f32::from(k) - 0.03), -48.0, 96.0, color.with_alpha(color.a * a), w);
         }
     }
-    slash(p, c, s, mute, color, w);
+    if mute > 0.0 {
+        // The cross grows out of its centre where the waves were.
+        let (x, d) = (at(origin, s * 0.27, 0.0), s * 0.13 * mute);
+        let cross = color.with_alpha(color.a * mute);
+        p.line(at(x, -d, -d), at(x, d, d), cross, w);
+        p.line(at(x, -d, d), at(x, d, -d), cross, w);
+    }
 }
 
 /// Where the magnifier's parts go: the lens (centre, radius) and the handle (from, to).
