@@ -8,13 +8,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Завантажити" src="https://img.shields.io/badge/%D0%B7%D0%B0%D0%B2%D0%B0%D0%BD%D1%82%D0%B0%D0%B6%D0%B8%D1%82%D0%B8-NewWin%201.0.1-fff?style=for-the-badge&labelColor=111"></a>
+  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Завантажити" src="https://img.shields.io/badge/%D0%B7%D0%B0%D0%B2%D0%B0%D0%BD%D1%82%D0%B0%D0%B6%D0%B8%D1%82%D0%B8-NewWin%201.0.2-fff?style=for-the-badge&labelColor=111"></a>
 </p>
 
 <p align="center">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011-111?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/rust-2024%20edition-111?style=flat-square&logo=rust">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.1-111?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.2-111?style=flat-square">
   <img alt="RAM" src="https://img.shields.io/badge/RAM-~8%20MB-111?style=flat-square">
   <img alt="Idle CPU" src="https://img.shields.io/badge/idle%20CPU-0.002%25-111?style=flat-square">
   <img alt="Tests" src="https://img.shields.io/badge/tests-492%20passing-111?style=flat-square">
@@ -87,11 +87,11 @@
 
 ## Встановлення
 
-1. Завантажте **`NewWin-Setup-1.0.1.exe`** з [Releases](https://github.com/ynujeqax/new_win/releases/latest) або [зберіть самі](#збірка-з-коду).
+1. Завантажте **`NewWin-Setup-1.0.2.exe`** з [Releases](https://github.com/ynujeqax/new_win/releases/latest) або [зберіть самі](#збірка-з-коду).
 2. Запустіть. Права адміністратора не потрібні: NewWin ставиться лише для вашого користувача, у `%LOCALAPPDATA%\Programs\NewWin` (папку можна змінити). Інсталятор поки не підписаний, тож SmartScreen може попередити: **Докладніше → Усе одно запустити**.
 3. NewWin запускається одразу, а далі — разом із Windows. Новіший інсталятор поверх старого оновлює програму й зберігає налаштування.
 
-Тихе встановлення для скриптів: `NewWin-Setup-1.0.1.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
+Тихе встановлення для скриптів: `NewWin-Setup-1.0.2.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
 
 **Видалення:** *Параметри → Програми → Інстальовані програми → NewWin*. Таскбар Windows повертається, а все, що записав NewWin (налаштування й журнали), видаляється.
 
@@ -182,6 +182,7 @@ NewWin.exe  (сторож)                       перезапускає shell 
 - [x] **M4**: вікно налаштувань, живий конфіг
 - [x] **M5**: інсталятор, видалення з поверненням таскбару, шліфування
 - [x] **1.0.1**: кольорові іконки програм на барі, у Spotlight і в треї
+- [x] **1.0.2**: анімації всюди (підсвітка, що ковзає, пігулки програм, що з'їжджають, годинник, що прокручується), нові іконки Wi-Fi і звуку, назви Steam-ігор одразу
 - [ ] Кілька моніторів
 
 ## Розробка

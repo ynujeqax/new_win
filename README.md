@@ -8,13 +8,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.1-fff?style=for-the-badge&labelColor=111"></a>
+  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.2-fff?style=for-the-badge&labelColor=111"></a>
 </p>
 
 <p align="center">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011-111?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/rust-2024%20edition-111?style=flat-square&logo=rust">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.1-111?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.2-111?style=flat-square">
   <img alt="RAM" src="https://img.shields.io/badge/RAM-~8%20MB-111?style=flat-square">
   <img alt="Idle CPU" src="https://img.shields.io/badge/idle%20CPU-0.002%25-111?style=flat-square">
   <img alt="Tests" src="https://img.shields.io/badge/tests-492%20passing-111?style=flat-square">
@@ -87,11 +87,11 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
 
 ## Install
 
-1. Download **`NewWin-Setup-1.0.1.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
+1. Download **`NewWin-Setup-1.0.2.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
 2. Run it. No admin rights are needed: NewWin installs for your user only, into `%LOCALAPPDATA%\Programs\NewWin` (you can pick another folder). Setup is not code-signed yet, so SmartScreen may warn: **More info → Run anyway**.
 3. NewWin starts right away, and with Windows from then on. Running a newer Setup over it updates it and keeps your settings.
 
-Silent install, for scripts: `NewWin-Setup-1.0.1.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
+Silent install, for scripts: `NewWin-Setup-1.0.2.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
 
 **Uninstall** from *Settings → Apps → Installed apps → NewWin*. The Windows taskbar comes back, and everything NewWin wrote is removed, settings and logs included.
 
@@ -182,6 +182,7 @@ NewWin.exe  (watchdog)                     restarts the shell on a crash or hang
 - [x] **M4**: Settings window, live config
 - [x] **M5**: installer, an uninstall that restores the taskbar, polish
 - [x] **1.0.1**: colour app icons on the bar, in Spotlight and in the tray
+- [x] **1.0.2**: animations everywhere (gliding highlights, sliding app pills, a rolling clock), redrawn Wi-Fi and speaker icons, Steam games named right away
 - [ ] Multiple monitors
 
 ## Development
