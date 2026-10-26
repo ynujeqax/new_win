@@ -162,3 +162,60 @@ fn calendar_panel() {
     let mut c = newwin_ui::calendar_panel::CalendarPanel::new((2026, 10, 26), 0, names, Box::new(move |m: Month| format!("{} {}", months[m.month as usize - 1], m.year)), &style(), &gfx);
     panel("calendar", &mut c, 10_000);
 }
+
+/// Spotlight with `query` typed, over `catalog` and the 1.0.6 extras, saved as `name`.
+fn spotlight_with(name: &str, mut catalog: Vec<newwin_core::spotlight::Candidate>, query: &str, links: Vec<(String, newwin_core::links::Target)>) {
+    use newwin_ui::panel::{PanelContent, PanelInput};
+    use std::collections::BTreeMap;
+    let gfx = Gfx::new().unwrap();
+    catalog.extend(newwin_core::spotlight::system_candidates(newwin_core::strings::strings_for("en-US")));
+    let per_uah: BTreeMap<String, f64> = [("UAH", 1.0), ("USD", 41.3), ("EUR", 44.8)].into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+    let rates = newwin_core::currency::Rates { date: "2026-10-27".into(), fetched_at: 1_800_000_000, per_uah };
+    let extras = newwin_ui::spotlight::SpotlightExtras {
+        engine: Some(newwin_core::web::Engine::DuckDuckGo),
+        rates: Some(std::rc::Rc::new(rates)),
+        currency_on: true,
+        uk: false,
+        now_secs: 1_800_000_000,
+        links,
+    };
+    let labels = newwin_ui::spotlight::SpotlightLabels::from_strings(newwin_core::strings::strings_for("en-US"));
+    let mut v = newwin_ui::spotlight::SpotlightView::new(std::rc::Rc::new(catalog), Default::default(), labels, extras, &style(), 8, None, &gfx);
+    for ch in query.chars() {
+        v.input(PanelInput::Char(ch), 0);
+    }
+    panel(name, &mut v, 10_000);
+}
+
+#[test]
+#[ignore]
+fn spotlight_settings_page() {
+    spotlight_with("spotlight_settings", newwin_core::settings_pages::candidates(false), "blue", Vec::new());
+}
+
+#[test]
+#[ignore]
+fn spotlight_web() {
+    spotlight_with("spotlight_web", Vec::new(), "how to bake bread", Vec::new());
+}
+
+#[test]
+#[ignore]
+fn spotlight_currency() {
+    spotlight_with("spotlight_currency", Vec::new(), "100 usd in uah", Vec::new());
+}
+
+#[test]
+#[ignore]
+fn spotlight_emoji() {
+    spotlight_with("spotlight_emoji", Vec::new(), ":heart", Vec::new());
+}
+
+#[test]
+#[ignore]
+fn spotlight_links() {
+    use newwin_core::links::{Link, Target};
+    let links = [Link { keyword: "gh".into(), target: "https://github.com".into() }, Link { keyword: "dl".into(), target: r"%USERPROFILE%\Downloads".into() }];
+    let catalog = newwin_core::spotlight::link_candidates(&links);
+    spotlight_with("spotlight_links", catalog, "g", vec![("github.com".into(), Target::Url), (r"…\Downloads".into(), Target::Path)]);
+}

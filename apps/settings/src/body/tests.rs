@@ -253,3 +253,24 @@ fn a_link_row_is_a_remove_button() {
     assert!(b.focusables().iter().any(|f| f.0 == FocusKind::Button && f.2 == row));
     assert_eq!(b.activate(row, KeyAction::Activate, 0), Some(BodyEvent::Press(RowId::Link(0))));
 }
+
+/// A picture of the Spotlight section for checking by eye: `cargo test -p newwin-settings
+/// spotlight_section_preview -- --ignored`, then open `target/preview/settings_spotlight.bmp`.
+#[test]
+#[ignore]
+fn spotlight_section_preview() {
+    let mut c = Config::default();
+    c.spotlight.links.push(newwin_config::LinkConfig { keyword: "gh".into(), target: "https://github.com/ynujeqax".into() });
+    c.spotlight.links.push(newwin_config::LinkConfig { keyword: "dl".into(), target: r"%USERPROFILE%\Downloads".into() });
+    let mut b = spotlight_body(&c);
+    type_in(&mut b, "yt https://youtube.com");
+    let gfx = newwin_ui::Gfx::new().unwrap();
+    let mut cache = TextCache::new(&gfx);
+    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/preview");
+    std::fs::create_dir_all(dir).unwrap();
+    let (w, h) = (520, 560);
+    newwin_ui::preview::render_bmp(&format!("{dir}/settings_spotlight.bmp"), w, h, theme::GLASS_TINT_SOLID.with_alpha(1.0), |p| {
+        b.paint(p, &mut cache, strings_for("en-US"), RectF::new(16.0, 8.0, w as f32 - 32.0, h as f32 - 16.0), 10_000, None);
+    })
+    .unwrap();
+}
