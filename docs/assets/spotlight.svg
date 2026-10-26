@@ -31,7 +31,6 @@
 
   <g filter="url(#shadow)">
     <rect x="100" y="56" width="560" height="304" rx="16" fill="url(#glass)"/>
-    <rect x="100.5" y="56.5" width="559" height="303" rx="15.5" fill="none" stroke="url(#rim)"/>
   </g>
 
   <g font-family="Segoe UI Variable Text, Segoe UI, system-ui, -apple-system, sans-serif">

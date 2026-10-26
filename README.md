@@ -8,16 +8,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.2-fff?style=for-the-badge&labelColor=111"></a>
+  <a href="https://github.com/ynujeqax/new_win/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-NewWin%201.0.5-fff?style=for-the-badge&labelColor=111"></a>
 </p>
 
 <p align="center">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011-111?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/rust-2024%20edition-111?style=flat-square&logo=rust">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.2-111?style=flat-square">
-  <img alt="RAM" src="https://img.shields.io/badge/RAM-~8%20MB-111?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.5-111?style=flat-square">
+  <img alt="RAM" src="https://img.shields.io/badge/RAM-~18%20MB-111?style=flat-square">
   <img alt="Idle CPU" src="https://img.shields.io/badge/idle%20CPU-0.002%25-111?style=flat-square">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-492%20passing-111?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-520%20passing-111?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-111?style=flat-square">
 </p>
 
@@ -33,7 +33,7 @@
 
 ## Why
 
-Built for an OLED monitor and a black wallpaper: **no static pixels, no clutter, colour only where it carries meaning.** The bar hides above the screen edge and slides in only when the mouse touches a 1–2 px strip at the top, so windows get 100 % of the screen. It is text, thin vector lines and the apps' own icons, set in liquid glass with its own blur and a lens-like rim.
+Built for an OLED monitor and a black wallpaper: **no static pixels, no clutter, colour only where it carries meaning.** The bar hides above the screen edge and slides in only when the mouse touches a 1–2 px strip at the top, so windows get 100 % of the screen. It is text, thin vector lines and the apps' own icons, set in liquid glass: its own tinted blur with a soft shadow, and motion on everything that changes.
 
 It has to be invisible in another way too. It should never lag, freeze or crash, and if it ever does, you still get a taskbar back.
 
@@ -50,10 +50,18 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
   </tr>
 </table>
 
+<p align="center">
+  <img src="docs/assets/whats-new.svg" alt="Calculator in Spotlight, media panel and calendar">
+  <br><sub><b>New in 1.0.3–1.0.5</b>: a calculator and unit converter in Spotlight, now playing, a calendar under the date</sub>
+</p>
+
 ### The bar
 - **Running apps** on the left, each with its Windows icon. The active one is bold, in a soft glass pill that glides between apps.
 - Click to switch, minimise or restore; middle click to close; an app with several windows shows a list. Right click gives *New window* and *Close*.
-- **Right side:** keyboard layout (`ENG` / `UKR`), network (Ethernet, Wi-Fi with real signal bars, offline), volume (scroll to change, middle click to mute, click for a slider and output device), search, then date and time (click for the notification centre).
+- **Right side:** now playing, keyboard layout (`ENG` / `UKR`), network (Ethernet, Wi-Fi with real signal bars, offline), volume (scroll to change, middle click to mute, click for a slider and output device), search, then date and time.
+- **Now playing** shows up only while something plays (Spotify, a browser, anything in Windows' media flyout): a note and the track, which rolls over like the clock. Click for a panel with title, artist and ⏮ ⏯ ⏭ (<kbd>Space</kbd> and the arrows work too); middle click plays or pauses.
+- **Calendar:** click the date for this month, with today in a white disc. ‹ ›, the wheel or the arrows leaf through months; click the title or press <kbd>Home</kbd> to come back. Right or middle click on the date opens the notification centre.
+- **Motion everywhere:** the bar slides in, panels and menus spring open and fade out, the clock and the keyboard layout roll over, tooltips fade. Every panel, menu and tooltip casts a soft shadow and keeps the same margin from the bar and the screen edges.
 - **Auto-hide** (appears on hover) or **Pinned** (reserves its space like the native taskbar, so maximised windows never slide under it). It also stays out of the way of full-screen apps.
 - Right click on empty space opens the full **Win+X menu**: Device Manager, PowerShell (admin), Task Manager, Run, shut down, and the rest.
 
@@ -61,6 +69,7 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
 - <kbd>Win</kbd> or <kbd>Ctrl</kbd> + <kbd>Esc</kbd> opens a centred glass panel. Type to search apps and system commands (*Shut down*, *Restart*, *Sleep*, *Lock*, *Sign out*, *NewWin Settings*).
 - Results carry their app icons. Two apps with the same name are told apart, and the matched part is bold.
 - Ranked by how often you launch things. New apps show up live as they are installed.
+- **Calculator and unit converter**, offline: `12*(3+4)`, `100 + 10%`, `sqrt 2`, `sin 30`, `10 km in mi`, `23c to f`, `5 км в м`. Length, mass, temperature, volume, area, speed, data and time. <kbd>↵</kbd> copies the answer.
 - <kbd>↵</kbd> open · <kbd>Ctrl</kbd> + <kbd>↵</kbd> run as administrator · right click: *Open file location* · <kbd>Esc</kbd> close.
 
 ### Tray
@@ -87,11 +96,11 @@ It has to be invisible in another way too. It should never lag, freeze or crash,
 
 ## Install
 
-1. Download **`NewWin-Setup-1.0.2.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
+1. Download **`NewWin-Setup-1.0.5.exe`** from [Releases](https://github.com/ynujeqax/new_win/releases/latest), or [build it yourself](#build-from-source).
 2. Run it. No admin rights are needed: NewWin installs for your user only, into `%LOCALAPPDATA%\Programs\NewWin` (you can pick another folder). Setup is not code-signed yet, so SmartScreen may warn: **More info → Run anyway**.
 3. NewWin starts right away, and with Windows from then on. Running a newer Setup over it updates it and keeps your settings.
 
-Silent install, for scripts: `NewWin-Setup-1.0.2.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
+Silent install, for scripts: `NewWin-Setup-1.0.5.exe /VERYSILENT /DIR="C:\Programs\NewWin"`.
 
 **Uninstall** from *Settings → Apps → Installed apps → NewWin*. The Windows taskbar comes back, and everything NewWin wrote is removed, settings and logs included.
 
@@ -106,7 +115,8 @@ You can open Settings from the tray (`⌃` → **NewWin**), from the bar's menu,
 | Middle click an app | Close it |
 | Right click empty bar | Win+X menu, NewWin Settings, Restart / Quit NewWin |
 | Scroll / middle click on volume | Change volume / mute |
-| Click the date | Notification centre |
+| Click the date | Calendar · right or middle click: notification centre |
+| Click / middle click now playing | Media panel / play or pause |
 | Click `ENG` | Next keyboard layout |
 
 ## Performance
@@ -115,7 +125,7 @@ Measured on the author's machine (Windows 11, 16 logical CPUs).
 
 | | Result |
 |---|---|
-| Memory, shell (private working set, 1.0.1) | **~8 MB**, 19 threads |
+| Memory, shell (private working set, 1.0.5) | **~18 MB**, 40 threads |
 | Memory, icon helper (only while fetching icons) | 2.6 MB; exits 30 s after its last request |
 | Memory, watchdog | 1.3 MB |
 | CPU, 10 minutes idle (1.0.0) | **0.0016 %** shell · 0.0003 % watchdog |
@@ -176,14 +186,21 @@ NewWin.exe  (watchdog)                     restarts the shell on a crash or hang
 ## Roadmap
 
 - [x] **M1**: shell core (bar, auto-hide / pinned, running apps, clock, watchdog)
-- [x] **Liquid glass**: own blur, lens rim, capsule shape
+- [x] **Liquid glass**: own blur, capsule shape
 - [x] **M2**: tray, network, volume, keyboard layout
 - [x] **M3**: Spotlight
 - [x] **M4**: Settings window, live config
 - [x] **M5**: installer, an uninstall that restores the taskbar, polish
 - [x] **1.0.1**: colour app icons on the bar, in Spotlight and in the tray
 - [x] **1.0.2**: animations everywhere (gliding highlights, sliding app pills, a rolling clock), redrawn Wi-Fi and speaker icons, Steam games named right away
-- [ ] Multiple monitors
+- [x] **1.0.3**: clean glass without a rim, slower motion you can actually see, layouts roll over like the clock
+- [x] **1.0.4**: calculator and unit converter in Spotlight, soft shadows, panels and menus that spring open, smooth glass corners
+- [x] **1.0.5**: now playing and a media panel, a calendar under the date, tooltips that fade out, one spacing for every panel, menu and tooltip
+- [ ] **1.0.6, Spotlight as a command centre**: Windows settings pages, web search, currencies, emoji, quick links
+- [ ] **1.0.7, Network and sound**: pick a Wi-Fi network in our own panel, per-app volume, Bluetooth headphones in one click
+- [ ] **1.0.8, Files and clipboard**: file search in Spotlight (Windows index, or Everything if installed), clipboard history
+- [ ] **1.1, Multiple monitors**: a bar on every monitor, apps on the screen their windows are on
+- [ ] Later: `timer 5m` and reminders, window snapping and hotkeys, text snippets, plugins
 
 ## Development
 
