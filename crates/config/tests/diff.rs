@@ -82,3 +82,18 @@ fn tray_hidden_is_tray() {
 fn autostart_is_autostart() {
     assert_eq!(only(|c| c.system.start_with_windows = false), Changes { autostart: true, ..Default::default() });
 }
+
+#[test]
+fn web_search_currency_and_links_are_spotlight_changes() {
+    use newwin_config::{Config, LinkConfig, diff::changes};
+    let old = Config::default();
+    let mut new = old.clone();
+    new.spotlight.links.push(LinkConfig { keyword: "gh".into(), target: "x".into() });
+    assert!(changes(&old, &new).spotlight);
+    let mut new = old.clone();
+    new.spotlight.web_search = "off".into();
+    assert!(changes(&old, &new).spotlight);
+    let mut new = old.clone();
+    new.spotlight.currency = false;
+    assert!(changes(&old, &new).spotlight);
+}

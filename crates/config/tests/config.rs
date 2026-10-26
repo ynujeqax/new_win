@@ -225,3 +225,73 @@ fn stale_tmp_files_go_fresh_ones_stay() {
     assert!(dir.join("config.toml").exists());
     std::fs::remove_dir_all(&dir).unwrap();
 }
+
+#[test]
+fn spotlight_defaults_have_ddg_currency_on_no_links() {
+    let c = Config::default();
+    assert_eq!(c.spotlight.web_search, "duckduckgo");
+    assert!(c.spotlight.currency);
+    assert!(c.spotlight.links.is_empty());
+}
+
+#[test]
+fn old_config_without_new_keys_loads_defaults() {
+    let c = parse("[spotlight]\nwin_key = false\nmax_results = 6\n").unwrap();
+    assert_eq!((c.spotlight.win_key, c.spotlight.max_results), (false, 6));
+    assert_eq!(c.spotlight.web_search, "duckduckgo");
+    assert!(c.spotlight.currency);
+}
+
+#[test]
+fn links_load_and_bad_ones_are_dropped_dupes_keep_last() {
+    let text = r#"
+[[spotlight.links]]
+keyword = "GH"
+target = "https://github.com/old"
+
+[[spotlight.links]]
+keyword = "has space"
+target = "x"
+
+[[spotlight.links]]
+keyword = "empty"
+target = "  "
+
+[[spotlight.links]]
+keyword = "gh"
+target = "https://github.com"
+
+[[spotlight.links]]
+keyword = "dl"
+target = '%USERPROFILE%\Downloads'
+"#;
+    let c = parse(text).unwrap();
+    let got: Vec<_> = c.spotlight.links.iter().map(|l| (l.keyword.as_str(), l.target.as_str())).collect();
+    assert_eq!(got, [("gh", "https://github.com"), ("dl", r"%USERPROFILE%\Downloads")]);
+}
+
+#[test]
+fn links_are_capped_at_100() {
+    let mut text = String::new();
+    for i in 0..120 {
+        text.push_str(&format!("[[spotlight.links]]\nkeyword = \"k{i}\"\ntarget = \"t\"\n"));
+    }
+    assert_eq!(parse(&text).unwrap().spotlight.links.len(), 100);
+}
+
+#[test]
+fn unknown_engine_falls_back_and_off_stays() {
+    assert_eq!(parse("[spotlight]\nweb_search = \"altavista\"\n").unwrap().spotlight.web_search, "duckduckgo");
+    assert_eq!(parse("[spotlight]\nweb_search = \"off\"\n").unwrap().spotlight.web_search, "off");
+    assert_eq!(parse("[spotlight]\nweb_search = \"Google\"\n").unwrap().spotlight.web_search, "google");
+}
+
+#[test]
+fn new_spotlight_fields_round_trip() {
+    let mut c = Config::default();
+    c.spotlight.web_search = "brave".into();
+    c.spotlight.currency = false;
+    c.spotlight.links.push(LinkConfig { keyword: "gh".into(), target: "https://github.com".into() });
+    let back = parse(&to_toml(&c)).unwrap();
+    assert_eq!(back.spotlight, c.spotlight);
+}

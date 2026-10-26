@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 pub mod diff;
+pub mod rates;
 pub mod tray_seen;
 pub mod usage;
 
@@ -112,12 +113,24 @@ pub struct SpotlightConfig {
     pub win_key: bool,
     #[serde(deserialize_with = "sat::u32")]
     pub max_results: u32,
+    /// A key of `newwin_core::web::Engine`, or `"off"`.
+    pub web_search: String,
+    /// Currency answers, with rates downloaded from the NBU; off means no network at all.
+    pub currency: bool,
+    pub links: Vec<LinkConfig>,
 }
 
 impl Default for SpotlightConfig {
     fn default() -> Self {
-        Self { win_key: true, max_results: 8 }
+        Self { win_key: true, max_results: 8, web_search: "duckduckgo".into(), currency: true, links: Vec::new() }
     }
+}
+
+/// A quick link: `keyword` opens `target` (spec: 1.0.6 §2.5).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub struct LinkConfig {
+    pub keyword: String,
+    pub target: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -194,6 +207,7 @@ impl Config {
         a.corner_radius = clamp_f(a.corner_radius, 0.0, 24.0, d.corner_radius);
         a.font_size = clamp_f(a.font_size, 10.0, 18.0, d.font_size);
         self.spotlight.max_results = self.spotlight.max_results.clamp(3, 15);
+        sanitize_spotlight(&mut self.spotlight);
         normalize_items(&mut self.items);
         dedupe_ci(&mut self.tray.order);
         dedupe_ci(&mut self.tray.hidden);
@@ -339,4 +353,29 @@ pub fn write_default_if_missing(path: &Path) -> std::io::Result<()> {
         std::fs::create_dir_all(dir)?;
     }
     save_atomic(path, &to_toml(&Config::default()))
+}
+
+/// Web search names a known engine or `"off"`; links need a keyword (lowercase,
+/// no spaces, ≤ 32 chars) and a target (≤ 1024 chars), a repeated keyword keeps its last target, and there are at most 100.
+fn sanitize_spotlight(s: &mut SpotlightConfig) {
+    use newwin_core::links::{MAX_KEYWORD, MAX_LINKS, MAX_TARGET};
+    s.web_search = match newwin_core::web::Engine::from_key(&s.web_search) {
+        Some(e) => e.key().to_string(),
+        None if s.web_search.eq_ignore_ascii_case("off") => "off".to_string(),
+        None => newwin_core::web::ENGINES[0].key().to_string(),
+    };
+    let mut out: Vec<LinkConfig> = Vec::new();
+    for l in std::mem::take(&mut s.links) {
+        let (keyword, target) = (l.keyword.trim().to_lowercase(), l.target.trim().to_string());
+        let keyword_ok = !keyword.is_empty() && keyword.chars().count() <= MAX_KEYWORD && !keyword.contains(char::is_whitespace);
+        if !keyword_ok || target.is_empty() || target.chars().count() > MAX_TARGET {
+            continue;
+        }
+        out.retain(|o| o.keyword != keyword);
+        out.push(LinkConfig { keyword, target });
+    }
+    // Keep the last 100 (the newest).
+    let extra = out.len().saturating_sub(MAX_LINKS);
+    out.drain(..extra);
+    s.links = out;
 }

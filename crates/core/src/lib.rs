@@ -13,6 +13,7 @@ pub mod glass;
 pub mod input_lang;
 pub mod items;
 pub mod layout;
+pub mod links;
 pub mod media;
 pub mod network;
 pub mod quit;

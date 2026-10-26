@@ -20,7 +20,7 @@ pub struct Changes {
     pub items: bool,
     /// spotlight.win_key
     pub win_key: bool,
-    /// spotlight.max_results (applies on next open)
+    /// spotlight.max_results | web_search | currency | links (apply on next open)
     pub spotlight: bool,
     /// tray.order | tray.hidden
     pub tray: bool,
@@ -52,7 +52,10 @@ pub fn changes(old: &Config, new: &Config) -> Changes {
         clock: oa.date_format != na.date_format || oa.show_seconds != na.show_seconds,
         items: old.items != new.items,
         win_key: old.spotlight.win_key != new.spotlight.win_key,
-        spotlight: old.spotlight.max_results != new.spotlight.max_results,
+        spotlight: old.spotlight.max_results != new.spotlight.max_results
+            || old.spotlight.web_search != new.spotlight.web_search
+            || old.spotlight.currency != new.spotlight.currency
+            || old.spotlight.links != new.spotlight.links,
         tray: old.tray != new.tray,
         autostart: old.system.start_with_windows != new.system.start_with_windows,
     }
