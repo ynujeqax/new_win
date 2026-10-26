@@ -108,18 +108,8 @@ fn spotlight() {
     let gfx = Gfx::new().unwrap();
     let app = |n: &str| Candidate { name: n.into(), id: format!("id:{n}"), kind: Kind::App, file_path: None, packaged: false, words: Vec::new() };
     let catalog = std::rc::Rc::new(vec![app("Steam"), app("Steam Support Center"), app("Settings"), app("Snipping Tool"), app("Services")]);
-    let labels = newwin_ui::spotlight::SpotlightLabels {
-        hint: "Search apps".into(),
-        no_results: "No results".into(),
-        kind_app: "App".into(),
-        kind_system: "System".into(),
-        kind_calculator: "Calculator".into(),
-        kind_conversion: "Conversion".into(),
-        press_again_shut_down: "Press Enter again to shut down".into(),
-        press_again_restart: "Press Enter again to restart".into(),
-        keys: "enter open   esc close".into(),
-    };
-    let mut v = newwin_ui::spotlight::SpotlightView::new(catalog, Default::default(), labels, &style(), 6, None, &gfx);
+    let labels = newwin_ui::spotlight::SpotlightLabels::from_strings(newwin_core::strings::strings_for("en-US"));
+    let mut v = newwin_ui::spotlight::SpotlightView::new(catalog, Default::default(), labels, Default::default(), &style(), 6, None, &gfx);
     for ch in "10 km in mi".chars() {
         v.input(PanelInput::Char(ch), 0);
     }

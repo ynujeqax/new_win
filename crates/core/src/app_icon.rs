@@ -60,8 +60,8 @@ pub fn source_for_group(key: &GroupKey) -> String {
 /// Where a Spotlight result takes its icon from; system commands have none.
 pub fn source_for_candidate(c: &Candidate) -> Option<String> {
     match c.kind {
-        Kind::System(_) => None,
-        _ => Some(format!(r"shell:AppsFolder\{}", c.id)),
+        Kind::System(_) | Kind::SettingsPage(_) | Kind::Link(_) => None,
+        Kind::App => Some(format!(r"shell:AppsFolder\{}", c.id)),
     }
 }
 

@@ -185,20 +185,10 @@ fn view_draws_with_text() {
     use windows::Win32::Foundation::RECT;
     use windows::Win32::UI::WindowsAndMessaging::{WS_EX_NOREDIRECTIONBITMAP, WS_EX_TOOLWINDOW, WS_POPUP};
     let s = strings_for("en");
-    let labels = SpotlightLabels {
-        hint: s.search.into(),
-        no_results: s.no_results.into(),
-        kind_app: s.kind_app.into(),
-        kind_system: s.kind_system.into(),
-        kind_calculator: s.kind_calculator.into(),
-        kind_conversion: s.kind_conversion.into(),
-        press_again_shut_down: s.press_again_shut_down.into(),
-        press_again_restart: s.press_again_restart.into(),
-        keys: s.spotlight_keys.into(),
-    };
+    let labels = SpotlightLabels::from_strings(s);
     let gfx = Gfx::new().unwrap();
     let style = PopupStyle { font_family: "Segoe UI Variable Text".into(), font_size_px: 13.0, dpi: 96 };
-    let mut v = SpotlightView::new(catalog(), Default::default(), labels, &style, 8, Some(530), &gfx);
+    let mut v = SpotlightView::new(catalog(), Default::default(), labels, Default::default(), &style, 8, Some(530), &gfx);
     let hwnd = newwin_platform::window::create_test_window(WS_EX_TOOLWINDOW | WS_EX_NOREDIRECTIONBITMAP, WS_POPUP, RECT { left: 0, top: 0, right: 560, bottom: 400 }, "spot").unwrap();
     let mut layer = Layer::new(&gfx, hwnd, Backdrop::Tint, 560, 400).unwrap();
     let mut draw = |v: &mut SpotlightView, now| layer.draw(None, |p| v.paint(p, now)).unwrap();

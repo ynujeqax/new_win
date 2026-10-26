@@ -105,23 +105,12 @@ impl App {
         self.spotlight = None;
         self.close_popup();
         self.close_panel();
-        let s = self.strings;
-        let labels = SpotlightLabels {
-            hint: s.search.into(),
-            no_results: s.no_results.into(),
-            kind_app: s.kind_app.into(),
-            kind_system: s.kind_system.into(),
-            kind_calculator: s.kind_calculator.into(),
-            kind_conversion: s.kind_conversion.into(),
-            press_again_shut_down: s.press_again_shut_down.into(),
-            press_again_restart: s.press_again_restart.into(),
-            keys: s.spotlight_keys.into(),
-        };
+        let labels = SpotlightLabels::from_strings(self.strings);
         let launches = self.catalog.iter().map(|c| c.usage_key()).map(|k| (k.clone(), self.usage.get(&k))).filter(|(_, n)| *n > 0).collect();
         let blink = unsafe { GetCaretBlinkTime() };
         let blink = (blink != 0 && blink != u32::MAX).then_some(blink);
         let style = self.popup_style_px();
-        let view = SpotlightView::new(self.catalog.clone(), launches, labels, &style, self.config.spotlight.max_results as usize, blink, &self.gfx);
+        let view = SpotlightView::new(self.catalog.clone(), launches, labels, Default::default(), &style, self.config.spotlight.max_results as usize, blink, &self.gfx);
         let mut work = RECT::default();
         if unsafe { SystemParametersInfoW(SPI_GETWORKAREA, 0, Some(&mut work as *mut RECT as *mut _), SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0)) }.is_err() {
             work = self.monitor;
@@ -167,12 +156,13 @@ impl App {
             SpotlightOp::Menu => self.open_spotlight_menu(index),
             SpotlightOp::Icons => self.fill_spotlight_icons(),
             SpotlightOp::Copy => self.copy_spotlight_answer(),
+            SpotlightOp::Web | SpotlightOp::CopyEmoji | SpotlightOp::Refresh => {}
         }
     }
 
     /// Enter on a calculation: its result goes to the clipboard and Spotlight closes.
     fn copy_spotlight_answer(&mut self) {
-        let text = self.spotlight.as_ref().and_then(|p| p.read(|v| v.answer().map(|a| a.text.clone()))).flatten();
+        let text = self.spotlight.as_ref().and_then(|p| p.read(|v| v.copy_text())).flatten();
         if let Some(t) = text
             && !newwin_platform::clipboard::set_text(&t)
         {
