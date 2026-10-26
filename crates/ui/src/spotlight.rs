@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 use newwin_core::anim::Tween;
 use newwin_core::app_icon::{ICON_FADE_MS, ICON_GAP_LOGICAL_PX, ICON_LOGICAL_PX, IconImage, fade as icon_fade, source_for_candidate};
+use newwin_core::calc::{Answer, AnswerKind};
 use newwin_core::spotlight::{Candidate, Confirm, Hit, Kind, SystemCommand, rank};
 use newwin_core::text_edit::{Edit, TextEdit};
 use windows::Win32::UI::Input::KeyboardAndMouse::{VK_DOWN, VK_RETURN, VK_UP};
@@ -24,21 +25,24 @@ pub enum SpotlightOp {
     Menu = 2,
     /// The results changed: the owner looks up their icons ([`SpotlightView::shown`]).
     Icons = 3,
+    /// Enter on the answer row: the owner copies [`SpotlightView::answer`].
+    Copy = 4,
 }
 
 /// Panel action id: `index` is into the catalog the view shows.
 pub fn action_id(index: usize, op: SpotlightOp) -> u32 {
-    ((index as u32) << 2) | op as u32
+    ((index as u32) << 3) | op as u32
 }
 
 pub fn decode_action(id: u32) -> (usize, SpotlightOp) {
-    let op = match id & 3 {
+    let op = match id & 7 {
         1 => SpotlightOp::Admin,
         2 => SpotlightOp::Menu,
         3 => SpotlightOp::Icons,
+        4 => SpotlightOp::Copy,
         _ => SpotlightOp::Open,
     };
-    ((id >> 2) as usize, op)
+    ((id >> 3) as usize, op)
 }
 
 pub struct SpotlightLabels {
@@ -46,6 +50,8 @@ pub struct SpotlightLabels {
     pub no_results: String,
     pub kind_app: String,
     pub kind_system: String,
+    pub kind_calculator: String,
+    pub kind_conversion: String,
     pub press_again_shut_down: String,
     pub press_again_restart: String,
     pub keys: String,
@@ -72,6 +78,9 @@ pub struct SpotlightView {
     blink_ms: Option<u32>,
     text: Option<Text>,
     edit: TextEdit,
+    /// A calculation or conversion of the query: the first row, above the hits.
+    answer: Option<Answer>,
+    answer_row: Option<RowText>,
     hits: Vec<Hit>,
     selected: Option<usize>,
     hover: Option<usize>,
@@ -124,6 +133,8 @@ impl SpotlightView {
             no_results: String::new(),
             kind_app: String::new(),
             kind_system: String::new(),
+            kind_calculator: String::new(),
+            kind_conversion: String::new(),
             press_again_shut_down: String::new(),
             press_again_restart: String::new(),
             keys: String::new(),
@@ -141,6 +152,8 @@ impl SpotlightView {
             blink_ms,
             text,
             edit: TextEdit::default(),
+            answer: None,
+            answer_row: None,
             hits: Vec::new(),
             selected: None,
             hover: None,
@@ -171,6 +184,20 @@ impl SpotlightView {
 
     pub fn hits(&self) -> &[Hit] {
         &self.hits
+    }
+
+    /// The query's calculation or conversion, shown as the first row.
+    pub fn answer(&self) -> Option<&Answer> {
+        self.answer.as_ref()
+    }
+
+    /// Rows before the first hit: the answer row, when there is one.
+    fn offset(&self) -> usize {
+        usize::from(self.answer.is_some())
+    }
+
+    fn total_rows(&self) -> usize {
+        self.offset() + self.hits.len()
     }
 
     /// Each shown row's catalog index and where its icon comes from (none for system commands).
@@ -208,7 +235,7 @@ impl SpotlightView {
         if let Some(id) = keep
             && let Some(r) = self.hits.iter().position(|h| self.catalog.get(h.index).is_some_and(|c| c.id == id))
         {
-            self.selected = Some(r);
+            self.selected = Some(r + self.offset());
         }
         self.pill_y = Tween::at_rest(self.selected.map_or(0.0, |r| self.row_rect(r).y));
         self.rebuild();
@@ -216,7 +243,7 @@ impl SpotlightView {
 
     /// Rows shown below the field: none for an empty query, one for "No results".
     fn rows_shown(&self) -> usize {
-        if self.edit.text().trim().is_empty() { 0 } else { self.hits.len().max(1) }
+        if self.edit.text().trim().is_empty() { 0 } else { self.total_rows().max(1) }
     }
 
     fn rows_h(&self) -> f32 {
@@ -238,13 +265,18 @@ impl SpotlightView {
     }
 
     fn hit_row(&self, p: PointF) -> Option<usize> {
-        (0..self.hits.len()).find(|&r| self.row_rect(r).contains(p))
+        (0..self.total_rows()).find(|&r| self.row_rect(r).contains(p))
     }
 
     fn rank(&mut self) {
         let launches = &self.launches;
         self.hits = rank(self.edit.text(), &self.catalog, &|k| launches.get(k).copied().unwrap_or(0), self.max);
-        self.selected = (!self.hits.is_empty()).then_some(0);
+        self.answer = newwin_core::calc::answer(self.edit.text());
+        // The answer row takes a place among the results, not on top of them.
+        if self.answer.is_some() && self.hits.len() >= self.max {
+            self.hits.truncate(self.max.saturating_sub(1));
+        }
+        self.selected = (self.total_rows() > 0).then_some(0);
         self.hover = None;
         self.confirm.reset();
     }
@@ -268,6 +300,7 @@ impl SpotlightView {
             .collect();
         let armed = self.armed_label();
         let width = self.width();
+        let answer = self.answer.as_ref().map(|a| (a.text.clone(), if a.kind == AnswerKind::Math { self.labels.kind_calculator.clone() } else { self.labels.kind_conversion.clone() }));
         let Some(t) = self.text.as_mut() else { return };
         self.query_text = (!self.edit.text().is_empty()).then(|| t.cache.layout(self.edit.text(), &t.query, field_room).ok()).flatten();
         self.hint_text = t.cache.layout(&self.labels.hint, &t.query, field_room).ok();
@@ -281,6 +314,13 @@ impl SpotlightView {
                 RowText { name: t.cache.layout_ranges(name, &t.regular, (name_w - kind_w).max(1.0), ranges).ok(), kind }
             })
             .collect();
+        self.answer_row = answer.map(|(text, kind)| {
+            let kind = t.cache.layout(&kind, &t.small, row_w / 3.0).ok();
+            let kind_w = kind.as_ref().map_or(0.0, |k| k.width() + pad_x);
+            // The result reads first: a size up from the names, between them and the query.
+            let bold = TextStyle { weight: theme::WEIGHT_SEMIBOLD, size: (t.regular.size + t.query.size) / 2.0, ..t.regular.clone() };
+            RowText { name: t.cache.layout(&text, &bold, (name_w - kind_w).max(1.0)).ok(), kind }
+        });
         self.armed_text = armed.and_then(|(index, label)| t.cache.layout(&label, &t.regular, row_w).ok().map(|l| (index, l)));
     }
 
@@ -334,7 +374,7 @@ impl SpotlightView {
     }
 
     fn step(&mut self, down: bool, now: u64) -> PanelReply {
-        let n = self.hits.len();
+        let n = self.total_rows();
         if n == 0 {
             return PanelReply::default();
         }
@@ -348,12 +388,15 @@ impl SpotlightView {
     }
 
     fn selected_candidate(&self) -> Option<(usize, &Candidate)> {
-        let index = self.hits.get(self.selected?)?.index;
+        let index = self.hits.get(self.selected?.checked_sub(self.offset())?)?.index;
         Some((index, self.catalog.get(index)?))
     }
 
     /// Enter or a click on the selected row.
     fn activate(&mut self, now: u64) -> PanelReply {
+        if self.answer.is_some() && self.selected == Some(0) {
+            return PanelReply { action: Some(action_id(0, SpotlightOp::Copy)), ..Default::default() };
+        }
         let Some((index, c)) = self.selected_candidate() else { return PanelReply::default() };
         let needs_confirm = matches!(c.kind, Kind::System(cmd) if cmd.needs_confirm());
         if self.confirm.press(index, needs_confirm, now) {
@@ -450,16 +493,36 @@ impl PanelContent for SpotlightView {
             if self.selected.is_some() {
                 p.fill_round_rect(RectF::new(base.x, self.pill_y.value(now), base.w, base.h), radius, theme::ACTIVE_PILL.with_alpha(theme::ACTIVE_PILL.a * fade));
             }
-            if self.hits.is_empty()
+            if self.total_rows() == 0
                 && let Some(t) = &self.empty_text
             {
                 p.text(t, PointF { x: base.x + pad_x, y: (base.y + (base.h - t.height()) / 2.0).round() }, theme::TEXT_INACTIVE.with_alpha(fade));
             }
             let armed = self.armed_text.as_ref().filter(|_| self.confirm.armed(now).is_some());
             let name_x = self.name_x();
+            if let Some(row) = &self.answer_row {
+                // The answer: an = in the icon column, the result in bold.
+                let rect = self.row_rect(0);
+                let strong = self.selected == Some(0);
+                let c = PointF { x: rect.x + pad_x + self.s(ICON_LOGICAL_PX) / 2.0, y: rect.y + rect.h / 2.0 };
+                let (d, gap) = (self.s(5.0), self.s(2.5));
+                let stroke = self.s(theme::ICON_STROKE).max(1.0) + 0.3;
+                for dy in [-gap, gap] {
+                    p.line(PointF { x: c.x - d, y: c.y + dy }, PointF { x: c.x + d, y: c.y + dy }, theme::TEXT_STRONG.with_alpha(fade), stroke);
+                }
+                if let Some(t) = &row.name {
+                    let color = if strong { theme::TEXT_STRONG } else { theme::TEXT };
+                    p.text(t, PointF { x: rect.x + name_x, y: (rect.y + (rect.h - t.height()) / 2.0).round() }, color.with_alpha(fade));
+                }
+                if let Some(k) = &row.kind {
+                    let at = PointF { x: rect.right() - pad_x - k.width(), y: (rect.y + (rect.h - k.height()) / 2.0).round() };
+                    p.text(k, at, theme::TEXT_INACTIVE.with_alpha(fade));
+                }
+            }
+            let offset = self.offset();
             for (r, row) in self.rows.iter().enumerate() {
-                let rect = self.row_rect(r);
-                let strong = self.selected == Some(r);
+                let rect = self.row_rect(r + offset);
+                let strong = self.selected == Some(r + offset);
                 let index = self.hits.get(r).map(|h| h.index);
                 if let Some((img, at)) = index.and_then(|i| self.icons.get(&i)) {
                     let dst = icon_rect(rect.x + pad_x, rect.y + rect.h / 2.0, self.dpi);

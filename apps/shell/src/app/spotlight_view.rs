@@ -111,6 +111,8 @@ impl App {
             no_results: s.no_results.into(),
             kind_app: s.kind_app.into(),
             kind_system: s.kind_system.into(),
+            kind_calculator: s.kind_calculator.into(),
+            kind_conversion: s.kind_conversion.into(),
             press_again_shut_down: s.press_again_shut_down.into(),
             press_again_restart: s.press_again_restart.into(),
             keys: s.spotlight_keys.into(),
@@ -164,7 +166,19 @@ impl App {
             SpotlightOp::Admin => self.launch_candidate(index, true),
             SpotlightOp::Menu => self.open_spotlight_menu(index),
             SpotlightOp::Icons => self.fill_spotlight_icons(),
+            SpotlightOp::Copy => self.copy_spotlight_answer(),
         }
+    }
+
+    /// Enter on a calculation: its result goes to the clipboard and Spotlight closes.
+    fn copy_spotlight_answer(&mut self) {
+        let text = self.spotlight.as_ref().and_then(|p| p.read(|v| v.answer().map(|a| a.text.clone()))).flatten();
+        if let Some(t) = text
+            && !newwin_platform::clipboard::set_text(&t)
+        {
+            log::warn!("cannot copy the answer");
+        }
+        self.close_spotlight();
     }
 
     fn open_spotlight_menu(&mut self, index: usize) {

@@ -109,12 +109,14 @@ fn spotlight() {
         no_results: "No results".into(),
         kind_app: "App".into(),
         kind_system: "System".into(),
+        kind_calculator: "Calculator".into(),
+        kind_conversion: "Conversion".into(),
         press_again_shut_down: "Press Enter again to shut down".into(),
         press_again_restart: "Press Enter again to restart".into(),
         keys: "enter open   esc close".into(),
     };
     let mut v = newwin_ui::spotlight::SpotlightView::new(catalog, Default::default(), labels, &style(), 6, None, &gfx);
-    for ch in "st".chars() {
+    for ch in "10 km in mi".chars() {
         v.input(PanelInput::Char(ch), 0);
     }
     panel("spotlight", &mut v, 10_000);

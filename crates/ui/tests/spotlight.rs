@@ -190,6 +190,8 @@ fn view_draws_with_text() {
         no_results: s.no_results.into(),
         kind_app: s.kind_app.into(),
         kind_system: s.kind_system.into(),
+        kind_calculator: s.kind_calculator.into(),
+        kind_conversion: s.kind_conversion.into(),
         press_again_shut_down: s.press_again_shut_down.into(),
         press_again_restart: s.press_again_restart.into(),
         keys: s.spotlight_keys.into(),
@@ -238,4 +240,47 @@ fn a_query_asks_the_owner_for_icons() {
 fn names_line_up_with_or_without_an_icon() {
     let v = view();
     assert_eq!(v.name_x(), theme::POPUP_ITEM_PAD_X + 16.0 + 6.0, "the same column for every row, icon or not");
+}
+
+#[test]
+fn a_calculation_is_the_first_row_and_enter_copies_it() {
+    let mut v = view();
+    typed(&mut v, "2+2*3");
+    assert_eq!(v.answer().map(|a| a.text.as_str()), Some("8"));
+    assert_eq!(v.selected(), Some(0));
+    assert_eq!(v.size().1, theme::SPOTLIGHT_FIELD_H + 2.0 * theme::SPOTLIGHT_PAD + (1 + v.hits().len()) as f32 * theme::SPOTLIGHT_ROW_H + theme::SPOTLIGHT_HINTS_H);
+    assert_eq!(key(&mut v, RETURN), Some(action_id(0, SpotlightOp::Copy)));
+}
+
+#[test]
+fn answers_appear_only_for_calculations() {
+    let mut v = view();
+    typed(&mut v, "5 s in ms");
+    assert_eq!(v.answer().map(|a| a.text.as_str()), Some("5000 ms"));
+    let mut v = view();
+    typed(&mut v, "ste");
+    assert!(v.answer().is_none());
+    let mut v = SpotlightView::for_test(catalog(), 8);
+    typed(&mut v, "2pi");
+    assert!(v.answer().is_some());
+    assert_eq!(v.hits().len(), 0);
+    assert_eq!(key(&mut v, DOWN), None);
+    assert_eq!(v.selected(), Some(0), "one row: the arrows stay on it");
+}
+
+#[test]
+fn copy_round_trips_through_the_action_id() {
+    use newwin_ui::spotlight::decode_action;
+    assert_eq!(decode_action(action_id(0, SpotlightOp::Copy)), (0, SpotlightOp::Copy));
+    assert_eq!(decode_action(action_id(41, SpotlightOp::Menu)), (41, SpotlightOp::Menu));
+}
+
+#[test]
+fn an_app_below_the_answer_opens() {
+    let mut v =SpotlightView::for_test(Rc::new(vec![app("Calc 2+2", None, true)]), 8);
+    typed(&mut v, "2+2");
+    assert_eq!(v.hits().len(), 1, "the app matches too");
+    key(&mut v, DOWN);
+    assert_eq!(v.selected(), Some(1));
+    assert_eq!(key(&mut v, RETURN), Some(action_id(0, SpotlightOp::Open)), "row 1 is the app, catalog index 0");
 }

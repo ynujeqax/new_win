@@ -4,6 +4,7 @@ pub mod anim;
 pub mod app_icon;
 pub mod apps;
 pub mod audio;
+pub mod calc;
 pub mod clock;
 pub mod glass;
 pub mod input_lang;

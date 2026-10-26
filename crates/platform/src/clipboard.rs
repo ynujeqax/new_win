@@ -1,8 +1,8 @@
-//! Reading text the user copied (for pasting into Spotlight).
+//! Text on the clipboard: read for pasting into Spotlight, written for its answers.
 
-use windows::Win32::Foundation::HGLOBAL;
-use windows::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
-use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+use windows::Win32::Foundation::{GlobalFree, HANDLE, HGLOBAL};
+use windows::Win32::System::DataExchange::{CloseClipboard, EmptyClipboard, GetClipboardData, OpenClipboard, SetClipboardData};
+use windows::Win32::System::Memory::{GMEM_MOVEABLE, GlobalAlloc, GlobalLock, GlobalUnlock};
 use windows::core::PCWSTR;
 
 const CF_UNICODETEXT: u32 = 13;
@@ -23,5 +23,35 @@ pub fn text() -> Option<String> {
         });
         let _ = CloseClipboard();
         s
+    }
+}
+
+/// Puts `s` on the clipboard as text; false when the clipboard is busy.
+pub fn set_text(s: &str) -> bool {
+    let wide: Vec<u16> = s.encode_utf16().chain(Some(0)).collect();
+    unsafe {
+        if OpenClipboard(None).is_err() {
+            return false;
+        }
+        let ok = (|| {
+            EmptyClipboard().ok()?;
+            let g = GlobalAlloc(GMEM_MOVEABLE, wide.len() * 2).ok()?;
+            let p = GlobalLock(g) as *mut u16;
+            if p.is_null() {
+                let _ = GlobalFree(Some(g));
+                return None;
+            }
+            std::ptr::copy_nonoverlapping(wide.as_ptr(), p, wide.len());
+            let _ = GlobalUnlock(g);
+            // The clipboard owns the memory once this succeeds.
+            if SetClipboardData(CF_UNICODETEXT, Some(HANDLE(g.0))).is_err() {
+                let _ = GlobalFree(Some(g));
+                return None;
+            }
+            Some(())
+        })()
+        .is_some();
+        let _ = CloseClipboard();
+        ok
     }
 }
