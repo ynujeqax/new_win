@@ -101,7 +101,7 @@ impl App {
             dpi: self.dpi,
         };
         let content = MediaPanel::new(v.info.clone(), app_name(&v.info.app), &style, &self.gfx);
-        let anchor = PointF { x: self.bar_rect.left as f32 + slot.x + slot.w / 2.0, y: self.bar_rect.bottom as f32 + scale(4.0, self.dpi).round() };
+        let anchor = PointF { x: self.bar_rect.left as f32 + slot.x + slot.w / 2.0, y: self.under_bar() };
         match Panel::show(&self.gfx, content, anchor, self.dpi, self.bar, WM_APP_PANEL) {
             Ok(p) => self.open_panel(ShellPanel::Media(p)),
             Err(e) => log::error!("cannot open the media panel: {e}"),

@@ -87,7 +87,7 @@ impl App {
 
     /// Screen position just under a bar item (or under the pointer for the bar menu).
     fn anchor_below(&self, x_in_bar: f32) -> PointF {
-        PointF { x: self.bar_rect.left as f32 + x_in_bar, y: self.bar_rect.bottom as f32 + scale(4.0, self.dpi).round() }
+        PointF { x: self.bar_rect.left as f32 + x_in_bar, y: self.under_bar() }
     }
 
     pub(super) fn open(&mut self, items: Vec<MenuItem>, anchor: PointF, ctx: MenuCtx) {

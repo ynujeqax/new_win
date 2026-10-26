@@ -364,7 +364,7 @@ impl App {
         self.right.tooltip_item = Some(item);
         let a = &self.config.appearance;
         let style = PopupStyle { font_family: a.font_family.clone(), font_size_px: scale(a.font_size, self.dpi), dpi: self.dpi };
-        let anchor = PointF { x: self.bar_rect.left as f32 + r.x + r.w / 2.0, y: self.bar_rect.bottom as f32 + scale(6.0, self.dpi).round() };
+        let anchor = PointF { x: self.bar_rect.left as f32 + r.x + r.w / 2.0, y: self.under_bar() };
         self.tooltip = None;
         match Tooltip::show(&self.gfx, &text, anchor, &style) {
             Ok(t) => self.tooltip = Some(t),

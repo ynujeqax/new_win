@@ -151,7 +151,7 @@ impl App {
         }
         // Left-aligned with the bar: centred on the button it would stick out past the bar's end.
         let width = newwin_ui::panel::PanelContent::size(&list).0;
-        let anchor = PointF { x: left + width / 2.0, y: self.bar_rect.bottom as f32 + scale(4.0, self.dpi).round() };
+        let anchor = PointF { x: left + width / 2.0, y: self.under_bar() };
         match Panel::show(&self.gfx, list, anchor, self.dpi, self.bar, WM_APP_PANEL) {
             Ok(p) => {
                 self.open_panel(ShellPanel::Tray(p));

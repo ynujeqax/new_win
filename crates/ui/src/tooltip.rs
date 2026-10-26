@@ -11,7 +11,7 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
 use crate::backdrop::Frame;
-use crate::panel::{GlassWindow, panel_rect};
+use crate::panel::{GlassWindow, panel_rect, popup_area};
 use crate::popup::PopupStyle;
 use crate::{Backdrop, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyle, fade, paint_glass, theme};
 
@@ -100,7 +100,7 @@ impl Tooltip {
         };
         state.layout(text);
         let (mon, _) = primary_monitor();
-        let r = panel_rect(anchor, state.size, mon);
+        let r = panel_rect(anchor, state.size, popup_area(mon));
         let (w, h) = state.size;
         let state = Rc::new(RefCell::new(state));
         let hwnd = create_window(
@@ -139,7 +139,7 @@ impl Tooltip {
         unsafe {
             let _ = GetWindowRect(self.hwnd, &mut wr);
             let (mon, _) = primary_monitor();
-            let r = panel_rect(PointF { x: (wr.left + wr.right) as f32 / 2.0, y: wr.top as f32 }, (w, h), mon);
+            let r = panel_rect(PointF { x: (wr.left + wr.right) as f32 / 2.0, y: wr.top as f32 }, (w, h), popup_area(mon));
             let _ = SetWindowPos(self.hwnd, None, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOACTIVATE | SWP_NOZORDER);
         }
         if let Some(layer) = s.layer.as_mut() {

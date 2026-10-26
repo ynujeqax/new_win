@@ -198,8 +198,9 @@ impl Popup {
         let (w, h, rects) = layout_items(&widths, &seps, &subs, &metrics);
 
         let (mon, _) = primary_monitor();
-        let x = (anchor.x as i32).min(mon.right - w as i32).max(mon.left);
-        let y = (anchor.y as i32).min(mon.bottom - h as i32).max(mon.top);
+        let area = crate::panel::popup_area(mon);
+        let x = (anchor.x as i32).min(area.right - w as i32).max(area.left);
+        let y = (anchor.y as i32).min(area.bottom - h as i32).max(area.top);
         let mut ex = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOREDIRECTIONBITMAP;
         if is_child {
             ex |= WS_EX_NOACTIVATE;

@@ -47,7 +47,7 @@ impl App {
             dpi: self.dpi,
         };
         let content = CalendarPanel::new(today(), first_weekday(), weekday_names(), Box::new(|m: Month| month_title(m.year, m.month)), &style, &self.gfx);
-        let anchor = PointF { x: self.bar_rect.left as f32 + slot.x + slot.w / 2.0, y: self.bar_rect.bottom as f32 + scale(4.0, self.dpi).round() };
+        let anchor = PointF { x: self.bar_rect.left as f32 + slot.x + slot.w / 2.0, y: self.under_bar() };
         match Panel::show(&self.gfx, content, anchor, self.dpi, self.bar, WM_APP_PANEL) {
             Ok(p) => self.open_panel(ShellPanel::Calendar(p)),
             Err(e) => log::error!("cannot open the calendar: {e}"),

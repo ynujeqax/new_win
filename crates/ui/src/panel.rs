@@ -72,10 +72,25 @@ pub trait PanelContent {
     }
 }
 
-/// The panel's screen rectangle: centred under `anchor`, kept inside `monitor`.
-pub fn panel_rect(anchor: PointF, size: (f32, f32), monitor: RECT) -> RECT {
+thread_local! {
+    static POPUP_AREA: std::cell::Cell<Option<RECT>> = const { std::cell::Cell::new(None) };
+}
+
+/// Where panels, menus and tooltips may go: the bar's span, so they keep the bar's margin from
+/// the screen edges (one spacing everywhere). The shell sets it whenever the bar moves.
+pub fn set_popup_area(r: RECT) {
+    POPUP_AREA.with(|a| a.set(Some(r)));
+}
+
+/// The area set by [`set_popup_area`], else `monitor`.
+pub fn popup_area(monitor: RECT) -> RECT {
+    POPUP_AREA.with(|a| a.get()).unwrap_or(monitor)
+}
+
+/// The panel's screen rectangle: centred under `anchor`, kept inside `area` horizontally.
+pub fn panel_rect(anchor: PointF, size: (f32, f32), area: RECT) -> RECT {
     let (w, h) = (size.0.round() as i32, size.1.round() as i32);
-    let left = ((anchor.x - size.0 / 2.0).round() as i32).min(monitor.right - w).max(monitor.left);
+    let left = ((anchor.x - size.0 / 2.0).round() as i32).min(area.right - w).max(area.left);
     let top = anchor.y.round() as i32;
     RECT { left, top, right: left + w, bottom: top + h }
 }
@@ -129,7 +144,7 @@ impl<C: PanelContent + 'static> Panel<C> {
         let started = std::time::Instant::now();
         let size = content.size();
         let (mon, _) = primary_monitor();
-        let r = panel_rect(anchor, size, mon);
+        let r = panel_rect(anchor, size, popup_area(mon));
         let state = Rc::new(RefCell::new(State {
             gfx: gfx.clone(),
             hwnd: HWND::default(),
@@ -391,7 +406,7 @@ impl<C: PanelContent> State<C> {
             // Keep the top centre where it was.
             let cx = (wr.left + wr.right) as f32 / 2.0;
             let (mon, _) = primary_monitor();
-            let r = panel_rect(PointF { x: cx, y: wr.top as f32 }, size, mon);
+            let r = panel_rect(PointF { x: cx, y: wr.top as f32 }, size, popup_area(mon));
             let _ = SetWindowPos(self.hwnd, None, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOACTIVATE | SWP_NOZORDER);
             if let Some(sh) = self.shadow.as_mut() {
                 sh.follow(r, radius_for(size.1, self.dpi));

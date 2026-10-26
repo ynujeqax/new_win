@@ -13,7 +13,7 @@ use newwin_core::watchdog::EXIT_RESTART;
 use newwin_platform::appbar::AppBar;
 use newwin_platform::appinfo::ComGuard;
 use newwin_platform::clock::ui_language_tag;
-use newwin_platform::dpi::{primary_monitor, scale};
+use newwin_platform::dpi::{primary_monitor, scale, scale_px};
 use newwin_platform::paths::taskbar_state_file;
 use newwin_platform::taskbar::{NativeTaskbar, WinEventHookGuard, restore_from_state_file, taskbar_created_message, watch_taskbar_show};
 use newwin_platform::tray_host::{Forward, HostOptions, TrayHost, watch_reorder};
@@ -213,6 +213,12 @@ fn is_intl_change(lp: LPARAM) -> bool {
 }
 
 impl App {
+    /// Where a panel, menu or tooltip under the bar starts: the bar's margin below it, the same
+    /// gap as between the bar and the screen's edge.
+    pub(super) fn under_bar(&self) -> f32 {
+        (self.bar_rect.bottom + scale_px(self.config.appearance.margin, self.dpi)) as f32
+    }
+
     fn reposition(&mut self) {
         let (monitor, dpi) = primary_monitor();
         // The output's size or position may have changed: the glass capture re-reads it.
@@ -244,6 +250,9 @@ impl App {
             }
             None => {}
         }
+        // Panels, menus and tooltips keep the bar's margin from the screen edges.
+        let m = scale_px(self.config.appearance.margin, dpi);
+        newwin_ui::panel::set_popup_area(RECT { left: r.left, top: monitor.top + m, right: r.right, bottom: monitor.bottom - m });
         self.set_catcher(self.catcher_mode);
         self.reserve_space();
         self.refresh();
