@@ -7,6 +7,7 @@ pub mod audio;
 pub mod calc;
 pub mod calendar;
 pub mod clock;
+pub mod currency;
 pub mod emoji;
 pub mod glass;
 pub mod input_lang;
