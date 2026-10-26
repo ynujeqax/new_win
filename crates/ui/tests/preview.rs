@@ -55,7 +55,7 @@ fn bar_right_side() {
 #[ignore]
 fn icon_sheet() {
     // Every icon at bar size and states, 48 px apart.
-    render_bmp(&out("icons"), 48 * 8, 48, BG, |p| {
+    render_bmp(&out("icons"), 48 * 12, 48, BG, |p| {
         let c = |i: f32| PointF { x: 24.0 + 48.0 * i, y: 24.0 };
         let (col, w) = (theme::TEXT_STRONG, theme::ICON_STROKE);
         icons::wifi(p, c(0.0), 18.0, 3.0, col, w);
@@ -66,6 +66,10 @@ fn icon_sheet() {
         icons::speaker(p, c(5.0), 18.0, 0.0, 1.0, col, w);
         icons::magnifier(p, c(6.0), 16.0, col, w);
         icons::chevron(p, c(7.0), 16.0, 0.0, col, w);
+        icons::gear(p, c(8.0), 16.0, col, w);
+        icons::globe(p, c(9.0), 16.0, col, w);
+        icons::link(p, c(10.0), 16.0, col, w);
+        icons::folder(p, c(11.0), 16.0, col, w);
     })
     .unwrap();
 }

@@ -173,6 +173,42 @@ pub fn magnifier(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
     p.line(m.handle.0, m.handle.1, color, w);
 }
 
+/// A gear: a Windows Settings page.
+pub fn gear(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    let (hub, ring) = (s * 0.12, s * 0.28);
+    p.stroke_round_rect(RectF::new(c.x - hub, c.y - hub, 2.0 * hub, 2.0 * hub), hub, color, w);
+    p.stroke_round_rect(RectF::new(c.x - ring, c.y - ring, 2.0 * ring, 2.0 * ring), ring, color, w);
+    for k in 0..8 {
+        let a = k as f32 * std::f32::consts::FRAC_PI_4;
+        let (dx, dy) = (a.cos(), a.sin());
+        p.line(at(c, dx * ring, dy * ring), at(c, dx * s * 0.42, dy * s * 0.42), color, s * 0.16);
+    }
+}
+
+/// A globe: search the web.
+pub fn globe(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    let r = s * 0.42;
+    p.stroke_round_rect(RectF::new(c.x - r, c.y - r, 2.0 * r, 2.0 * r), r, color, w);
+    let m = s * 0.18;
+    p.stroke_round_rect(RectF::new(c.x - m, c.y - r, 2.0 * m, 2.0 * r), m, color, w);
+    p.line(at(c, -r, 0.0), at(c, r, 0.0), color, w);
+}
+
+/// A box with an arrow out of it: a quick link to a site.
+pub fn link(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    let (l, t, r, b) = (c.x - s * 0.4, c.y - s * 0.3, c.x + s * 0.3, c.y + s * 0.4);
+    p.stroke_polyline(&[PointF { x: c.x - s * 0.02, y: t }, PointF { x: l, y: t }, PointF { x: l, y: b }, PointF { x: r, y: b }, PointF { x: r, y: c.y + s * 0.02 }], color, w);
+    let tip = at(c, s * 0.42, -s * 0.42);
+    p.line(at(c, -s * 0.06, s * 0.06), tip, color, w);
+    p.stroke_polyline(&[at(tip, -s * 0.26, 0.0), tip, at(tip, 0.0, s * 0.26)], color, w);
+}
+
+/// A folder: a quick link to a folder or file.
+pub fn folder(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    let pt = |x: f32, y: f32| at(c, s * x, s * y);
+    p.stroke_polygon(&[pt(-0.42, -0.3), pt(-0.12, -0.3), pt(-0.02, -0.18), pt(0.42, -0.18), pt(0.42, 0.32), pt(-0.42, 0.32)], color, w);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

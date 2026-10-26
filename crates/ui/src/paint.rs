@@ -174,6 +174,15 @@ impl<'a> Painter<'a> {
         unsafe { self.dc.DrawTextLayout(Vector2 { X: origin.x, Y: origin.y }, &t.layout, &b, D2D1_DRAW_TEXT_OPTIONS_NONE) };
     }
 
+    /// Text in its font's own colours (emoji), at `opacity`; any monochrome part is white.
+    pub fn text_color(&mut self, t: &TextLayout, origin: PointF, opacity: f32) {
+        if opacity <= 0.0 {
+            return;
+        }
+        let Some(b) = self.brush(Color::rgba(255, 255, 255, opacity.min(1.0))) else { return };
+        unsafe { self.dc.DrawTextLayout(Vector2 { X: origin.x, Y: origin.y }, &t.layout, &b, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT) };
+    }
+
     /// An app icon in `dst` (physical px), at `opacity`; its bitmap comes from `cache`.
     pub fn icon(&mut self, cache: &mut IconBitmaps, img: &Rc<IconImage>, dst: RectF, opacity: f32) {
         if opacity <= 0.0 {
