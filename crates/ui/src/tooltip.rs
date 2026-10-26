@@ -17,7 +17,7 @@ use crate::{Backdrop, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyl
 
 const PAD_X: f32 = 10.0;
 const HEIGHT: f32 = 24.0;
-const FADE_MS: u32 = 120;
+const FADE_MS: u32 = 200;
 
 struct State {
     gfx: Rc<Gfx>,

@@ -12,9 +12,9 @@ use crate::popup::PopupStyle;
 use crate::slider::{level_at, thumb_x};
 use crate::{Color, Gfx, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, icons, theme};
 
-const LEVEL_MS: u32 = 120;
-const MUTE_MS: u32 = 120;
-const FADE_MS: u32 = 120;
+const LEVEL_MS: u32 = 200;
+const MUTE_MS: u32 = 240;
+const FADE_MS: u32 = 160;
 const TRACK: Color = Color::rgba(255, 255, 255, 0.14);
 const FILL: Color = Color::rgba(255, 255, 255, 0.85);
 const THUMB: Color = Color::rgba(255, 255, 255, 0.95);

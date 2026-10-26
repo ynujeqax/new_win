@@ -1,8 +1,7 @@
 //! Drawing primitives in physical pixels.
 
-use windows::Win32::Graphics::Direct2D::Common::{D2D_RECT_F, D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN, D2D1_GRADIENT_STOP};
+use windows::Win32::Graphics::Direct2D::Common::{D2D_RECT_F, D2D_SIZE_F, D2D1_FIGURE_BEGIN_FILLED, D2D1_FIGURE_BEGIN_HOLLOW, D2D1_FIGURE_END_CLOSED, D2D1_FIGURE_END_OPEN};
 use windows::Win32::Graphics::Direct2D::*;
-use windows::core::Interface;
 use windows_numerics::Vector2;
 
 use std::rc::Rc;
@@ -69,24 +68,6 @@ impl<'a> Painter<'a> {
         unsafe { self.dc.DrawRoundedRectangle(&rr, &b, width, None) };
     }
 
-    /// Horizontal linear gradient from `r.x` (position 0) to `r.right()` (position 1).
-    fn h_gradient(&self, r: RectF, stops: &[(f32, Color)]) -> Option<ID2D1LinearGradientBrush> {
-        let stops: Vec<D2D1_GRADIENT_STOP> = stops.iter().map(|(p, c)| D2D1_GRADIENT_STOP { position: *p, color: c.d2d() }).collect();
-        unsafe {
-            let rt: ID2D1RenderTarget = self.dc.cast().ok()?;
-            let coll = rt.CreateGradientStopCollection(&stops, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP).ok()?;
-            let props = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES { startPoint: Vector2 { X: r.x, Y: 0.0 }, endPoint: Vector2 { X: r.right(), Y: 0.0 } };
-            self.dc.CreateLinearGradientBrush(&props, None, &coll).ok()
-        }
-    }
-
-    /// Like [`Self::stroke_round_rect`], with a horizontal gradient.
-    pub fn stroke_round_rect_h(&mut self, r: RectF, radius: f32, stops: &[(f32, Color)], width: f32) {
-        let Some(b) = self.h_gradient(r, stops) else { return };
-        let inner = r.inset(width / 2.0);
-        let rr = D2D1_ROUNDED_RECT { rect: inner.d2d(), radiusX: (radius - width / 2.0).max(0.0), radiusY: (radius - width / 2.0).max(0.0) };
-        unsafe { self.dc.DrawRoundedRectangle(&rr, &b, width, None) };
-    }
 
     pub fn line(&mut self, a: PointF, b: PointF, c: Color, width: f32) {
         let Some(br) = self.brush(c) else { return };

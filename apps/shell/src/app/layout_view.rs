@@ -1,4 +1,4 @@
-//! Keyboard layout on the bar (spec: M2 §2, §4.3): `ENG` / `UKR`, cross-fading on a switch.
+//! Keyboard layout on the bar (spec: M2 §2, §4.3): `ENG` / `UKR`, rolling to the new one on a switch.
 
 use newwin_core::anim::Tween;
 use newwin_core::input_lang::display_code;
@@ -16,7 +16,7 @@ pub(super) const WM_APP_LAYOUT: u32 = WM_APP + 10;
 pub(super) const LAYOUT_RECHECK_TIMER: usize = 8;
 /// Windows applies a layout switch asynchronously; read it a moment later.
 const RECHECK_MS: u32 = 50;
-const CROSSFADE_MS: u32 = 120;
+const CROSSFADE_MS: u32 = 300;
 
 pub(super) struct LangView {
     pub code: String,

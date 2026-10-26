@@ -210,13 +210,16 @@ impl RightView {
                 }
                 RightItem::Layout => {
                     if let Some(l) = &self.lang {
+                        // A switch rolls the new code in from below, like the clock.
                         let color = lit(Target::Right(RightItem::Layout));
                         let f = l.fade.value(now);
+                        let lift = s(7.0);
+                        let at = |t: &TextLayout, dy: f32| PointF { x: (r.x + (r.w - t.width()) / 2.0).round(), y: ((h - t.height()) / 2.0 + dy).round() };
                         if let Some(t) = l.prev_text.as_ref().filter(|_| f < 1.0) {
-                            text(p, t, color.with_alpha(color.a * (1.0 - f)));
+                            p.text(t, at(t, -lift * f), color.with_alpha(color.a * (1.0 - f)));
                         }
                         if let Some(t) = &l.text {
-                            text(p, t, color.with_alpha(color.a * f));
+                            p.text(t, at(t, lift * (1.0 - f)), color.with_alpha(color.a * f));
                         }
                     }
                 }

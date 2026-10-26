@@ -55,14 +55,7 @@ fn tint_only_layers_have_no_backdrop_visual() {
 }
 
 #[test]
-fn glass_rim_lights_the_ends_not_the_top() {
-    // Liquid Glass (variant B): the rim runs left to right, bright at the rounded ends, almost
-    // invisible along the long sides; no glare along the top.
-    use newwin_ui::theme::{GLASS_GLOW, GLASS_RIM_H};
-    let (first, last) = (GLASS_RIM_H[0].1.a, GLASS_RIM_H[GLASS_RIM_H.len() - 1].1.a);
-    assert_eq!((first, last), (0.45, 0.35));
-    assert!(GLASS_RIM_H[1..GLASS_RIM_H.len() - 1].iter().all(|(_, c)| c.a <= 0.05));
-    assert_eq!(GLASS_GLOW.map(|(inset, c)| (inset, c.a)), [(1.0, 0.07), (2.0, 0.04), (3.0, 0.02)]);
+fn active_pill_strength() {
     assert_eq!(newwin_ui::theme::ACTIVE_PILL.a, 0.16);
 }
 

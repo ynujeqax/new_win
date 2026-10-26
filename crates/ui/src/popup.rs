@@ -26,6 +26,11 @@ pub const CLOSED: isize = 0;
 pub const REGIONS: isize = 2;
 /// Not exported by the `windows` crate.
 const WM_MOUSELEAVE: u32 = 0x02A3;
+/// A menu opens a little quicker than a panel: it is smaller and usually picked from at once.
+const MENU_SHOW_MS: u32 = 200;
+const MENU_HIDE_MS: u32 = 140;
+/// Destroys the window once the closing animation has run.
+const CLOSE_TIMER: usize = 2;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MenuItem {
@@ -244,6 +249,8 @@ impl Popup {
             s.paint();
             if wait_glass {
                 s.hide_until_glass();
+            } else {
+                s.animate_in();
             }
         }
         unsafe {
@@ -356,12 +363,20 @@ impl crate::GlassWindow for Popup {
 
 impl Drop for Popup {
     fn drop(&mut self) {
-        if let Ok(mut s) = self.state.try_borrow_mut() {
-            s.closed = true;
-            s.child = None;
-        }
+        // The menu fades out and lifts towards the bar; its window goes when that has run.
+        let faded = match self.state.try_borrow_mut() {
+            Ok(mut s) => {
+                s.closed = true;
+                s.child = None;
+                s.animate_out()
+            }
+            Err(_) => false,
+        };
         unsafe {
-            if IsWindow(Some(self.hwnd)).as_bool() {
+            if !IsWindow(Some(self.hwnd)).as_bool() {
+                return;
+            }
+            if !faded || SetTimer(Some(self.hwnd), CLOSE_TIMER, MENU_HIDE_MS + 20, None) == 0 {
                 let _ = DestroyWindow(self.hwnd);
             }
         }
@@ -371,8 +386,9 @@ impl Drop for Popup {
 impl State {
     /// Clear until [`Self::reveal`] (at most 250 ms: the reveal timer).
     fn hide_until_glass(&mut self) {
+        let drop = self.drop();
         if let Some(layer) = self.layer.as_mut() {
-            match start_clear(&self.gfx, layer, self.hwnd, 0.0) {
+            match start_clear(&self.gfx, layer, self.hwnd, drop) {
                 Ok(()) => self.waiting = true,
                 Err(e) => log::warn!("popup cannot start clear: {e}"),
             }
@@ -386,14 +402,39 @@ impl State {
         }
         self.waiting = false;
         end_clear(self.hwnd);
+        self.animate_in();
+    }
+
+    /// How far above its place a menu starts: it drops in from the bar. Submenus only fade.
+    fn drop(&self) -> f32 {
+        if self.is_child { 0.0 } else { -(theme::PANEL_DROP_PX * self.dpi as f32 / 96.0).round() }
+    }
+
+    /// Slides down into place and fades in, like the panels.
+    fn animate_in(&mut self) {
+        let drop = self.drop();
         let Some(layer) = self.layer.as_mut() else { return };
         let shown = layer.visual().and_then(|root| {
             let inner = layer.backdrop_visual()?;
-            crate::set_offset_opacity(&self.gfx, &root, inner.as_ref(), 0.0, 1.0)
+            crate::set_offset_opacity(&self.gfx, &root, inner.as_ref(), drop, 0.0)?;
+            crate::slide_y_both(&self.gfx, &root, inner.as_ref(), drop, 0.0, MENU_SHOW_MS)?;
+            crate::fade(&self.gfx, &root, 0.0, 1.0, MENU_SHOW_MS)
         });
         if let Err(e) = shown {
             log::warn!("popup cannot reveal: {e}");
         }
+    }
+
+    /// The closing animation; false when it could not start (the window then goes at once).
+    fn animate_out(&mut self) -> bool {
+        let drop = self.drop();
+        let Some(layer) = self.layer.as_mut() else { return false };
+        let r = layer.visual().and_then(|root| {
+            let inner = layer.backdrop_visual()?;
+            crate::slide_y_both(&self.gfx, &root, inner.as_ref(), 0.0, drop / 2.0, MENU_HIDE_MS)?;
+            crate::fade(&self.gfx, &root, 1.0, 0.0, MENU_HIDE_MS)
+        });
+        r.is_ok()
     }
 
     fn paint(&mut self) {
@@ -524,6 +565,14 @@ impl Handler for State {
                 self.reveal();
                 Some(LRESULT(0))
             }
+            WM_TIMER if wp.0 == CLOSE_TIMER => {
+                unsafe {
+                    let _ = DestroyWindow(self.hwnd);
+                }
+                Some(LRESULT(0))
+            }
+            // Closed and fading out: input goes nowhere.
+            WM_MOUSEMOVE | WM_MOUSELEAVE | WM_LBUTTONUP | WM_KEYDOWN if self.closed => Some(LRESULT(0)),
             WM_MOUSEACTIVATE if self.is_child => Some(LRESULT(MA_NOACTIVATE as isize)),
             WM_MOUSEMOVE => {
                 if !self.tracking {

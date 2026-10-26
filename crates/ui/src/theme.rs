@@ -26,30 +26,20 @@ pub const POPUP_HOVER: Color = Color::rgba(255, 255, 255, 0.10);
 pub const WEIGHT_REGULAR: u16 = 400;
 pub const WEIGHT_SEMIBOLD: u16 = 600;
 
-pub const REVEAL_MS: u32 = 150;
-pub const HIDE_MS: u32 = 120;
+pub const REVEAL_MS: u32 = 240;
+pub const HIDE_MS: u32 = 180;
 
 /// Liquid glass, variant B "dark glass" (spec: liquid glass §2): tint over the blurred backdrop,
 /// and without one.
 pub const GLASS_TINT: Color = Color::rgba(8, 8, 10, 0.38);
 pub const GLASS_TINT_SOLID: Color = Color::rgba(8, 8, 10, 0.88);
-/// 1 px rim, left to right: light catches the rounded ends, the long sides stay almost clear.
-pub const GLASS_RIM_H: [(f32, Color); 4] = [
-    (0.0, Color::rgba(255, 255, 255, 0.45)),
-    (0.18, Color::rgba(255, 255, 255, 0.05)),
-    (0.82, Color::rgba(255, 255, 255, 0.03)),
-    (1.0, Color::rgba(255, 255, 255, 0.35)),
-];
-/// Soft inner glow: (inset px, color) strokes inside the edge.
-pub const GLASS_GLOW: [(f32, Color); 3] =
-    [(1.0, Color::rgba(255, 255, 255, 0.07)), (2.0, Color::rgba(255, 255, 255, 0.04)), (3.0, Color::rgba(255, 255, 255, 0.02))];
 
 // M2 (spec: M2 §2.1, §3)
 pub const PANEL_RADIUS: f32 = 16.0;
-pub const PANEL_SHOW_MS: u32 = 150;
-pub const PANEL_HIDE_MS: u32 = 120;
-pub const PANEL_DROP_PX: f32 = 6.0;
-pub const HOVER_GLIDE_MS: u32 = 140;
+pub const PANEL_SHOW_MS: u32 = 240;
+pub const PANEL_HIDE_MS: u32 = 170;
+pub const PANEL_DROP_PX: f32 = 10.0;
+pub const HOVER_GLIDE_MS: u32 = 180;
 pub const ICON_STROKE: f32 = 1.35;
 pub const TOOLTIP_DELAY_MS: u32 = 500;
 pub const TOOLTIP_TEXT: f32 = 12.0;
@@ -67,7 +57,7 @@ pub const SPOTLIGHT_TOP: f32 = 0.22;
 /// Darkens the glass under Spotlight so its text reads over any window.
 pub const SPOTLIGHT_SHADE: Color = Color::rgba(0, 0, 0, 0.22);
 pub const CARET_W: f32 = 1.35;
-pub const ROW_FADE_MS: u32 = 120;
+pub const ROW_FADE_MS: u32 = 160;
 
 // M4 settings controls
 pub const TOGGLE_W: f32 = 36.0;

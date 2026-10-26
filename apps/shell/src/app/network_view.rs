@@ -15,7 +15,7 @@ pub(super) const WM_APP_NET: u32 = WM_APP + 9;
 pub(super) const NET_DEBOUNCE_TIMER: usize = 7;
 /// Windows sends a burst of events while a connection comes up.
 const DEBOUNCE_MS: u32 = 300;
-const CROSSFADE_MS: u32 = 160;
+const CROSSFADE_MS: u32 = 280;
 
 /// The network icon, cross-fading from the previous state.
 pub(super) struct NetView {

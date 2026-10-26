@@ -15,7 +15,7 @@ use crate::{Gfx, Painter, PointF, RectF, TextCache, TextLayout, TextStyle, theme
 
 const MAX_ROWS: usize = 14;
 const SCROLL_MS: u32 = 120;
-const FADE_MS: u32 = 120;
+const FADE_MS: u32 = 160;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TrayRow {

@@ -19,8 +19,8 @@ use super::panels::{ShellPanel, WM_APP_PANEL};
 use super::right_view::SpeakerView;
 
 pub(super) const WM_APP_AUDIO: u32 = WM_APP + 8;
-const WAVE_MS: u32 = 100;
-const MUTE_MS: u32 = 120;
+const WAVE_MS: u32 = 160;
+const MUTE_MS: u32 = 240;
 /// Volume per wheel notch over the speaker.
 const WHEEL_STEP: u8 = 2;
 
