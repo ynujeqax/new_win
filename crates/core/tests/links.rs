@@ -36,3 +36,9 @@ fn entries() {
     assert_eq!(parse_entry(&format!("{} x", "a".repeat(33))), None);
     assert_eq!(parse_entry(&format!("k {}", "x".repeat(1025))), None);
 }
+
+#[test]
+fn link_label_strings() {
+    use newwin_core::strings::strings_for;
+    assert_eq!((strings_for("en-US").kind_link, strings_for("uk-UA").kind_link), ("Link", "Посилання"));
+}

@@ -54,6 +54,7 @@ pub struct Strings {
     pub kind_conversion: &'static str,
     pub kind_settings_page: &'static str,
     pub kind_web: &'static str,
+    pub kind_link: &'static str,
     pub kind_currency: &'static str,
     /// For the date of the currency rates: "27 Oct".
     pub months_short: [&'static str; 12],
@@ -175,6 +176,7 @@ static EN: Strings = Strings {
     kind_conversion: "Conversion",
     kind_settings_page: "Settings",
     kind_web: "Web",
+    kind_link: "Link",
     kind_currency: "Currency",
     months_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     web_search_row: "Search {engine} for “{query}”",
@@ -287,6 +289,7 @@ static UK: Strings = Strings {
     kind_conversion: "Конвертер",
     kind_settings_page: "Параметри",
     kind_web: "Інтернет",
+    kind_link: "Посилання",
     kind_currency: "Валюта",
     months_short: ["січ", "лют", "бер", "кві", "тра", "чер", "лип", "сер", "вер", "жов", "лис", "гру"],
     web_search_row: "Шукати «{query}» у {engine}",

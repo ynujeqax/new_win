@@ -177,3 +177,41 @@ fn uk_strings_present() {
     assert_eq!(s.press_again_shut_down, "Натисніть ↵ ще раз, щоб завершити роботу");
     assert_eq!(newwin_core::strings::strings_for("en").spotlight_keys, "↑↓ select · ↵ open · Ctrl ↵ run as administrator · Esc close");
 }
+
+mod links {
+    use newwin_core::links::Link;
+    use newwin_core::spotlight::{Candidate, Kind, link_candidates, rank};
+
+    fn app(name: &str) -> Candidate {
+        Candidate { name: name.into(), id: name.into(), kind: Kind::App, file_path: None, packaged: false, words: Vec::new() }
+    }
+
+    fn link(k: &str) -> Link {
+        Link { keyword: k.into(), target: format!("https://{k}.example") }
+    }
+
+    #[test]
+    fn exact_link_beats_app() {
+        let mut c = vec![app("Steam")];
+        c.extend(link_candidates(&[link("steam")]));
+        let lots = |k: &str| if k == "Steam" { 50 } else { 0 };
+        let hits = rank("Steam", &c, &lots, 8);
+        assert_eq!(c[hits[0].index].kind, Kind::Link(0));
+        assert_eq!(c[hits[1].index].kind, Kind::App);
+    }
+
+    #[test]
+    fn link_prefix_ranks_normally() {
+        let mut c = vec![app("Steam")];
+        c.extend(link_candidates(&[link("steamdb")]));
+        let lots = |k: &str| if k == "Steam" { 5 } else { 0 };
+        let hits = rank("st", &c, &lots, 8);
+        assert_eq!(c[hits[0].index].kind, Kind::App, "more launches first");
+    }
+
+    #[test]
+    fn link_keys() {
+        let c = link_candidates(&[link("gh")]);
+        assert_eq!((c[0].name.as_str(), c[0].id.as_str(), c[0].usage_key()), ("gh", "link:gh", "link:gh".to_string()));
+    }
+}

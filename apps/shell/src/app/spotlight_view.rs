@@ -290,6 +290,14 @@ impl App {
                     Err(e) => log::warn!("open {}: {e}", page.uri),
                 })));
             }
+            Kind::Link(i) => {
+                let Some(target) = self.config.spotlight.links.get(i).map(|l| l.target.clone()) else { return };
+                let ping = self.ping.0 as isize;
+                self.submit_job(Job::Run(Box::new(move || match launch::shell_execute("open", &target, "") {
+                    Ok(()) => post_launched(ping, key),
+                    Err(e) => log::warn!("open link {target}: {e}"),
+                })));
+            }
             Kind::System(cmd) => {
                 // The session may end before the save timer: count and write first.
                 if matches!(cmd, SystemCommand::ShutDown | SystemCommand::Restart | SystemCommand::SignOut) {

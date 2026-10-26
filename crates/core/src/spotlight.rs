@@ -35,6 +35,8 @@ pub enum Kind {
     System(SystemCommand),
     /// A Windows Settings page: index into [`crate::settings_pages::PAGES`].
     SettingsPage(usize),
+    /// A quick link: index into the links it was built from ([`link_candidates`]).
+    Link(usize),
 }
 
 /// One thing Spotlight can find: an app from `shell:AppsFolder` or a system command.
@@ -70,6 +72,7 @@ impl Candidate {
                 }
             ),
             Kind::SettingsPage(i) => format!("settings:{}", crate::settings_pages::PAGES.get(i).map_or("", |p| p.uri.trim_start_matches("ms-settings:"))),
+            Kind::Link(_) => format!("link:{}", self.name),
         }
     }
 
@@ -200,9 +203,9 @@ fn rank_one(query: &str, cands: &[Candidate], launches: &dyn Fn(&str) -> u32) ->
     if q.is_empty() {
         return Vec::new();
     }
-    // (sort key, hit): level, more launches, apps then settings pages then system commands, name,
-    // position.
-    type Key = (MatchLevel, Reverse<u32>, u8, Vec<char>, usize);
+    // (sort key, hit): a quick link named exactly so, level, more launches, apps and links then
+    // settings pages then system commands, name, position.
+    type Key = (bool, MatchLevel, Reverse<u32>, u8, Vec<char>, usize);
     let mut found: Vec<(Key, Hit)> = Vec::new();
     for (i, c) in cands.iter().enumerate() {
         let name = folded(&c.name);
@@ -216,11 +219,12 @@ fn rank_one(query: &str, cands: &[Candidate], launches: &dyn Fn(&str) -> u32) ->
             (None, None) => continue,
         };
         let order = match c.kind {
-            Kind::App => 0,
+            Kind::App | Kind::Link(_) => 0,
             Kind::SettingsPage(_) => 1,
             Kind::System(_) => 2,
         };
-        found.push(((m.level, Reverse(launches(&c.usage_key())), order, name.chars, i), Hit { index: i, ranges: m.ranges }));
+        let exact_link = matches!(c.kind, Kind::Link(_)) && name.chars == q;
+        found.push(((!exact_link, m.level, Reverse(launches(&c.usage_key())), order, name.chars, i), Hit { index: i, ranges: m.ranges }));
     }
     found.sort_by(|a, b| a.0.cmp(&b.0));
     found.into_iter().map(|(_, h)| h).collect()
@@ -309,4 +313,17 @@ pub fn is_listed(name: &str, file_path: Option<&str>) -> bool {
     }
     let ext = file.rsplit_once('.').map(|(_, e)| e).unwrap_or("");
     !matches!(ext, "txt" | "chm" | "pdf" | "htm" | "html" | "url" | "rtf" | "md" | "log" | "ini")
+}
+
+/// The user's quick links as Spotlight entries: named by their keyword.
+pub fn link_candidates(links: &[crate::links::Link]) -> Vec<Candidate> {
+    links
+        .iter()
+        .enumerate()
+        .map(|(i, l)| {
+            let mut c = Candidate { name: l.keyword.clone(), id: String::new(), kind: Kind::Link(i), file_path: None, packaged: false, words: Vec::new() };
+            c.id = c.usage_key();
+            c
+        })
+        .collect()
 }
