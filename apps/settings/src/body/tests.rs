@@ -66,7 +66,7 @@ fn a_press_on_a_row_toggle_switches_it_and_starts_no_drag() {
     assert_eq!(b.press(pt(456.0, 60.0), 0), Some(BodyEvent::List(ListEdit::Toggled(1, false))));
     assert_eq!(b.move_to(pt(456.0, 200.0), 5), (None, false), "no row follows the pointer");
     assert_eq!(b.release(pt(456.0, 200.0), 10).0, None);
-    assert_eq!(b.list_keys(), ["layout", "network", "volume", "search", "date", "time"]);
+    assert_eq!(b.list_keys(), ["media", "layout", "network", "volume", "search", "date", "time"]);
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn dragging_a_row_by_its_body_moves_it() {
     assert!(b.animating(10), "the rows in between glide aside");
     assert_eq!(b.release(pt(50.0, 150.0), 10), (Some(BodyEvent::List(ListEdit::Moved(0, 3))), true));
     b.commit_move(0, 3, 10);
-    assert_eq!(b.list_keys(), ["network", "volume", "search", "layout", "date", "time"]);
+    assert_eq!(b.list_keys(), ["layout", "network", "volume", "media", "search", "date", "time"]);
     assert_eq!(b.release(pt(50.0, 150.0), 20), (None, false), "a second release does nothing");
 }
 
@@ -95,11 +95,11 @@ fn a_press_and_release_in_place_moves_nothing() {
 fn list_rows_are_focusable_space_toggles_and_steps_move() {
     let mut b = items();
     let f = b.focusables();
-    assert_eq!(f.len(), 6);
+    assert_eq!(f.len(), 7);
     assert!(f.iter().all(|f| f.0 == FocusKind::ListRow));
     assert_eq!(b.activate(0, KeyAction::Activate, 0), Some(BodyEvent::List(ListEdit::Toggled(0, false))));
     assert_eq!(b.activate(0, KeyAction::Step(-1), 0), None, "the first row cannot go up");
-    assert_eq!(b.activate(5, KeyAction::Step(1), 0), None, "the last row cannot go down");
+    assert_eq!(b.activate(6, KeyAction::Step(1), 0), None, "the last row cannot go down");
     assert_eq!(b.activate(2, KeyAction::Step(1), 0), Some(BodyEvent::List(ListEdit::Moved(2, 3))));
 }
 
@@ -110,7 +110,7 @@ fn a_reload_with_the_same_rows_keeps_the_list_and_glides_toggles() {
     c.items.hidden = vec!["date".into()];
     b.set_list(sections::list_for(Section::Items, &c, &TraySeen::default(), strings_for("en-US")).unwrap(), 100);
     assert!(b.animating(150));
-    assert_eq!(b.activate(4, KeyAction::Activate, 200), Some(BodyEvent::List(ListEdit::Toggled(4, true))));
+    assert_eq!(b.activate(5, KeyAction::Activate, 200), Some(BodyEvent::List(ListEdit::Toggled(5, true))));
 }
 
 #[test]

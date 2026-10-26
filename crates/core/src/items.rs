@@ -2,6 +2,8 @@
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum RightItem {
+    /// What is playing; shown only while something is.
+    Media,
     Layout,
     Network,
     Volume,
@@ -23,6 +25,7 @@ pub fn parse_right(names: &[String]) -> Vec<RightItem> {
     let mut out = Vec::new();
     for n in names {
         let item = match n.to_ascii_lowercase().as_str() {
+            "media" => RightItem::Media,
             "layout" => RightItem::Layout,
             "network" => RightItem::Network,
             "volume" => RightItem::Volume,

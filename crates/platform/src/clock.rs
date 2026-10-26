@@ -1,6 +1,10 @@
 //! Date/time text in the user's regional format, and the UI language.
 
-use windows::Win32::Globalization::{DATE_LONGDATE, GetDateFormatEx, GetTimeFormatEx, GetUserDefaultUILanguage, LCIDToLocaleName, TIME_FORMAT_FLAGS, TIME_NOSECONDS};
+use windows::Win32::Foundation::SYSTEMTIME;
+use windows::Win32::Globalization::{
+    DATE_LONGDATE, GetDateFormatEx, GetLocaleInfoEx, GetTimeFormatEx, GetUserDefaultUILanguage, LCIDToLocaleName, LOCALE_IFIRSTDAYOFWEEK,
+    LOCALE_SSHORTESTDAYNAME1, TIME_FORMAT_FLAGS, TIME_NOSECONDS,
+};
 use windows::Win32::System::SystemInformation::GetLocalTime;
 use windows::core::{HSTRING, PCWSTR};
 
@@ -48,4 +52,37 @@ pub fn ui_language_tag() -> String {
 /// Milliseconds since boot, for animations; never goes back (unlike the wall clock).
 pub fn now_ms() -> u64 {
     unsafe { windows::Win32::System::SystemInformation::GetTickCount64() }
+}
+
+/// Today's (year, month, day) on the local clock.
+pub fn today() -> (i32, u32, u32) {
+    let t = unsafe { GetLocalTime() };
+    (i32::from(t.wYear), u32::from(t.wMonth), u32::from(t.wDay))
+}
+
+fn locale_info(kind: u32) -> String {
+    let mut buf = [0u16; 64];
+    let n = unsafe { GetLocaleInfoEx(PCWSTR::null(), kind, Some(&mut buf)) };
+    String::from_utf16_lossy(&buf[..(n.max(1) - 1) as usize])
+}
+
+/// The week's first day in the user's region: 0 = Monday … 6 = Sunday.
+pub fn first_weekday() -> u32 {
+    locale_info(LOCALE_IFIRSTDAYOFWEEK).trim().parse().unwrap_or(0).min(6)
+}
+
+/// The shortest weekday names, Monday first ("Mo", "Пн").
+pub fn weekday_names() -> [String; 7] {
+    std::array::from_fn(|i| locale_info(LOCALE_SSHORTESTDAYNAME1 + i as u32))
+}
+
+/// "October 2026" in the user's language, with a capital first letter.
+pub fn month_title(year: i32, month: u32) -> String {
+    let st = SYSTEMTIME { wYear: year as u16, wMonth: month as u16, wDay: 1, ..Default::default() };
+    let pattern = HSTRING::from("MMMM yyyy");
+    let mut buf = [0u16; 64];
+    let n = unsafe { GetDateFormatEx(PCWSTR::null(), Default::default(), Some(&st), &pattern, Some(&mut buf), PCWSTR::null()) };
+    let s = String::from_utf16_lossy(&buf[..(n.max(1) - 1) as usize]);
+    let mut c = s.chars();
+    c.next().map(|f| f.to_uppercase().chain(c).collect()).unwrap_or_default()
 }

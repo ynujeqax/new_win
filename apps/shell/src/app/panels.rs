@@ -4,6 +4,8 @@ use newwin_core::items::RightItem;
 use newwin_core::visibility::VisInput;
 use newwin_platform::clock::now_ms;
 use newwin_ui::GlassWindow;
+use newwin_ui::calendar_panel::CalendarPanel;
+use newwin_ui::media_panel::MediaPanel;
 use newwin_ui::panel::Panel;
 use newwin_ui::popup::{CLOSED, PICKED, REGIONS};
 use newwin_ui::tray_list::TrayList;
@@ -20,6 +22,8 @@ pub(super) const WM_APP_PANEL: u32 = WM_APP + 11;
 pub(super) enum ShellPanel {
     Tray(Panel<TrayList>),
     Volume(Panel<VolumePanel>),
+    Media(Panel<MediaPanel>),
+    Calendar(Panel<CalendarPanel>),
 }
 
 impl ShellPanel {
@@ -27,6 +31,8 @@ impl ShellPanel {
         match self {
             ShellPanel::Tray(p) => p,
             ShellPanel::Volume(p) => p,
+            ShellPanel::Media(p) => p,
+            ShellPanel::Calendar(p) => p,
         }
     }
 
@@ -34,6 +40,8 @@ impl ShellPanel {
         match self {
             ShellPanel::Tray(p) => p.hwnd(),
             ShellPanel::Volume(p) => p.hwnd(),
+            ShellPanel::Media(p) => p.hwnd(),
+            ShellPanel::Calendar(p) => p.hwnd(),
         }
     }
 
@@ -42,6 +50,8 @@ impl ShellPanel {
         match self {
             ShellPanel::Tray(_) => Target::Tray,
             ShellPanel::Volume(_) => Target::Right(RightItem::Volume),
+            ShellPanel::Media(_) => Target::Right(RightItem::Media),
+            ShellPanel::Calendar(_) => Target::Right(RightItem::Date),
         }
     }
 
@@ -49,6 +59,8 @@ impl ShellPanel {
         match self {
             ShellPanel::Tray(p) => p.close(),
             ShellPanel::Volume(p) => p.close(),
+            ShellPanel::Media(p) => p.close(),
+            ShellPanel::Calendar(p) => p.close(),
         }
     }
 }
@@ -94,6 +106,7 @@ impl App {
             PICKED => match self.panel.as_ref().map(ShellPanel::anchor) {
                 Some(Target::Tray) => self.on_tray_action(wp.0 as u32),
                 Some(Target::Right(RightItem::Volume)) => self.on_volume_action(wp.0 as u32),
+                Some(Target::Right(RightItem::Media)) => self.on_media_action(wp.0 as u32),
                 _ => {}
             },
             REGIONS => self.sync_glass(),

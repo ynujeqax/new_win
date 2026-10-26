@@ -10,6 +10,7 @@ use newwin_ui::toggle::Toggle;
 /// An item's name in the list; an unknown name shows as itself.
 pub fn display_name(name: &str, s: &Strings) -> String {
     match name {
+        "media" => s.item_media,
         "layout" => s.item_layout,
         "network" => s.item_network,
         "volume" => s.item_volume,
@@ -57,21 +58,21 @@ mod tests {
     #[test]
     fn hiding_an_item_keeps_its_place() {
         let mut c = Config::default();
-        toggled(&mut c, 2, false);
-        assert_eq!(c.items.right[2], "volume");
+        toggled(&mut c, 3, false);
+        assert_eq!(c.items.right[3], "volume");
         assert_eq!(c.items.hidden, ["volume"]);
-        toggled(&mut c, 2, false);
+        toggled(&mut c, 3, false);
         assert_eq!(c.items.hidden, ["volume"], "hidden once");
-        toggled(&mut c, 2, true);
+        toggled(&mut c, 3, true);
         assert!(c.items.hidden.is_empty());
     }
 
     #[test]
     fn moving_an_item_rewrites_right() {
         let mut c = Config::default();
-        moved(&mut c, 5, 0);
+        moved(&mut c, 6, 0);
         assert_eq!(c.items.right[0], "time");
-        assert_eq!(c.items.right, ["time", "layout", "network", "volume", "search", "date"]);
+        assert_eq!(c.items.right, ["time", "media", "layout", "network", "volume", "search", "date"]);
         moved(&mut c, 9, 0);
         toggled(&mut c, 9, false);
         assert_eq!(c.items.right[0], "time", "out of range does nothing");
@@ -85,9 +86,9 @@ mod tests {
         c.items.hidden = vec!["search".into()];
         let r = rows(&c, en);
         let labels: Vec<_> = r.iter().map(|r| r.label.as_str()).collect();
-        assert_eq!(labels, ["Keyboard layout", "Network", "Volume", "Search", "Date", "Time"]);
+        assert_eq!(labels, ["Now playing", "Keyboard layout", "Network", "Volume", "Search", "Date", "Time"]);
         let on: Vec<_> = r.iter().map(|r| r.on.on).collect();
-        assert_eq!(on, [true, true, true, false, true, true]);
+        assert_eq!(on, [true, true, true, true, false, true, true]);
         assert!(r.iter().all(|r| r.detail.is_none()));
         assert_eq!(keys(&c), c.items.right);
     }

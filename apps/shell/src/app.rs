@@ -41,6 +41,7 @@ mod glass_regions;
 mod icons_view;
 mod layout_view;
 mod menus;
+mod media_view;
 mod network_view;
 mod panels;
 mod right_view;
@@ -112,6 +113,7 @@ pub struct App {
     audio_switch_warned: bool,
     // Network (M2)
     network: Option<newwin_platform::network::NetworkWatch>,
+    media: Option<newwin_platform::media::MediaWatch>,
     net_info: Option<newwin_core::network::NetInfo>,
     // Keyboard layout (M2)
     input_hook: Option<newwin_platform::input_hook::InputHook>,
@@ -372,6 +374,10 @@ impl App {
             self.on_network_event();
             return Some(LRESULT(0));
         }
+        if msg == media_view::WM_APP_MEDIA {
+            self.on_media(lp);
+            return Some(LRESULT(0));
+        }
         if msg == volume_view::WM_APP_AUDIO {
             self.on_audio(wp, lp);
             return Some(LRESULT(0));
@@ -598,6 +604,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         volume_wheel: newwin_core::audio::Wheel::default(),
         audio_switch_warned: false,
         network: None,
+        media: None,
         net_info: None,
         input_hook: None,
         ping: HWND::default(),
@@ -694,6 +701,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         let foreground = unsafe { GetForegroundWindow() }.0 as usize as u64;
         a.load_windows(enumerate_top_level(), foreground);
         a.start_audio();
+        a.start_media();
         a.start_network();
         a.start_layout();
         a.load_tray_seen();

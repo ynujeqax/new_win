@@ -17,6 +17,7 @@ pub mod input_hook;
 pub mod keyboard_layout;
 pub mod launch;
 pub mod log;
+pub mod media;
 pub mod network;
 pub mod paths;
 pub mod processes;

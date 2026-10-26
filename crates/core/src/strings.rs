@@ -109,6 +109,7 @@ pub struct Strings {
     pub unit_ms: &'static str,
     pub unit_px: &'static str,
     // Settings sections Items and Tray (M4 §3.3, §3.5)
+    pub item_media: &'static str,
     pub item_layout: &'static str,
     pub item_network: &'static str,
     pub item_volume: &'static str,
@@ -214,6 +215,7 @@ static EN: Strings = Strings {
     invalid_date_format: "Invalid format",
     unit_ms: "ms",
     unit_px: "px",
+    item_media: "Now playing",
     item_layout: "Keyboard layout",
     item_network: "Network",
     item_volume: "Volume",
@@ -319,6 +321,7 @@ static UK: Strings = Strings {
     invalid_date_format: "Неправильний формат",
     unit_ms: "мс",
     unit_px: "пкс",
+    item_media: "Зараз грає",
     item_layout: "Розкладка клавіатури",
     item_network: "Мережа",
     item_volume: "Гучність",

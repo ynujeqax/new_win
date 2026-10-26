@@ -3,10 +3,16 @@
 use newwin_config::Items;
 use newwin_core::anim::Tween;
 use newwin_core::clock::ms_until_next_minute;
-use newwin_platform::clock::{format_bar_date, format_bar_time, local_second_and_millis, now_ms};
+use newwin_core::calendar::Month;
+use newwin_platform::clock::{first_weekday, format_bar_date, format_bar_time, local_second_and_millis, month_title, now_ms, today, weekday_names};
+use newwin_platform::dpi::scale;
+use newwin_ui::PointF;
+use newwin_ui::calendar_panel::CalendarPanel;
+use newwin_ui::panel::Panel;
 use windows::Win32::UI::WindowsAndMessaging::SetTimer;
 
 use super::App;
+use super::panels::{ShellPanel, WM_APP_PANEL};
 
 pub(super) const CLOCK_TIMER: usize = 3;
 const TIME_ROLL_MS: u32 = 360;
@@ -30,6 +36,22 @@ impl App {
         let (s, ms) = local_second_and_millis();
         let delay = if ticks_every_second(self.config.appearance.show_seconds, &self.config.items) { 1000 - u32::from(ms) + 20 } else { ms_until_next_minute(s, ms) };
         unsafe { SetTimer(Some(self.bar), CLOCK_TIMER, delay, None) };
+    }
+
+    /// A click on the date: this month, today marked.
+    pub(super) fn toggle_calendar(&mut self) {
+        let Some(slot) = self.right.slot(newwin_core::items::RightItem::Date) else { return };
+        let style = newwin_ui::popup::PopupStyle {
+            font_family: self.config.appearance.font_family.clone(),
+            font_size_px: scale(self.config.appearance.font_size, self.dpi),
+            dpi: self.dpi,
+        };
+        let content = CalendarPanel::new(today(), first_weekday(), weekday_names(), Box::new(|m: Month| month_title(m.year, m.month)), &style, &self.gfx);
+        let anchor = PointF { x: self.bar_rect.left as f32 + slot.x + slot.w / 2.0, y: self.bar_rect.bottom as f32 + scale(4.0, self.dpi).round() };
+        match Panel::show(&self.gfx, content, anchor, self.dpi, self.bar, WM_APP_PANEL) {
+            Ok(p) => self.open_panel(ShellPanel::Calendar(p)),
+            Err(e) => log::error!("cannot open the calendar: {e}"),
+        }
     }
 }
 

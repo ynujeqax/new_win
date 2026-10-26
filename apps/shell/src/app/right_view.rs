@@ -58,6 +58,8 @@ pub(super) struct RightView {
     pub net: Option<super::network_view::NetView>,
     /// `None` until the layout has been read once.
     pub lang: Option<super::layout_view::LangView>,
+    /// `None` while nothing plays.
+    pub media: Option<super::media_view::MediaView>,
     /// Whose tooltip is showing.
     pub tooltip_item: Option<RightItem>,
     /// The item the hover pill last went to; it keeps its glow while the pill fades out.
@@ -91,6 +93,7 @@ impl RightView {
             speaker: None,
             net: None,
             lang: None,
+            media: None,
             tooltip_item: None,
             lit: None,
         }
@@ -136,7 +139,8 @@ impl RightView {
         let speaker = self.speaker.as_ref().is_some_and(|s| s.waves.running(now) || s.mute.running(now));
         let net = self.net.as_ref().is_some_and(|n| n.animating(now));
         let lang = self.lang.as_ref().is_some_and(|l| l.fade.running(now));
-        speaker || net || lang || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn, self.time_roll].iter().any(|t| t.running(now))
+        let media = self.media.as_ref().is_some_and(|m| m.roll.running(now));
+        speaker || net || lang || media || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn, self.time_roll].iter().any(|t| t.running(now))
     }
 
     /// Draws the tray button, the separators, the hover pill and the right items.
@@ -223,6 +227,28 @@ impl RightView {
                         }
                     }
                 }
+                RightItem::Media => {
+                    if let Some(m) = &self.media {
+                        // A note while playing, two bars while paused; a new track rolls in.
+                        let color = lit(Target::Right(RightItem::Media));
+                        let icon_c = PointF { x: r.x + s(theme::PILL_PAD_X) + s(7.0), y: h / 2.0 };
+                        if m.info.playing {
+                            icons::music_note(p, icon_c, s(16.0), color, stroke);
+                        } else {
+                            icons::pause(p, icon_c, s(12.0), color);
+                        }
+                        let x = r.x + s(theme::PILL_PAD_X) + s(14.0) + s(6.0);
+                        let f = m.roll.value(now);
+                        let lift = s(7.0);
+                        let at = |t: &TextLayout, dy: f32| PointF { x, y: ((h - t.height()) / 2.0 + dy).round() };
+                        if let Some(t) = m.prev_text.as_ref().filter(|_| f < 1.0) {
+                            p.text(t, at(t, -lift * f), color.with_alpha(color.a * (1.0 - f)));
+                        }
+                        if let Some(t) = &m.text {
+                            p.text(t, at(t, lift * (1.0 - f)), color.with_alpha(color.a * f));
+                        }
+                    }
+                }
             }
         }
     }
@@ -237,6 +263,10 @@ impl App {
             RightItem::Volume => self.right.speaker.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Network => self.right.net.as_ref().map(|_| scale(theme::PILL_HEIGHT, self.dpi).round()),
             RightItem::Search => Some(scale(theme::PILL_HEIGHT, self.dpi).round()),
+            RightItem::Media => {
+                let s = |v: f32| scale(v, self.dpi).round();
+                self.right.media.as_ref().and_then(|m| m.text.as_ref()).map(|t| t.width() + s(14.0) + s(6.0) + 2.0 * pad)
+            }
             // The layout code sits among icons: the same air around it as around their strokes,
             // not a text pill's padding, so it is no farther from its neighbour than they are.
             RightItem::Layout => {
@@ -260,6 +290,11 @@ impl App {
         if let Some(l) = self.right.lang.as_mut() {
             l.text = self.text.layout(&l.code, &regular, w / 3.0).ok();
             l.prev_text = l.prev.as_ref().and_then(|p| self.text.layout(p, &regular, w / 3.0).ok());
+        }
+        if let Some(m) = self.right.media.as_mut() {
+            let max = s(super::media_view::LABEL_MAX);
+            m.text = self.text.layout(&m.info.label(), &regular, max).ok();
+            m.prev_text = m.prev_label.as_ref().and_then(|l| self.text.layout(l, &regular, max).ok());
         }
         let (edge, pad, pill_h) = (s(6.0), s(theme::PILL_PAD_X), s(theme::PILL_HEIGHT));
         let y = ((h - pill_h) / 2.0).round();
@@ -291,6 +326,7 @@ impl App {
             RightItem::Layout => self.layout_tooltip(),
             RightItem::Time => None,
             RightItem::Search => Some(self.strings.search.to_string()),
+            RightItem::Media => self.media_tooltip(),
         }
     }
 
@@ -350,7 +386,10 @@ impl App {
     pub(super) fn on_right_click(&mut self, item: RightItem, button: Button) {
         self.hide_tooltip();
         match (item, button) {
-            (RightItem::Date, Button::Left) => launch::open_notification_center(),
+            (RightItem::Date, Button::Left) => self.toggle_calendar(),
+            (RightItem::Date, Button::Right | Button::Middle) => launch::open_notification_center(),
+            (RightItem::Media, Button::Left) => self.toggle_media_panel(),
+            (RightItem::Media, Button::Middle) => self.media_command(newwin_core::media::MediaCmd::PlayPause),
             (RightItem::Volume, Button::Left) => self.toggle_volume_panel(),
             (RightItem::Volume, Button::Middle) => self.toggle_mute(),
             (RightItem::Layout, Button::Left) => self.switch_layout(),

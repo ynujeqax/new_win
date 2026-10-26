@@ -104,6 +104,47 @@ pub fn speaker(p: &mut Painter, c: PointF, s: f32, waves: f32, mute: f32, color:
     }
 }
 
+/// A music note: what is playing.
+pub fn music_note(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    let r = s * 0.15;
+    let head = at(c, -s * 0.12, s * 0.24);
+    p.fill_round_rect(RectF::new(head.x - r, head.y - r, 2.0 * r, 2.0 * r), r, color);
+    let stem_x = head.x + r - w / 2.0;
+    let top = PointF { x: stem_x, y: c.y - s * 0.36 };
+    p.line(PointF { x: stem_x, y: head.y }, top, color, w);
+    p.stroke_polyline(&[top, at(top, s * 0.26, s * 0.12), at(top, s * 0.26, s * 0.3)], color, w);
+}
+
+/// ▶: play, filled, with softened corners.
+pub fn play(p: &mut Painter, c: PointF, s: f32, color: Color) {
+    let (h, l, r) = (s * 0.36, c.x - s * 0.26, c.x + s * 0.34);
+    let tri = [PointF { x: l, y: c.y - h }, PointF { x: r, y: c.y }, PointF { x: l, y: c.y + h }];
+    p.fill_polygon(&tri, color);
+    p.stroke_polygon(&tri, color, s * 0.08);
+}
+
+/// ❚❚: pause.
+pub fn pause(p: &mut Painter, c: PointF, s: f32, color: Color) {
+    let (bw, h, gap) = (s * 0.2, s * 0.68, s * 0.14);
+    for x in [c.x - gap / 2.0 - bw, c.x + gap / 2.0] {
+        p.fill_round_rect(RectF::new(x, c.y - h / 2.0, bw, h), bw * 0.3, color);
+    }
+}
+
+/// ⏭ (or ⏮ when `back`): skip to the next or previous track.
+pub fn skip(p: &mut Painter, c: PointF, s: f32, back: bool, color: Color) {
+    let d = if back { -1.0 } else { 1.0 };
+    let h = s * 0.3;
+    for k in [0.0, 1.0] {
+        let base = c.x + d * (-s * 0.36 + k * s * 0.32);
+        let tri = [PointF { x: base, y: c.y - h }, PointF { x: base + d * s * 0.32, y: c.y }, PointF { x: base, y: c.y + h }];
+        p.fill_polygon(&tri, color);
+        p.stroke_polygon(&tri, color, s * 0.06);
+    }
+    let bar = c.x + d * s * 0.3;
+    p.fill_round_rect(RectF::new(bar - s * 0.05, c.y - h, s * 0.1, 2.0 * h), s * 0.03, color);
+}
+
 /// A check mark: the chosen item in a list.
 pub fn check(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
     p.stroke_polyline(&[at(c, -s * 0.4, 0.0), at(c, -s * 0.12, s * 0.3), at(c, s * 0.42, -s * 0.32)], color, w);

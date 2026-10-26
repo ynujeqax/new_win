@@ -90,7 +90,7 @@ pub struct Items {
 }
 
 /// The known right-side item names, in default order.
-pub const ITEM_NAMES: [&str; 6] = ["layout", "network", "volume", "search", "date", "time"];
+pub const ITEM_NAMES: [&str; 7] = ["media", "layout", "network", "volume", "search", "date", "time"];
 
 impl Default for Items {
     fn default() -> Self {
@@ -201,7 +201,8 @@ impl Config {
     }
 }
 
-/// Known names only, first occurrence wins, missing ones appended in default order;
+/// Known names only, first occurrence wins; a missing one (an item added in a newer version)
+/// goes where it sits by default, before the first later item;
 /// `hidden` keeps only names that are in `right`.
 fn normalize_items(items: &mut Items) {
     let mut right: Vec<String> = Vec::with_capacity(ITEM_NAMES.len());
@@ -210,10 +211,13 @@ fn normalize_items(items: &mut Items) {
             right.push(n.clone());
         }
     }
-    for n in ITEM_NAMES {
-        if !right.iter().any(|r| r == n) {
-            right.push(n.to_string());
+    for (i, n) in ITEM_NAMES.iter().enumerate() {
+        if right.iter().any(|r| r == n) {
+            continue;
         }
+        let later = |r: &String| ITEM_NAMES.iter().position(|x| x == r).is_some_and(|j| j > i);
+        let at = right.iter().position(later).unwrap_or(right.len());
+        right.insert(at, n.to_string());
     }
     let mut hidden: Vec<String> = Vec::new();
     for n in &items.hidden {

@@ -18,6 +18,9 @@ use crate::{Backdrop, Gfx, Layer, PointF, RectF, TextCache, TextLayout, TextStyl
 const PAD_X: f32 = 10.0;
 const HEIGHT: f32 = 24.0;
 const FADE_MS: u32 = 200;
+const FADE_OUT_MS: u32 = 140;
+/// Destroys the window once it has faded out.
+const GONE_TIMER: usize = 1;
 
 struct State {
     gfx: Rc<Gfx>,
@@ -32,8 +35,14 @@ struct State {
 }
 
 impl Handler for State {
-    fn on_message(&mut self, _: HWND, msg: u32, _: WPARAM, _: LPARAM) -> Option<LRESULT> {
+    fn on_message(&mut self, hwnd: HWND, msg: u32, wp: WPARAM, _: LPARAM) -> Option<LRESULT> {
         match msg {
+            WM_TIMER if wp.0 == GONE_TIMER => {
+                unsafe {
+                    let _ = DestroyWindow(hwnd);
+                }
+                Some(LRESULT(0))
+            }
             WM_MOUSEACTIVATE => Some(LRESULT(MA_NOACTIVATE as isize)),
             WM_NCHITTEST => Some(LRESULT(HTTRANSPARENT as isize)),
             _ => None,
@@ -141,9 +150,14 @@ impl Tooltip {
 }
 
 impl Drop for Tooltip {
+    /// Fades out, then the window goes; at once when the fade cannot start.
     fn drop(&mut self) {
+        let faded = self.state.try_borrow_mut().is_ok_and(|mut s| {
+            let gfx = s.gfx.clone();
+            s.layer.as_mut().and_then(|l| l.visual().ok()).is_some_and(|v| fade(&gfx, &v, 1.0, 0.0, FADE_OUT_MS).is_ok())
+        });
         unsafe {
-            if IsWindow(Some(self.hwnd)).as_bool() {
+            if IsWindow(Some(self.hwnd)).as_bool() && (!faded || SetTimer(Some(self.hwnd), GONE_TIMER, FADE_OUT_MS + 20, None) == 0) {
                 let _ = DestroyWindow(self.hwnd);
             }
         }

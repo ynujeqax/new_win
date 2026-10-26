@@ -11,6 +11,7 @@ windows-core.workspace = true
 windows = { workspace = true, features = [
     "ApplicationModel",
     "Foundation",
+    "Media_Control",
     "Networking_Connectivity",
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",

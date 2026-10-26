@@ -4,12 +4,14 @@
 //! animations are DirectComposition property animations run by DWM.
 
 mod anim;
+pub mod calendar_panel;
 pub mod app_window;
 pub mod backdrop;
 mod geom;
 mod glass;
 pub mod icon_bitmaps;
 pub mod icons;
+pub mod media_panel;
 mod gfx;
 mod layer;
 mod paint;

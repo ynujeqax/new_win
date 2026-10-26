@@ -31,7 +31,7 @@ fn missing_file_gives_defaults() {
     assert_eq!(c.appearance.font_size, 13.0);
     assert_eq!(c.appearance.date_format, "system");
     assert!(!c.appearance.show_seconds);
-    assert_eq!(c.items.right, ["layout", "network", "volume", "search", "date", "time"]);
+    assert_eq!(c.items.right, ["media", "layout", "network", "volume", "search", "date", "time"]);
     assert!(c.spotlight.win_key);
     assert_eq!(c.spotlight.max_results, 8);
     assert!(c.system.start_with_windows);
@@ -123,8 +123,18 @@ fn out_of_range_values_are_clamped_to_the_m4_bounds() {
 fn item_lists_are_normalized() {
     let c: Config = toml::from_str("[items]\nright = [\"time\", \"time\", \"clock\", \"date\"]\nhidden = [\"clock\", \"date\"]").unwrap();
     let c = c.sanitized();
-    assert_eq!(c.items.right, ["time", "date", "layout", "network", "volume", "search"]);
+    // Missing items go where they sit by default: before the first later item present.
+    assert_eq!(c.items.right, ["media", "layout", "network", "volume", "search", "time", "date"]);
     assert_eq!(c.items.hidden, ["date"]);
+}
+
+#[test]
+fn an_item_added_in_a_newer_version_takes_its_default_place() {
+    // A 1.0.4 config knows no "media": it appears left of the layout, not after the clock.
+    let c: Config = toml::from_str("[items]\nright = [\"layout\", \"network\", \"volume\", \"search\", \"date\", \"time\"]\nhidden = [\"search\"]").unwrap();
+    let c = c.sanitized();
+    assert_eq!(c.items.right, ["media", "layout", "network", "volume", "search", "date", "time"]);
+    assert_eq!(c.items.hidden, ["search"]);
 }
 
 #[test]

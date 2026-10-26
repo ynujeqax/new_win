@@ -145,3 +145,26 @@ fn shadow_on_a_light_wallpaper() {
     })
     .unwrap();
 }
+
+#[test]
+#[ignore]
+fn media_panel() {
+    use newwin_core::media::MediaInfo;
+    let gfx = Gfx::new().unwrap();
+    let info = MediaInfo { title: "Bohemian Rhapsody".into(), artist: "Queen".into(), app: "Spotify.exe".into(), playing: true, can_toggle: true, can_prev: true, can_next: false };
+    let mut m = newwin_ui::media_panel::MediaPanel::new(info, "Spotify".into(), &style(), &gfx);
+    let c = m.button_center(newwin_core::media::MediaCmd::Prev);
+    newwin_ui::panel::PanelContent::input(&mut m, newwin_ui::panel::PanelInput::Move(c), 0);
+    panel("media", &mut m, 10_000);
+}
+
+#[test]
+#[ignore]
+fn calendar_panel() {
+    use newwin_core::calendar::Month;
+    let gfx = Gfx::new().unwrap();
+    let names = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(String::from);
+    let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    let mut c = newwin_ui::calendar_panel::CalendarPanel::new((2026, 10, 26), 0, names, Box::new(move |m: Month| format!("{} {}", months[m.month as usize - 1], m.year)), &style(), &gfx);
+    panel("calendar", &mut c, 10_000);
+}

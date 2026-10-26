@@ -8,6 +8,7 @@ fn names(v: &[&str]) -> Vec<String> {
 #[test]
 fn parse_keeps_search_skips_unknown_and_duplicates() {
     assert_eq!(parse_right(&names(&["layout", "network", "volume", "search", "date", "time"])), vec![Layout, Network, Volume, Search, Date, Time]);
+    assert_eq!(parse_right(&names(&["media", "time"])), vec![Media, Time]);
     assert_eq!(parse_right(&names(&["Time", "bogus", "time", "DATE"])), vec![Time, Date]);
 }
 

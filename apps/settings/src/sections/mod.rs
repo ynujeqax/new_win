@@ -425,7 +425,7 @@ mod tests {
         let en = strings_for("en-US");
         let (c, seen) = (Config::default(), TraySeen::default());
         let items = list_for(Section::Items, &c, &seen, en).unwrap();
-        assert_eq!(items.keys(), ["layout", "network", "volume", "search", "date", "time"]);
+        assert_eq!(items.keys(), ["media", "layout", "network", "volume", "search", "date", "time"]);
         assert_eq!(items.hint, None);
         assert_eq!(list_for(Section::Tray, &c, &seen, en).unwrap().hint, Some(en.tray_empty));
         assert!(list_for(Section::Bar, &c, &seen, en).is_none());
@@ -436,8 +436,8 @@ mod tests {
     fn list_edits_go_to_their_section() {
         let mut c = Config::default();
         let keys = items::keys(&c);
-        apply_list(Section::Items, &mut c, &keys, ListEdit::Toggled(1, false));
-        apply_list(Section::Items, &mut c, &keys, ListEdit::Moved(1, 0));
+        apply_list(Section::Items, &mut c, &keys, ListEdit::Toggled(2, false));
+        apply_list(Section::Items, &mut c, &keys, ListEdit::Moved(2, 0));
         assert_eq!(c.items.hidden, ["network"]);
         assert_eq!(c.items.right[0], "network");
         let exes: Vec<String> = ["a.exe", "b.exe"].map(String::from).to_vec();
