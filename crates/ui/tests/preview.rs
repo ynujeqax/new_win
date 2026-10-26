@@ -132,3 +132,16 @@ fn tray_list() {
     let mut t = TrayList::new(rows, "Nothing here".into(), &style(), &gfx);
     panel("tray", &mut t, 10_000);
 }
+
+#[test]
+#[ignore]
+fn shadow_on_a_light_wallpaper() {
+    // A Spotlight-sized glass over a pink wallpaper, as in the user's screenshot.
+    let bg = Color::rgba(222, 170, 170, 1.0);
+    render_bmp(&out("shadow"), 700, 220, bg, |p| {
+        let glass = RectF::new(70.0, 60.0, 560.0, 80.0);
+        newwin_ui::shadow::paint_shadow(p, glass, 16.0, 28.0, 6.0);
+        p.fill_round_rect(glass, 16.0, Color::rgba(150, 100, 104, 1.0));
+    })
+    .unwrap();
+}

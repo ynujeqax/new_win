@@ -16,7 +16,7 @@ use windows::Win32::Graphics::Direct2D::{
     ID2D1DeviceContext,
 };
 use windows::Win32::Graphics::DirectComposition::{
-    DCOMPOSITION_BITMAP_INTERPOLATION_MODE_LINEAR, IDCompositionRectangleClip, IDCompositionSurface, IDCompositionTarget,
+    DCOMPOSITION_BITMAP_INTERPOLATION_MODE_LINEAR, DCOMPOSITION_BORDER_MODE_SOFT, IDCompositionRectangleClip, IDCompositionSurface, IDCompositionTarget,
     IDCompositionVirtualSurface, IDCompositionVisual2,
 };
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_ALPHA_MODE_PREMULTIPLIED, DXGI_FORMAT_B8G8R8A8_UNORM};
@@ -112,6 +112,8 @@ impl Layer {
                     let backdrop = dcomp.CreateVisual()?;
                     backdrop.SetBitmapInterpolationMode(DCOMPOSITION_BITMAP_INTERPOLATION_MODE_LINEAR)?;
                     container.SetClip(&clip)?;
+                    // Soft borders antialias the clip's rounded corners; hard ones step.
+                    container.SetBorderMode(DCOMPOSITION_BORDER_MODE_SOFT)?;
                     shift.AddVisual(&backdrop, false, None)?;
                     container.AddVisual(&shift, false, None)?;
                     root.AddVisual(&container, false, None)?;

@@ -10,14 +10,17 @@ use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::Result;
 
-use crate::{Backdrop, Color, Gfx, Layer, RectF, fade, set_offset_opacity, slide_y};
+use crate::{Backdrop, Color, Gfx, Layer, Painter, RectF, fade, set_offset_opacity, slide_y};
 
-/// How far the shadow spreads past the owner's edge, and how far it falls below it (96 DPI).
-const BLUR: f32 = 26.0;
-const FALL: f32 = 8.0;
-/// Darkness right at the owner's edge.
-const PEAK: f32 = 0.5;
-const STEPS: usize = 16;
+/// How far the shadow spreads past its shape, and how far the shape sits below the owner (96 DPI).
+const BLUR: f32 = 28.0;
+const FALL: f32 = 6.0;
+/// The shape is this much smaller than the owner, so its dark core stays hidden under the glass
+/// and only the soft falloff shows: no hard band along the bottom edge.
+const SHRINK: f32 = 3.0;
+/// Darkness of the core.
+const PEAK: f32 = 0.3;
+const STEPS: usize = 28;
 
 struct Inert;
 
@@ -41,6 +44,23 @@ pub struct Shadow {
     fall: f32,
     blur: f32,
     radius: f32,
+}
+
+/// Paints the shadow of glass at `owner` (corners of `radius`): a shape a little smaller than the
+/// owner and `fall` px lower, so its dark core hides under the glass and only the soft falloff
+/// shows, spreading `blur` px past the shape.
+pub fn paint_shadow(p: &mut Painter, owner: RectF, radius: f32, blur: f32, fall: f32) {
+    let shrink = (SHRINK * blur / BLUR).round();
+    let shape = RectF { y: owner.y + fall, ..owner }.inset(shrink);
+    let radius = (radius - shrink).max(0.0);
+    // Stacked rounded rectangles: at a distance x·blur past the shape (1 − x)² of them overlap,
+    // a smooth falloff with no edge where it ends.
+    let a = PEAK / STEPS as f32;
+    for k in 0..STEPS {
+        let t = (k as f32 + 0.5) / STEPS as f32;
+        let grow = blur * (1.0 - t.sqrt());
+        p.fill_round_rect(shape.inset(-grow), radius + grow, Color::rgba(0, 0, 0, a));
+    }
 }
 
 /// The rectangle of the shadow window for an owner at `r`.
@@ -116,24 +136,16 @@ impl Shadow {
     fn paint(&mut self) {
         let (w, h) = self.layer.size();
         let m = self.margin as f32;
-        let owner = RectF::new(m, m + self.fall, w as f32 - 2.0 * m, h as f32 - 2.0 * m);
-        let (blur, radius) = (self.blur, self.radius);
+        let owner = RectF::new(m, m, w as f32 - 2.0 * m, h as f32 - 2.0 * m);
+        let (blur, fall, radius) = (self.blur, self.fall, self.radius);
         let r = self.layer.draw(None, |p| {
             p.clear();
-            // Stacked rounded rectangles, widest and faintest first: where more of them overlap
-            // the shadow is darker, falling off smoothly towards the outer edge.
-            let a = PEAK / STEPS as f32;
-            for k in 0..STEPS {
-                let t = k as f32 / STEPS as f32;
-                let grow = blur * (1.0 - t).powf(1.6);
-                p.fill_round_rect(owner.inset(-grow), radius + grow, Color::rgba(0, 0, 0, a));
-            }
+            paint_shadow(p, owner, radius, blur, fall);
         });
         if let Err(e) = r.and_then(|_| self.gfx.commit()) {
             log::warn!("shadow paint failed: {e}");
         }
     }
-
     /// Jumps to an offset and opacity (as the owner does before its show animation).
     pub fn set_offset_opacity(&mut self, y: f32, opacity: f32) {
         if let Ok(v) = self.layer.visual() {
