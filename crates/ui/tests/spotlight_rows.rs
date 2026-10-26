@@ -24,7 +24,7 @@ fn rates(fetched_at: u64) -> Rc<Rates> {
 }
 
 fn extras() -> SpotlightExtras {
-    SpotlightExtras { engine: Some(Engine::DuckDuckGo), rates: None, currency_on: true, uk: false, now_secs: NOW, links: Vec::new() }
+    SpotlightExtras { engine: Some(Engine::DuckDuckGo), rates: None, currency_on: true, uk: false, now_secs: NOW, links: Default::default() }
 }
 
 fn view_with(catalog: Vec<Candidate>, max: usize, x: SpotlightExtras) -> SpotlightView {
@@ -100,7 +100,7 @@ fn currency_row_from_rates() {
         Row::Currency { text, date } => assert_eq!((text.as_str(), date.as_str()), ("4\u{2009}130.00 UAH", "2026-10-27")),
         r => panic!("{r:?}"),
     }
-    assert_eq!(v.copy_text().as_deref(), Some("4\u{2009}130.00 UAH"));
+    assert_eq!(v.copy_text().as_deref(), Some("4130.00 UAH"), "no thin spaces in what is pasted");
     assert_eq!(key(&mut v, RETURN), Some(action_id(0, SpotlightOp::Copy)));
 }
 
@@ -188,7 +188,7 @@ fn units_still_win_over_currency() {
 fn a_quick_link_opens_like_an_app() {
     let mut c = vec![app("GitHub Desktop")];
     c.extend(link_candidates(&[Link { keyword: "gh".into(), target: "https://github.com".into() }]));
-    let links = vec![("github.com".to_string(), Target::Url)];
+    let links = [("gh".to_string(), ("github.com".to_string(), Target::Url))].into_iter().collect();
     let mut v = view_with(c, 8, SpotlightExtras { links, ..extras() });
     typed(&mut v, "gh");
     assert!(matches!(&v.rows()[0], Row::Hit(h) if h.index == 1), "{:?}", v.rows());
@@ -210,4 +210,14 @@ fn new_ops_round_trip() {
     for op in [SpotlightOp::Web, SpotlightOp::CopyEmoji, SpotlightOp::Refresh, SpotlightOp::Copy, SpotlightOp::Open] {
         assert_eq!(decode_action(action_id(7, op)), (7, op));
     }
+}
+
+#[test]
+fn a_link_row_takes_its_label_by_keyword_not_by_position() {
+    // The catalog was built when "gh" was link 0; the config since put "dl" first.
+    let c = link_candidates(&[Link { keyword: "gh".into(), target: "https://github.com".into() }]);
+    let links = [("dl".to_string(), (r"…\Downloads".to_string(), Target::Path)), ("gh".to_string(), ("github.com".to_string(), Target::Url))].into_iter().collect();
+    let mut v = view_with(c, 8, SpotlightExtras { links, ..extras() });
+    typed(&mut v, "gh");
+    assert_eq!(v.row_link(0), Some(("github.com", Target::Url)));
 }

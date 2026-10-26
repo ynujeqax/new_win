@@ -39,7 +39,7 @@ impl SpotlightView {
             Row::Hit(h) => match self.catalog.get(h.index).map(|c| &c.kind) {
                 Some(Kind::App) => l.kind_app.clone(),
                 Some(Kind::SettingsPage(_)) => l.kind_settings_page.clone(),
-                Some(Kind::Link(i)) => self.extras.links.get(*i).map(|(label, _)| label.clone()).unwrap_or_default(),
+                Some(Kind::Link(_)) => self.catalog.get(h.index).and_then(|c| self.extras.links.get(&c.name)).map(|(label, _)| label.clone()).unwrap_or_default(),
                 Some(Kind::System(_)) => l.kind_system.clone(),
                 None => String::new(),
             },
@@ -54,7 +54,7 @@ impl SpotlightView {
             Row::Hit(h) => match self.catalog.get(h.index).map(|c| &c.kind) {
                 Some(Kind::App) => Glyph::AppIcon(h.index),
                 Some(Kind::SettingsPage(_)) => Glyph::Gear,
-                Some(Kind::Link(i)) => Glyph::Link(self.extras.links.get(*i).map_or(Target::Url, |(_, t)| *t)),
+                Some(Kind::Link(_)) => Glyph::Link(self.catalog.get(h.index).and_then(|c| self.extras.links.get(&c.name)).map_or(Target::Url, |(_, t)| *t)),
                 _ => Glyph::None,
             },
         }

@@ -16,8 +16,9 @@ use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
 use super::App;
 use super::spotlight_view::WM_APP_RATES;
 
-/// After a failed download, the next try waits this long.
-pub(super) const RATES_RETRY_SECS: u64 = 10 * 60;
+/// After a failed download, the next try waits this long: short, since the first try is often at
+/// sign-in, before the network is up.
+pub(super) const RATES_RETRY_SECS: u64 = 60;
 /// Rates older than this are fetched again at start.
 pub(super) const RATES_STARTUP_SECS: u64 = 24 * 3600;
 
@@ -31,6 +32,12 @@ pub(super) fn should_refresh(currency_on: bool, fetching: bool, failed_at: Optio
 /// At start: fetch when there are no rates or they are a day old.
 pub(super) fn refresh_at_start(fetched_at: Option<u64>, now: u64) -> bool {
     fetched_at.is_none_or(|t| now.saturating_sub(t) > RATES_STARTUP_SECS)
+}
+
+/// The target of the link named `keyword` now: an open Spotlight may show links from before a
+/// config change, so the keyword, not the position, says which one.
+pub(super) fn link_target<'a>(links: &'a [newwin_config::LinkConfig], keyword: &str) -> Option<&'a str> {
+    links.iter().find(|l| l.keyword == keyword).map(|l| l.target.as_str())
 }
 
 fn now_secs() -> u64 {
@@ -67,7 +74,7 @@ impl App {
             currency_on: s.currency,
             uk: self.strings.ukrainian,
             now_secs: now_secs(),
-            links: s.links.iter().map(|l| (label(&l.target), target_kind(&l.target))).collect(),
+            links: s.links.iter().map(|l| (l.keyword.clone(), (label(&l.target), target_kind(&l.target)))).collect(),
         }
     }
 
@@ -85,9 +92,10 @@ impl App {
         if !should_refresh(self.config.spotlight.currency, self.rates_fetching, self.rates_failed_at, now_secs()) {
             return;
         }
-        self.rates_fetching = true;
         let ping = self.ping.0 as isize;
-        self.submit_job(Job::Run(Box::new(move || {
+        // Its own short-lived thread: a slow network (proxy discovery, a captive portal) must not
+        // hold up the worker, which also names windows, fetches icons and launches apps.
+        let spawned = std::thread::Builder::new().name("newwin-rates".into()).spawn(move || {
             let url = rates_url();
             let rates = match newwin_platform::http::get(&url, 5000, 262_144) {
                 Ok(body) => newwin_core::currency::parse_nbu(&body, &today()).map(|r| Rates { fetched_at: now_secs(), ..r }).or_else(|| {
@@ -108,7 +116,11 @@ impl App {
             if unsafe { PostMessageW(Some(HWND(ping as *mut _)), WM_APP_RATES, WPARAM(0), LPARAM(boxed as isize)) }.is_err() {
                 drop(unsafe { Box::from_raw(boxed) });
             }
-        })));
+        });
+        match spawned {
+            Ok(_) => self.rates_fetching = true,
+            Err(e) => log::warn!("cannot start the rates download: {e}"),
+        }
     }
 
     pub(super) fn on_rates(&mut self, rates: Option<Rates>) {
@@ -165,8 +177,16 @@ mod tests {
         assert!(should_refresh(true, false, None, now));
         assert!(!should_refresh(false, false, None, now), "currency off: no network");
         assert!(!should_refresh(true, true, None, now), "one download at a time");
-        assert!(!should_refresh(true, false, Some(now - 60), now), "a minute after a failure: wait");
-        assert!(should_refresh(true, false, Some(now - RATES_RETRY_SECS), now), "ten minutes later: try again");
+        assert!(!should_refresh(true, false, Some(now - 20), now), "just failed: wait");
+        assert!(should_refresh(true, false, Some(now - 120), now), "two minutes after a failed start (no network yet): a typed query tries again");
+    }
+
+    #[test]
+    fn a_link_opens_by_its_keyword_whatever_its_place() {
+        let l = |k: &str, t: &str| newwin_config::LinkConfig { keyword: k.into(), target: t.into() };
+        let links = [l("dl", "D:\\"), l("gh", "https://github.com")];
+        assert_eq!(link_target(&links, "gh"), Some("https://github.com"));
+        assert_eq!(link_target(&links, "yt"), None, "removed meanwhile: nothing opens");
     }
 
     #[test]

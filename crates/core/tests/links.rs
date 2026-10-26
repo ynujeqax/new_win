@@ -42,3 +42,15 @@ fn link_label_strings() {
     use newwin_core::strings::strings_for;
     assert_eq!((strings_for("en-US").kind_link, strings_for("uk-UA").kind_link), ("Link", "Посилання"));
 }
+
+#[test]
+fn a_bare_domain_is_a_url() {
+    assert_eq!(target_kind("github.com"), Target::Url);
+    assert_eq!(target_kind("github.com/ynujeqax"), Target::Url);
+    assert_eq!(url_for("github.com"), "https://github.com");
+    assert_eq!(label("github.com/x"), "github.com");
+    assert_eq!(target_kind(r"D:\Games"), Target::Path);
+    assert_eq!(target_kind(r"\nas\share"), Target::Path);
+    assert_eq!(target_kind(r"%USERPROFILE%\Downloads"), Target::Path);
+    assert_eq!(target_kind("my folder"), Target::Path, "no dot: not a site");
+}

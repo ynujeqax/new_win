@@ -18,9 +18,12 @@ pub enum Target {
     Path,
 }
 
+/// A site: a scheme, `www.`, or a bare domain like `github.com/x` (a dot, no spaces, no drive,
+/// backslash or `%VARIABLE%`). Anything else is a folder or file.
 pub fn target_kind(t: &str) -> Target {
     let t = t.trim();
-    if t.contains("://") || t.to_ascii_lowercase().starts_with("www.") { Target::Url } else { Target::Path }
+    let domain = t.contains('.') && !t.contains([' ', '\\', ':', '%']) && !t.starts_with(['/', '.']);
+    if t.contains("://") || t.to_ascii_lowercase().starts_with("www.") || domain { Target::Url } else { Target::Path }
 }
 
 /// What the shell opens for a URL target: `www.x` gets `https://`.

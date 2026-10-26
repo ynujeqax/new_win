@@ -104,8 +104,9 @@ pub struct SpotlightExtras {
     pub uk: bool,
     /// Now, Unix seconds (to tell stale rates).
     pub now_secs: u64,
-    /// Each quick link's label and kind, by `Kind::Link` index.
-    pub links: Vec<(String, Target)>,
+    /// Each quick link's label and kind, by keyword (a re-index may hand over a catalog built
+    /// from an older list of links, so not by position).
+    pub links: HashMap<String, (String, Target)>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -353,7 +354,8 @@ impl SpotlightView {
     pub fn copy_text(&self) -> Option<String> {
         match self.rows.get(self.selected?)? {
             Row::Answer(a) => Some(a.text.clone()),
-            Row::Currency { text, .. } => Some(text.clone()),
+            // Grouping is for reading: pasted, a number must parse.
+            Row::Currency { text, .. } => Some(text.replace('\u{2009}', "")),
             Row::Emoji(e) => Some(e.glyph.to_string()),
             _ => None,
         }
@@ -422,6 +424,13 @@ impl SpotlightView {
             Row::Hit(h) => RowKey::Hit(self.catalog.get(h.index)?.id.clone()),
             Row::Web => RowKey::Web,
         })
+    }
+
+    /// Row `row`'s quick link: its label and kind.
+    pub fn row_link(&self, row: usize) -> Option<(&str, Target)> {
+        let Row::Hit(h) = self.rows.get(row)? else { return None };
+        let c = self.catalog.get(h.index).filter(|c| matches!(c.kind, Kind::Link(_)))?;
+        self.extras.links.get(&c.name).map(|(label, t)| (label.as_str(), *t))
     }
 
     /// The key hints for the selected row.

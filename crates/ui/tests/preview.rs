@@ -164,7 +164,7 @@ fn calendar_panel() {
 }
 
 /// Spotlight with `query` typed, over `catalog` and the 1.0.6 extras, saved as `name`.
-fn spotlight_with(name: &str, mut catalog: Vec<newwin_core::spotlight::Candidate>, query: &str, links: Vec<(String, newwin_core::links::Target)>) {
+fn spotlight_with(name: &str, mut catalog: Vec<newwin_core::spotlight::Candidate>, query: &str, links: std::collections::HashMap<String, (String, newwin_core::links::Target)>) {
     use newwin_ui::panel::{PanelContent, PanelInput};
     use std::collections::BTreeMap;
     let gfx = Gfx::new().unwrap();
@@ -190,25 +190,25 @@ fn spotlight_with(name: &str, mut catalog: Vec<newwin_core::spotlight::Candidate
 #[test]
 #[ignore]
 fn spotlight_settings_page() {
-    spotlight_with("spotlight_settings", newwin_core::settings_pages::candidates(false), "blue", Vec::new());
+    spotlight_with("spotlight_settings", newwin_core::settings_pages::candidates(false), "blue", Default::default());
 }
 
 #[test]
 #[ignore]
 fn spotlight_web() {
-    spotlight_with("spotlight_web", Vec::new(), "how to bake bread", Vec::new());
+    spotlight_with("spotlight_web", Vec::new(), "how to bake bread", Default::default());
 }
 
 #[test]
 #[ignore]
 fn spotlight_currency() {
-    spotlight_with("spotlight_currency", Vec::new(), "100 usd in uah", Vec::new());
+    spotlight_with("spotlight_currency", Vec::new(), "100 usd in uah", Default::default());
 }
 
 #[test]
 #[ignore]
 fn spotlight_emoji() {
-    spotlight_with("spotlight_emoji", Vec::new(), ":heart", Vec::new());
+    spotlight_with("spotlight_emoji", Vec::new(), ":heart", Default::default());
 }
 
 #[test]
@@ -217,5 +217,5 @@ fn spotlight_links() {
     use newwin_core::links::{Link, Target};
     let links = [Link { keyword: "gh".into(), target: "https://github.com".into() }, Link { keyword: "dl".into(), target: r"%USERPROFILE%\Downloads".into() }];
     let catalog = newwin_core::spotlight::link_candidates(&links);
-    spotlight_with("spotlight_links", catalog, "g", vec![("github.com".into(), Target::Url), (r"…\Downloads".into(), Target::Path)]);
+    spotlight_with("spotlight_links", catalog, "g", [("gh".into(), ("github.com".into(), Target::Url)), ("dl".into(), (r"…\Downloads".into(), Target::Path))].into_iter().collect());
 }

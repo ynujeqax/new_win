@@ -293,8 +293,8 @@ impl App {
                     Err(e) => log::warn!("open {}: {e}", page.uri),
                 })));
             }
-            Kind::Link(i) => {
-                let Some(target) = self.config.spotlight.links.get(i).map(|l| l.target.clone()) else { return };
+            Kind::Link(_) => {
+                let Some(target) = super::spotlight_actions::link_target(&self.config.spotlight.links, &c.name).map(str::to_string) else { return };
                 let ping = self.ping.0 as isize;
                 self.submit_job(Job::Run(Box::new(move || {
                     let r = match target_kind(&target) {
