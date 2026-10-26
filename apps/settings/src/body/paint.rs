@@ -40,6 +40,15 @@ impl Body {
                     Control::DateSample(f) => vec![lay(&sections::appearance::date_example(&format_bar_date(f), s), &small, wide)],
                     Control::Button => vec![lay(sections::button_label(r.id, self.armed.contains(&r.id), s), &small_bold, wide)],
                     Control::Info(text) => vec![lay(text, &label, wide)],
+                    Control::Note => {
+                        let text = match r.id {
+                            RowId::LinkPreview => sections::spotlight::link_preview(self.field.edit.text(), s),
+                            RowId::CurrencyNote => s.currency_note.to_string(),
+                            _ => String::new(),
+                        };
+                        vec![lay(&text, &small, wide)]
+                    }
+                    Control::Link { keyword, target } => vec![lay(&format!("{keyword}  →  {target}"), &label, label_w), lay(s.remove, &small_bold, wide)],
                     Control::Toggle(_) => Vec::new(),
                 };
                 // A part that failed to lay out is left out; the control then draws without it.
@@ -65,7 +74,7 @@ impl Body {
                 g.group = Some(PointF { x: a.x, y });
                 y += self.s(GROUP_H);
             }
-            let h = if matches!(r.control, Control::DateSample(_)) { self.s(SAMPLE_H) } else { self.s(ROW_H) };
+            let h = if matches!(r.control, Control::DateSample(_) | Control::Note) { self.s(SAMPLE_H) } else { self.s(ROW_H) };
             let cy = y + h / 2.0;
             let first = t.and_then(|t| t.parts.first());
             let centered = |w: f32, ch: f32| RectF::new(right - w, (cy - ch / 2.0).round(), w, ch);
@@ -98,6 +107,9 @@ impl Body {
                 Control::Text { .. } => centered(self.s(FIELD_W), self.s(theme::TEXT_FIELD_H)),
                 Control::Button => centered(width(first) + self.s(2.0 * BUTTON_PAD_X), self.s(BUTTON_H)),
                 Control::DateSample(_) | Control::Info(_) => centered(width(first), first.map_or(0.0, |t| t.height())),
+                // A note starts at the left, under the row before it.
+                Control::Note => RectF::new(a.x, (cy - first.map_or(0.0, |t| t.height()) / 2.0).round(), width(first), first.map_or(0.0, |t| t.height())),
+                Control::Link { .. } => centered(width(t.and_then(|t| t.parts.get(1))) + self.s(2.0 * BUTTON_PAD_X), self.s(BUTTON_H)),
             };
             g.row = RectF::new(a.x, y, right - a.x, h);
             y += h;
@@ -157,6 +169,16 @@ impl Body {
         self.texts = Some(texts);
     }
 
+    fn button_fill(&self, i: usize) -> Color {
+        if self.pressed == Some(i) {
+            theme::ACTIVE_PILL
+        } else if self.hover == Some(i) {
+            BUTTON_HOVER
+        } else {
+            BUTTON_FILL
+        }
+    }
+
     fn paint_control(&self, p: &mut Painter, r: &Row, g: &RowGeo, t: &RowTexts, i: usize, clock: (u64, Option<u32>)) {
         let now = clock.0;
         let c = g.control;
@@ -196,15 +218,22 @@ impl Body {
                 p.stroke_polyline(&pts, theme::TEXT, scale(theme::ICON_STROKE, self.dpi));
             }
             Control::Text { .. } => self.field.paint(p, c, first, t.hint.as_ref(), clock, self.dpi),
+            Control::Note => {
+                if let Some(nt) = first {
+                    p.text(nt, mid(nt, c.x), theme::TEXT_INACTIVE);
+                }
+            }
+            Control::Link { .. } => {
+                if let Some(lt) = first {
+                    p.text(lt, PointF { x: g.row.x.round(), y: (g.row.y + (g.row.h - lt.height()) / 2.0).round() }, theme::TEXT);
+                }
+                p.fill_round_rect(c, c.h / 2.0, self.button_fill(i));
+                if let Some(bt) = t.parts.get(1) {
+                    p.text(bt, mid(bt, c.x + (c.w - bt.width()) / 2.0), theme::TEXT_STRONG);
+                }
+            }
             Control::Button => {
-                let fill = if self.pressed == Some(i) {
-                    theme::ACTIVE_PILL
-                } else if self.hover == Some(i) {
-                    BUTTON_HOVER
-                } else {
-                    BUTTON_FILL
-                };
-                p.fill_round_rect(c, c.h / 2.0, fill);
+                p.fill_round_rect(c, c.h / 2.0, self.button_fill(i));
                 if self.armed.contains(&r.id) {
                     p.stroke_round_rect(c, c.h / 2.0, ARMED_RIM, self.s(1.0).max(1.0));
                 }

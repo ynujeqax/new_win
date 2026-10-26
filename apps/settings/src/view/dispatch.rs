@@ -145,6 +145,10 @@ impl SettingsView {
             }
             RowId::OpenLogs => about::open_logs(),
             RowId::OpenConfig => self.open_config(),
+            RowId::Link(_) => {
+                self.edit(|c| sections::apply(c, id, RowValue::Remove));
+                self.sync_body(now);
+            }
             _ => {}
         }
         self.refresh_armed(now);

@@ -98,7 +98,7 @@ impl Body {
             }
             Control::Font(_) if grab.contains(p) => Some(BodyEvent::OpenFonts),
             Control::Text { .. } if grab.contains(p) => Some(BodyEvent::FocusField),
-            Control::Button if grab.contains(p) => {
+            Control::Button | Control::Link { .. } if grab.contains(p) => {
                 self.pressed = Some(i);
                 None
             }
@@ -127,7 +127,7 @@ impl Body {
             }
             None => {
                 let hover = self.row_at(p).filter(|&i| {
-                    let pointable = self.rows.get(i).is_some_and(|r| matches!(r.control, Control::Button | Control::Font(_)));
+                    let pointable = self.rows.get(i).is_some_and(|r| matches!(r.control, Control::Button | Control::Font(_) | Control::Link { .. }));
                     pointable && self.geo.get(i).is_some_and(|g| g.control.contains(p))
                 });
                 let changed = hover != self.hover;

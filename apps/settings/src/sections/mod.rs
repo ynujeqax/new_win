@@ -46,6 +46,14 @@ pub enum RowId {
     WinKey,
     MaxResults,
     ClearHistory,
+    WebSearch,
+    Currency,
+    CurrencyNote,
+    LinkAdd,
+    /// What Enter in the link field would add, or how to fill it in.
+    LinkPreview,
+    /// A quick link, by index into `spotlight.links`.
+    Link(usize),
     // About
     Version,
     OpenLogs,
@@ -60,6 +68,8 @@ pub enum RowValue {
     Int(i32),
     Choice(usize),
     Text(String),
+    /// A quick link's *Remove*.
+    Remove,
 }
 
 /// The small caption above a group of rows.
@@ -71,6 +81,8 @@ pub enum Group {
     Size,
     Text,
     Clock,
+    Web,
+    Links,
 }
 
 /// What a row shows at its right, with the value from the config.
@@ -91,6 +103,10 @@ pub enum Control {
     Button,
     /// Plain text (the version).
     Info(String),
+    /// A small grey line under the row before it (a note, the link field's preview).
+    Note,
+    /// A quick link: "keyword → target" and a *Remove* button; `target` is shortened.
+    Link { keyword: String, target: String },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -183,7 +199,7 @@ pub fn apply(c: &mut Config, id: RowId, v: RowValue) {
         Glass | Height | Margin | CornerRadius | Font | FontSize | DateFormat | DateTemplate | DateSample | ShowSeconds => {
             appearance::apply(c, id, v)
         }
-        WinKey | MaxResults | ClearHistory => spotlight::apply(c, id, v),
+        WinKey | MaxResults | ClearHistory | WebSearch | Currency | CurrencyNote | LinkAdd | LinkPreview | Link(_) => spotlight::apply(c, id, v),
         Version | OpenLogs | OpenConfig | RestoreTaskbar => about::apply(c, id, v),
     }
 }
@@ -237,6 +253,10 @@ pub fn label(id: RowId, s: &Strings) -> &'static str {
         WinKey => s.win_key_opens_spotlight,
         MaxResults => s.results,
         ClearHistory => s.launch_history,
+        WebSearch => s.web_search_engine,
+        Currency => s.currency_rates,
+        LinkAdd => s.add_link,
+        CurrencyNote | LinkPreview | Link(_) => "",
         Version => s.version,
         OpenLogs | OpenConfig | RestoreTaskbar => "",
     }
@@ -250,6 +270,8 @@ pub fn group_title(g: Group, s: &Strings) -> &'static str {
         Group::Size => s.group_size,
         Group::Text => s.group_text,
         Group::Clock => s.group_clock,
+        Group::Web => s.group_web,
+        Group::Links => s.group_links,
     }
 }
 
@@ -259,6 +281,7 @@ pub fn choices(id: RowId, s: &Strings) -> Vec<String> {
         RowId::Mode => vec![s.auto_hide.into(), s.pinned.into()],
         RowId::TriggerStrip => vec![format!("1 {}", s.unit_px), format!("2 {}", s.unit_px)],
         RowId::DateFormat => vec![s.date_system.into(), s.date_custom.into()],
+        RowId::WebSearch => newwin_core::web::ENGINES.iter().map(|e| e.name().to_string()).chain([s.off.to_string()]).collect(),
         _ => Vec::new(),
     }
 }

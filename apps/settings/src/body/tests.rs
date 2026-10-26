@@ -215,3 +215,41 @@ fn no_autoscroll_away_from_the_edges() {
     assert!(!b.autoscroll(105));
     assert_eq!(b.scroll_offset(), 0.0);
 }
+
+fn spotlight_body(c: &Config) -> Body {
+    let mut b = Body::new();
+    b.set_rows(rows_for(Section::Spotlight, c, false), strings_for("en-US"), 0);
+    b.field.focused = true;
+    b
+}
+
+fn type_in(b: &mut Body, s: &str) -> Vec<BodyEvent> {
+    s.chars().filter_map(|c| b.field_input(newwin_ui::panel::PanelInput::Char(c), 0)).collect()
+}
+
+#[test]
+fn the_link_field_adds_on_enter_and_clears() {
+    let mut b = spotlight_body(&Config::default());
+    assert!(type_in(&mut b, "gh https://github.com").is_empty(), "typing changes nothing yet");
+    let enter = b.field_input(newwin_ui::panel::PanelInput::Key(0x0D), 0);
+    assert_eq!(enter, Some(BodyEvent::Set(RowId::LinkAdd, RowValue::Text("gh https://github.com".into()))));
+    assert_eq!(b.field.edit.text(), "", "ready for the next one");
+}
+
+#[test]
+fn an_unfinished_link_stays_in_the_field() {
+    let mut b = spotlight_body(&Config::default());
+    type_in(&mut b, "onlyword");
+    assert_eq!(b.field_input(newwin_ui::panel::PanelInput::Key(0x0D), 0), None);
+    assert_eq!(b.field.edit.text(), "onlyword");
+}
+
+#[test]
+fn a_link_row_is_a_remove_button() {
+    let mut c = Config::default();
+    c.spotlight.links.push(newwin_config::LinkConfig { keyword: "gh".into(), target: "https://github.com".into() });
+    let mut b = spotlight_body(&c);
+    let row = rows_for(Section::Spotlight, &c, false).iter().position(|r| r.id == RowId::Link(0)).unwrap();
+    assert!(b.focusables().iter().any(|f| f.0 == FocusKind::Button && f.2 == row));
+    assert_eq!(b.activate(row, KeyAction::Activate, 0), Some(BodyEvent::Press(RowId::Link(0))));
+}

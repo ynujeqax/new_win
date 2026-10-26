@@ -141,8 +141,8 @@ fn focus_kind(c: &Control) -> Option<FocusKind> {
         Control::Slider(_) => Some(FocusKind::Slider),
         Control::Font(_) => Some(FocusKind::FontList),
         Control::Text { .. } => Some(FocusKind::TextField),
-        Control::Button => Some(FocusKind::Button),
-        Control::DateSample(_) | Control::Info(_) => None,
+        Control::Button | Control::Link { .. } => Some(FocusKind::Button),
+        Control::DateSample(_) | Control::Info(_) | Control::Note => None,
     }
 }
 
@@ -369,14 +369,28 @@ impl Body {
                 (next != *v).then_some(BodyEvent::Set(id, RowValue::Int(next)))
             }
             (Control::Font(_), KeyAction::Activate) => Some(BodyEvent::OpenFonts),
-            (Control::Button, KeyAction::Activate) => Some(BodyEvent::Press(id)),
+            (Control::Button | Control::Link { .. }, KeyAction::Activate) => Some(BodyEvent::Press(id)),
             _ => None,
         }
     }
 
-    /// Typing in the focused template field.
+    /// Typing in the focused field: the date template changes the config as it is typed; the link
+    /// field only on Enter, with a complete entry, and is then emptied for the next one.
     pub fn field_input(&mut self, ev: newwin_ui::panel::PanelInput, now: u64) -> Option<BodyEvent> {
         let id = self.rows.iter().find(|r| matches!(r.control, Control::Text { .. }))?.id;
+        if id == RowId::LinkAdd {
+            if ev == newwin_ui::panel::PanelInput::Key(windows::Win32::UI::Input::KeyboardAndMouse::VK_RETURN.0) {
+                let text = self.field.edit.text().to_owned();
+                newwin_core::links::parse_entry(&text)?;
+                set_text(&mut self.field, "");
+                self.texts = None;
+                return Some(BodyEvent::Set(id, RowValue::Text(text)));
+            }
+            if self.field.input_at(ev, now) {
+                self.texts = None;
+            }
+            return None;
+        }
         if !self.field.input_at(ev, now) {
             return None;
         }
