@@ -69,3 +69,64 @@ fn icon_sheet() {
     })
     .unwrap();
 }
+
+fn style() -> newwin_ui::popup::PopupStyle {
+    newwin_ui::popup::PopupStyle { font_family: "Segoe UI Variable Text".into(), font_size_px: 13.0, dpi: 96 }
+}
+
+fn panel(name: &str, content: &mut dyn newwin_ui::panel::PanelContent, now: u64) {
+    let (w, h) = content.size();
+    render_bmp(&out(name), w.ceil() as u32, h.ceil() as u32, theme::GLASS_TINT_SOLID.with_alpha(1.0), |p| content.paint(p, now)).unwrap();
+}
+
+#[test]
+#[ignore]
+fn volume_panel() {
+    use newwin_platform::audio::{AudioDevice, AudioSnapshot};
+    use newwin_ui::panel::{PanelContent, PanelInput};
+    let gfx = Gfx::new().unwrap();
+    let devices = vec![
+        AudioDevice { id: "a".into(), name: "Speakers (Realtek USB Audio)".into() },
+        AudioDevice { id: "b".into(), name: "Headphones".into() },
+    ];
+    let snap = AudioSnapshot { level: 64, muted: false, devices, default_id: Some("a".into()) };
+    let mut v = newwin_ui::volume_panel::VolumePanel::new(Some(snap), ("No output devices", "Sound settings…"), &style(), &gfx);
+    let c = v.device_center(1);
+    v.input(PanelInput::Move(c), 0);
+    panel("volume", &mut v, 10_000);
+}
+
+#[test]
+#[ignore]
+fn spotlight() {
+    use newwin_core::spotlight::{Candidate, Kind};
+    use newwin_ui::panel::{PanelContent, PanelInput};
+    let gfx = Gfx::new().unwrap();
+    let app = |n: &str| Candidate { name: n.into(), id: format!("id:{n}"), kind: Kind::App, file_path: None, packaged: false };
+    let catalog = std::rc::Rc::new(vec![app("Steam"), app("Steam Support Center"), app("Settings"), app("Snipping Tool"), app("Services")]);
+    let labels = newwin_ui::spotlight::SpotlightLabels {
+        hint: "Search apps".into(),
+        no_results: "No results".into(),
+        kind_app: "App".into(),
+        kind_system: "System".into(),
+        press_again_shut_down: "Press Enter again to shut down".into(),
+        press_again_restart: "Press Enter again to restart".into(),
+        keys: "enter open   esc close".into(),
+    };
+    let mut v = newwin_ui::spotlight::SpotlightView::new(catalog, Default::default(), labels, &style(), 6, None, &gfx);
+    for ch in "st".chars() {
+        v.input(PanelInput::Char(ch), 0);
+    }
+    panel("spotlight", &mut v, 10_000);
+}
+
+#[test]
+#[ignore]
+fn tray_list() {
+    use newwin_ui::tray_list::{TrayList, TrayRow};
+    let gfx = Gfx::new().unwrap();
+    let row = |l: &str, header| TrayRow { label: l.into(), header, icon: None };
+    let rows = vec![row("NewWin", true), row("Steam", false), row("Telegram Desktop", false), row("MSI Afterburner", false), row("Counter-Strike 2", false)];
+    let mut t = TrayList::new(rows, "Nothing here".into(), &style(), &gfx);
+    panel("tray", &mut t, 10_000);
+}

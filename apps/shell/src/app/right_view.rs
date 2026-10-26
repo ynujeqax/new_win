@@ -48,6 +48,10 @@ pub(super) struct RightView {
     pill_o: Tween,
     pub date: Option<TextLayout>,
     pub time: Option<TextLayout>,
+    /// The minute that just passed, rolling up and out while the new one rolls in.
+    pub prev_time_text: Option<String>,
+    pub time_prev: Option<TextLayout>,
+    pub time_roll: Tween,
     /// `None` until the audio service runs.
     pub speaker: Option<SpeakerView>,
     /// `None` until the network has been read once.
@@ -81,6 +85,9 @@ impl RightView {
             pill_o: Tween::at_rest(0.0),
             date: None,
             time: None,
+            prev_time_text: None,
+            time_prev: None,
+            time_roll: Tween::at_rest(1.0),
             speaker: None,
             net: None,
             lang: None,
@@ -129,7 +136,7 @@ impl RightView {
         let speaker = self.speaker.as_ref().is_some_and(|s| s.waves.running(now) || s.mute.running(now));
         let net = self.net.as_ref().is_some_and(|n| n.animating(now));
         let lang = self.lang.as_ref().is_some_and(|l| l.fade.running(now));
-        speaker || net || lang || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn].iter().any(|t| t.running(now))
+        speaker || net || lang || [self.pill_x, self.pill_w, self.pill_o, self.chevron_turn, self.time_roll].iter().any(|t| t.running(now))
     }
 
     /// Draws the tray button, the separators, the hover pill and the right items.
@@ -171,8 +178,15 @@ impl RightView {
                     }
                 }
                 RightItem::Time => {
+                    // A new minute rolls in from below while the old one rises and fades.
+                    let f = self.time_roll.value(now);
+                    let lift = s(7.0);
+                    let at = |t: &TextLayout, dy: f32| PointF { x: (r.x + (r.w - t.width()) / 2.0).round(), y: ((h - t.height()) / 2.0 + dy).round() };
+                    if let Some(t) = self.time_prev.as_ref().filter(|_| f < 1.0) {
+                        p.text(t, at(t, -lift * f), theme::TEXT_STRONG.with_alpha(1.0 - f));
+                    }
                     if let Some(t) = &self.time {
-                        text(p, t, theme::TEXT_STRONG);
+                        p.text(t, at(t, lift * (1.0 - f)), theme::TEXT_STRONG.with_alpha(f));
                     }
                 }
                 RightItem::Volume => {
@@ -239,6 +253,7 @@ impl App {
         let strong = text_style(a, dpi, theme::WEIGHT_SEMIBOLD);
         self.right.time = self.text.layout(&self.time_text, &strong, w / 3.0).ok();
         self.right.date = self.text.layout(&self.date_text, &regular, w / 3.0).ok();
+        self.right.time_prev = self.right.prev_time_text.as_ref().and_then(|t| self.text.layout(t, &strong, w / 3.0).ok());
         if let Some(l) = self.right.lang.as_mut() {
             l.text = self.text.layout(&l.code, &regular, w / 3.0).ok();
             l.prev_text = l.prev.as_ref().and_then(|p| self.text.layout(p, &regular, w / 3.0).ok());
@@ -259,7 +274,7 @@ impl App {
     /// Repaints while a tween runs; stops waking once all are at rest.
     pub(super) fn keep_animating(&mut self) {
         let now = now_ms();
-        let pills = self.active_pill.running(now) || self.hover_pill.running(now);
+        let pills = self.active_pill.running(now) || self.hover_pill.running(now) || self.pills_moving(now);
         if pills || self.right.animating(now) || self.icons_animating(now) {
             unsafe { SetTimer(Some(self.bar), ANIM_TIMER, FRAME_MS, None) };
         }

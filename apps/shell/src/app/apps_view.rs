@@ -1,6 +1,7 @@
 //! Running apps on the bar: model updates, layout, painting, hit testing, clicks.
 
-use newwin_core::apps::{ClickAction, WindowInfo, is_screen_snip, left_click, middle_click};
+use newwin_core::anim::Tween;
+use newwin_core::apps::{ClickAction, GroupKey, WindowInfo, is_screen_snip, left_click, middle_click};
 use newwin_core::items::RightItem;
 use newwin_core::app_icon::{ICON_GAP_LOGICAL_PX, ICON_LOGICAL_PX, fallback_for_group, source_for_group};
 use newwin_core::layout::{fit_labels, pill_widths};
@@ -18,6 +19,10 @@ use crate::bar::{paint_background, text_style};
 /// The active app's pill glides a little slower than the hover one: it travels farther.
 const ACTIVE_GLIDE_MS: u32 = 180;
 const PILL_FADE_MS: u32 = 120;
+const PILL_SLIDE_MS: u32 = 200;
+/// Where an app pill's icon comes from, and the fallback.
+type IconSource = (String, Option<String>);
+const PILL_APPEAR_MS: u32 = 220;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Target {
@@ -35,6 +40,8 @@ pub(super) struct BarItem {
     pub text: Option<TextLayout>,
     /// Where an app pill takes its icon from, and where else when that has none.
     pub icon: Option<(String, Option<String>)>,
+    /// The app group, for following it as pills move (None for the overflow pill).
+    pub key: Option<GroupKey>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -132,18 +139,18 @@ impl App {
 
         // Left: one pill per app group, shrinking or overflowing into » when crowded.
         let active = self.model.active_group();
-        let names: Vec<(String, bool, (String, Option<String>))> = self
+        let names: Vec<(String, bool, IconSource, GroupKey)> = self
             .model
             .groups()
             .iter()
             .enumerate()
-            .map(|(i, g)| (g.name.clone(), Some(i) == active, (source_for_group(&g.key), fallback_for_group(&g.key, g.exe.as_deref()))))
+            .map(|(i, g)| (g.name.clone(), Some(i) == active, (source_for_group(&g.key), fallback_for_group(&g.key, g.exe.as_deref())), g.key.clone()))
             .collect();
         // Room for the icon is kept from the start, so the name does not jump when it arrives.
         let (icon, icon_gap) = (s(ICON_LOGICAL_PX), s(ICON_GAP_LOGICAL_PX));
         let natural: Vec<f32> = names
             .iter()
-            .map(|(n, act, _)| {
+            .map(|(n, act, ..)| {
                 let text_w = self.text.natural_width(n, if *act { &strong } else { &regular }).unwrap_or(0.0);
                 pill_widths(text_w, pill_pad, icon, icon_gap).0
             })
@@ -155,21 +162,44 @@ impl App {
         let mut x = start;
         let y = ((h - pill_h) / 2.0).round();
         for (i, width) in fit.widths.iter().enumerate() {
-            let (name, act, source) = &names[i];
+            let (name, act, source, key) = &names[i];
             let style = if *act { &strong } else { &regular };
             let room = width - 2.0 * pill_pad - icon - icon_gap;
             let text = (room >= s(8.0)).then(|| self.text.layout(name, style, room).ok()).flatten();
-            items.push(BarItem { target: Target::Group(i), rect: RectF::new(x, y, *width, pill_h), text, icon: Some(source.clone()) });
+            items.push(BarItem { target: Target::Group(i), rect: RectF::new(x, y, *width, pill_h), text, icon: Some(source.clone()), key: Some(key.clone()) });
             x += width + s(theme::ITEM_GAP);
         }
         if fit.overflow_from.is_some()
             && let Ok(text) = self.text.layout("»", &regular, s(24.0))
         {
-            items.push(BarItem { target: Target::Overflow, rect: RectF::new(x, y, s(24.0), pill_h), text: Some(text), icon: None });
+            items.push(BarItem { target: Target::Overflow, rect: RectF::new(x, y, s(24.0), pill_h), text: Some(text), icon: None, key: None });
         }
         let _ = h;
+        self.follow_pills(&items);
         self.items = items;
         self.overflow_from = fit.overflow_from;
+    }
+
+    /// Pills that stay glide from where they were to their new place; new ones fade in.
+    fn follow_pills(&mut self, items: &[BarItem]) {
+        let now = now_ms();
+        let keys: Vec<&GroupKey> = items.iter().filter_map(|it| it.key.as_ref()).collect();
+        self.pill_motion.retain(|k, _| keys.contains(&k));
+        for it in items {
+            let Some(k) = &it.key else { continue };
+            match self.pill_motion.get_mut(k) {
+                Some((x, _)) => x.to(it.rect.x, now, PILL_SLIDE_MS),
+                None => {
+                    let mut o = Tween::at_rest(0.0);
+                    o.to(1.0, now, PILL_APPEAR_MS);
+                    self.pill_motion.insert(k.clone(), (Tween::at_rest(it.rect.x), o));
+                }
+            }
+        }
+    }
+
+    pub(super) fn pills_moving(&self, now: u64) -> bool {
+        self.pill_motion.values().any(|(x, o)| x.running(now) || o.running(now))
     }
 
     pub(super) fn paint(&mut self) {
@@ -199,7 +229,7 @@ impl App {
         let (pad, icon_w, icon_gap) = (scale(theme::PILL_PAD_X, dpi).round(), scale(ICON_LOGICAL_PX, dpi).round(), scale(ICON_GAP_LOGICAL_PX, dpi).round());
         let bitmaps = &mut self.icon_bitmaps;
         let radius = scale(theme::PILL_RADIUS, dpi).round();
-        let (items, hover, glass, right) = (&self.items, self.hover, self.bar_glass, &self.right);
+        let (items, hover, glass, right, motion) = (&self.items, self.hover, self.bar_glass, &self.right, &self.pill_motion);
         let pills = [(self.hover_pill, theme::HOVER_PILL), (self.active_pill, theme::ACTIVE_PILL)];
         let pill_h = scale(theme::PILL_HEIGHT, dpi).round();
         let r = layer.draw(None, |p: &mut Painter| {
@@ -219,13 +249,17 @@ impl App {
                 } else {
                     theme::TEXT_INACTIVE
                 };
-                let mid_y = it.rect.y + it.rect.h / 2.0;
+                // Sliding to a new place, or fading in when just opened.
+                let (dx, o) = it.key.as_ref().and_then(|k| motion.get(k)).map_or((0.0, 1.0), |(x, o)| (x.value(now) - it.rect.x, o.value(now)));
+                let rect = RectF { x: it.rect.x + dx, ..it.rect };
+                let color = color.with_alpha(color.a * o);
+                let mid_y = rect.y + rect.h / 2.0;
                 if let Some((img, opacity)) = icon {
-                    p.icon(bitmaps, img, icon_rect(it.rect.x + pad, mid_y, dpi), *opacity);
+                    p.icon(bitmaps, img, icon_rect(rect.x + pad, mid_y, dpi), *opacity * o);
                 }
                 if let Some(t) = &it.text {
                     // An app pill: the name after the icon; the overflow pill: centred.
-                    let x = if it.icon.is_some() { it.rect.x + pad + icon_w + icon_gap } else { it.rect.x + (it.rect.w - t.width()) / 2.0 };
+                    let x = if it.icon.is_some() { rect.x + pad + icon_w + icon_gap } else { rect.x + (rect.w - t.width()) / 2.0 };
                     p.text(t, PointF { x: x.round(), y: (mid_y - t.height() / 2.0).round() }, color);
                 }
             }

@@ -1,11 +1,12 @@
 //! Shell role: owns the bar and keeps the native taskbar hidden.
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use newwin_config::Config;
-use newwin_core::anim::GlidePill;
-use newwin_core::apps::{AppModel, SnipTracker};
+use newwin_core::anim::{GlidePill, Tween};
+use newwin_core::apps::{AppModel, GroupKey, SnipTracker};
 use newwin_core::strings::{Strings, strings_for};
 use newwin_core::visibility::{Catcher, VisInput, Visibility};
 use newwin_core::watchdog::EXIT_RESTART;
@@ -141,6 +142,8 @@ pub struct App {
     /// The app pills' highlights: the active app's, and the one under the pointer.
     active_pill: GlidePill,
     hover_pill: GlidePill,
+    /// Each app pill's drawn x and opacity, so pills slide and fade instead of jumping.
+    pill_motion: HashMap<GroupKey, (Tween, Tween)>,
     popup: Option<(Popup, MenuCtx)>,
     panel: Option<ShellPanel>,
     tooltip: Option<Tooltip>,
@@ -602,6 +605,7 @@ fn start() -> Result<Rc<RefCell<App>>> {
         hover: None,
         active_pill: GlidePill::hidden(),
         hover_pill: GlidePill::hidden(),
+        pill_motion: HashMap::new(),
         popup: None,
         panel: None,
         tooltip: None,

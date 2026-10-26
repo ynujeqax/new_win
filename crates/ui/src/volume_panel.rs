@@ -215,7 +215,8 @@ impl VolumePanel {
     fn rebuild(&mut self) {
         let level = self.current();
         let width = self.width();
-        let room = width - 2.0 * self.s(theme::POPUP_PAD) - 2.0 * self.s(theme::POPUP_ITEM_PAD_X);
+        // Room for the current device's check at the right end.
+        let room = width - 2.0 * self.s(theme::POPUP_PAD) - 2.0 * self.s(theme::POPUP_ITEM_PAD_X) - self.s(20.0);
         let Some(t) = self.text.as_mut() else { return };
         let snap = self.snapshot.as_ref();
         self.devices = snap
@@ -309,20 +310,22 @@ impl PanelContent for VolumePanel {
         let base = self.row_rect(0);
         p.line(PointF { x: base.x + pad_x, y: sep_y }, PointF { x: base.right() - pad_x, y: sep_y }, theme::SEPARATOR, 1.0);
         let item_r = self.s(theme::POPUP_ITEM_RADIUS);
-        for (i, d) in snap.devices.iter().enumerate() {
-            let r = self.row_rect(i);
-            let current = snap.default_id.as_deref() == Some(d.id.as_str());
-            if current {
-                p.fill_round_rect(r, item_r, theme::ACTIVE_PILL);
-            }
-            if let Some(Some(t)) = self.devices.get(i) {
-                row_text(p, r, t, if current || self.hover == Some(Hit::Device(i)) { theme::TEXT_STRONG } else { theme::TEXT });
-            }
-        }
+        // The hover pill goes under the names; the current device is marked by a check, so it
+        // never looks like a second hovered row.
         let o = self.pill_o.value(now);
         if o > 0.0 {
             let pill = RectF::new(base.x, self.pill_y.value(now), base.w, base.h);
             p.fill_round_rect(pill, item_r, theme::POPUP_HOVER.with_alpha(theme::POPUP_HOVER.a * o));
+        }
+        for (i, d) in snap.devices.iter().enumerate() {
+            let r = self.row_rect(i);
+            let current = snap.default_id.as_deref() == Some(d.id.as_str());
+            if current {
+                icons::check(p, PointF { x: r.right() - pad_x - self.s(6.0), y: r.y + r.h / 2.0 }, self.s(12.0), theme::TEXT_STRONG, stroke);
+            }
+            if let Some(Some(t)) = self.devices.get(i) {
+                row_text(p, r, t, if current || self.hover == Some(Hit::Device(i)) { theme::TEXT_STRONG } else { theme::TEXT });
+            }
         }
         if self.settings_row
             && let Some(t) = &self.settings

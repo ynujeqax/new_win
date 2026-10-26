@@ -104,6 +104,11 @@ pub fn speaker(p: &mut Painter, c: PointF, s: f32, waves: f32, mute: f32, color:
     }
 }
 
+/// A check mark: the chosen item in a list.
+pub fn check(p: &mut Painter, c: PointF, s: f32, color: Color, w: f32) {
+    p.stroke_polyline(&[at(c, -s * 0.4, 0.0), at(c, -s * 0.12, s * 0.3), at(c, s * 0.42, -s * 0.32)], color, w);
+}
+
 /// Where the magnifier's parts go: the lens (centre, radius) and the handle (from, to).
 pub struct MagnifierGeometry {
     pub lens: PointF,

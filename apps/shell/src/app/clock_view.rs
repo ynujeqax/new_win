@@ -1,13 +1,15 @@
 //! Date and time on the right of the bar, updated once per minute.
 
 use newwin_config::Items;
+use newwin_core::anim::Tween;
 use newwin_core::clock::ms_until_next_minute;
-use newwin_platform::clock::{format_bar_date, format_bar_time, local_second_and_millis};
+use newwin_platform::clock::{format_bar_date, format_bar_time, local_second_and_millis, now_ms};
 use windows::Win32::UI::WindowsAndMessaging::SetTimer;
 
 use super::App;
 
 pub(super) const CLOCK_TIMER: usize = 3;
+const TIME_ROLL_MS: u32 = 360;
 
 impl App {
     /// Re-reads date/time, repaints if the text changed and re-arms the minute timer.
@@ -16,6 +18,11 @@ impl App {
         let date = format_bar_date(&a.date_format);
         let time = format_bar_time(a.show_seconds);
         if date != self.date_text || time != self.time_text {
+            if time != self.time_text && !self.time_text.is_empty() {
+                self.right.prev_time_text = Some(std::mem::take(&mut self.time_text));
+                self.right.time_roll = Tween::at_rest(0.0);
+                self.right.time_roll.to(1.0, now_ms(), TIME_ROLL_MS);
+            }
             self.date_text = date;
             self.time_text = time;
             self.refresh();
