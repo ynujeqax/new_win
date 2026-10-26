@@ -1,0 +1,1870 @@
+😀	grinning face	grin|nice|teeth|smile|laugh|happy|cheery|smiling|cheerful	широко всміхнене обличчя	сміх|вищир|широкий|усмішка|радість|посмішка|усміхнений
+😃	grinning face with big eyes	yay|open|grin|teeth|smile|happy|mouth|awesome|smiling	широко всміхнене обличчя з очищами	очі|рот|сміх|вищир|очища|усмішка|радість|великий|широкий|посмішка|відкритий|усміхнений
+😄	grinning face with smiling eyes	lol|eye|open|grin|smile|mouth|happy|laugh	широко всміхнене обличчя з примруженими очима	очі|рот|сміх|очища|вищир|радість|усмішка|великий|широкий|посмішка|відкритий|усміхнений|примружений
+😁	beaming face with smiling eyes	eye|nice|grin|teeth|smile|happy	осяйно всміхнене обличчя й очі	зуби|широко|усмішка|щасливий|посмішка|радісний|світиться|шкіриться
+😆	grinning squinting face	lol|open|rofl|eyes|haha|laugh|mouth|smile|happy|closed|smiling	обличчя із широкою посмішкою й замруженими очима	очі|рот|сміх|хаха|смішно|великий|радість|широкий|усмішка|щасливий|посмішка|реготати|відкритий|усміхнений|примружений|задоволений
+😅	grinning face with sweat	open|cold|smile|mouth|stress|smiling|excited|nervous|dejected	широко всміхнене обличчя з потом	піт|рот|хаха|сміх|смішно|усмішка|радість|широкий|холодний|посмішка|щасливий|реготати|відкритий|усміхнений
+🤣	rolling on the floor laughing	joy|lol|rofl|tear|lmao|hehe|haha|face|happy|funny|laugh|crying|hilarious	качається від сміху	сміх|хаха|регіт|смішний|веселий|до сліз|обличчя|кумедний|сміятися|умирати зі сміху
+😂	face with tears of joy	lol|hehe|rofl|lmao|tear|haha|feels|happy|funny|laugh|crying|hilarious	обличчя в сльозах радості	лол|сміх|хаха|регіт|сльози|до сліз|радість|кумедний|розсмішити
+🙂	slightly smiling face	smile|happy	трохи всміхнене обличчя	сміх|усмішка|посмішка|всміхнений|усміхнений|задоволений
+🙃	upside-down face	hehe|smile	обличчя догори дриґом	хаха|хехе
+🫠	melting face	lol|hot|heat|melt|haha|liquid|sarcasm|dissolve|sarcastic|disappear|embarrassed	розплавлене обличчя	лол|хаха|спека|текти|танути|сарказм|ніяково|зникати|плавитися|розчинятися
+😉	winking face	sexy|wink|tease|flirt|slide|heartbreaker	обличчя, що підморгує	жарт|флірт|дражнити|залицятися|підморгувати
+😊	smiling face with smiling eyes	eye|glad|smile|blush|satisfied	усміхнене обличчя й очі	ніяково|усмішка|посмішка|рум’янець|соромливий|задоволення
+😇	smiling face with halo	tale|angel|happy|smile|fairy|spirit|blessed|fantasy|innocent|peaceful	усміхнене обличчя з німбом	німб|ангел|янгол|казка|усмішка|фантазія|посмішка|безневинність
+🥰	smiling face with hearts	3|ily|you|love|smile|adore|crush|heart|romance	усміхнене обличчя із сердечками	серця|любов|усмішка|кохання|симпатія|сердечка|ніжність|закоханість|я кохаю тебе
+😍	smiling face with heart-eyes	eye|ily|143|bae|love|xoxo|feels|smile|kisses|hearts|romance|romantic	усміхнене обличчя з очима-серцями	очі|хочу|любов|серце|кохання|посмішка
+🤩	star-struck	wow|star|face|eyes|smile|excited|grinning	очі-зірочки	очі|щастя|зірка|виграш|веселий|обличчя|посмішка
+😘	face blowing a kiss	ily|bae|you|miss|love|xoxo|muah|flirt|heart|smooch|romantic	обличчя, що надсилає цілунок	цьом|цілую|серце|поцілунок|повітряний
+😗	kissing face	ily|you|143|xoxo|kiss|love|date|flirt|dating|smooch	обличчя, що цілує	цьом|флірт|кохання|цілувати|поцілунок|побачення
+☺️	smiling face	smile|happy|relaxed|outlined	усміхнене обличчя	усмішка|посмішка|спокійний|задоволений
+😚	kissing face with closed eyes	eye|ily|bae|143|xoxo|date|blush|flirt|dating|kisses|smooches	обличчя із заплющеними очима, що цілує	око|очі|флірт|закриті|заплющені|поцілунок|побачення
+😙	kissing face with smiling eyes	eye|ily|143|love|date|kiss|night|smile|flirt|closed|dating	обличчя з примруженими очима, що цілує	ніч|око|очі|143|флірт|усмішка|кохання|поцілунок|поцілунки|побачення|цілуватися|усміхатися
+🥲	smiling face with tear	joy|pain|glad|smile|proud|happy|touched|grateful|relieved	усмішка в сльозах	плач|смайл|сльоза|посмішка|гордість|полегшення|зворушення|розчулений
+😋	face savoring food	um|yum|eat|full|tasty|smile|savor|hungry|smiling|delicious	усміхнене обличчя, що облизує губи	їжа|ммм|смак|голод|смачно|страва|усмішка|посмішка
+😛	face with tongue	cool|nice|party|sweet|awesome|stuck-out	обличчя з висунутим язиком	язик|добре|радість|показати|висунутий|висолопити
+😜	winking face with tongue	eye|joke|wink|epic|yolo|wacky|crazy|party|loopy|nutty|funny|weirdo|stuck-out	обличчя, що підморгує і показує язика	очі|лол|язик|хаха|жарт|усмішка|посмішка|показати|підморгую|підморгувати
+🤪	zany face	eye|large|small|crazy|goofy	божевільне обличчя	око|малий|великий|скажений|божевільний
+😝	squinting face with tongue	eye|omg|yolo|gross|taste|closed|whatever|horrible|stuck-out	обличчя з висунутим язиком і заплющеними очима	фу|очі|смак|сміх|тьфу|язик|гидота|жахливий|висунутий
+🤑	money-mouth face	paid|money|mouth	обличчя з грішми замість очей та язика	очі|рот|гроші|виграш|вдавися|лотерея
+🤗	smiling face with open hands	hug	щасливе обличчя з руками, що обіймають	руки|щастя|обняти|обійми|радість|обійняв|радісний|обійматися
+🤭	face with hand over mouth	oops|shock|whoops|sudden|secret|giggle|surprise|giggling|realization	обличчя, що прикриває рота рукою	ой|упс|тихо|тайна|мовчу|смішно|секрет|сюрприз|хихикання
+🫢	face with open eyes and hand over mouth	awe|omg|gasp|shock|quiet|scared|surprise|amazement|disbelief|embarrass	обличчя з розплющеними очима і рукою на роті	ого|шок|диво|тиша|о боже|сюрприз|нівроку|переляк|не вірю|мовчати|мовчанка|не може бути
+🫣	face with peeking eye	shy|peep|hide|peek|stare|scared|hiding|embarrass|captivated	обличчя, що підглядає одним оком	конфуз|ніяково|ховатися|одне око|виглядати|наляканий|соромитися|витріщається|соромʼязливий|умирає з цікавості
+🤫	shushing face	shh|shush|quiet	обличчя, що цикає	тиша|тихо|тссс|шепіт|тихіше|мовчіть|пошепки|замовкніть|не гомоніть
+🤔	thinking face	hmm|chin|ponder|consider|wondering	обличчя в роздумах	хм|задума|думати|роздуми|не знаю|у роздумах|підборіддя|дай подумаю|треба подумати
+🫡	saluting face	OK|yes|sir|good|luck|ma’am|troops|salute|respect	обличчя, що козиряє	ОК|так|честь|удачі|салют|згода|повага|респект|козиряти|слухаюсь|шанування|буде зроблено
+🤐	zipper-mouth face	zip|shut|keep|quiet|mouth|secret	обличчя із застібкою замість рота	рот|мовчу|як риба|мовчати|не скажу|застібка|блискавка|не казати
+🤨	face with raised eyebrow	hmm|what|mild|emoji|skeptic|surprise|distrust|disbelief|disapproval	обличчя з піднятими бровами	гм|що|брови|конфуз|отакої|справді|не вірю|недовіра|не розумію|скептичний
+😐	neutral face	oh|meh|fine|shade|blank|unhappy|awkward|deadpan|jealous|whatever|unamused|straight|unimpressed|expressionless	обличчя з нейтральним виразом	ні|нехай|все одно|не скажу|не згоден|без емоцій|невражений|незворушний|нейтральний|незадоволення
+😑	expressionless face	uh|oh|omg|meh|not|dead|fine|unhappy|jealous|awkward|whatever|straight|unimpressed|inexpressive	обличчя без емоцій	нехай|все одно|невражений|ну й добре|заздрісний|невиразний
+😶	face without mouth	mute|quiet|blank|secret|silent|silence|awkward|speechless|expressionless	обличчя без рота	рот|тихо|мовчи|секрет|немає слів
+🫥	dotted line face	meh|wtv|hide|hidden|whatever|depressed|disappear|introvert|invisible	обличчя пунктиром	байдуже|ховатися|схований|так собі|все одно|зникнути|депресія|невидимка|сховатися|інтроверт|пригнічений
+😶‍🌫️	face in clouds	fog|head|absentminded	обличчя в хмарах	дим|смог|хмари|туман|голова|неуважний
+😏	smirking face	sly|leer|swag|smug|boss|slick|suave|flirt|smirk|shade|homie|dapper|kidding|snicker|suspicious	самовдоволене обличчя	бос|себе|ухти|ух-ти|люблю|цікаво|усмішка|не дуже|посмішка|так собі|сумніваюсь|самовдоволення
+😒	unamused face	uhh|jel|ugh|smh|...|fine|weird|bored|pissed|jealous|unhappy|whatever	невдоволене обличчя	фу|нудно|все одно|заздрість|нещасливий|розчарований|незадоволений
+🙄	face with rolling eyes	ugh|shade|eyeroll|whatever	обличчя із закоченими очима	очі|отакої|о боже|байдуже|оце так|закочувати
+😬	grimacing face	awk|smile|smiling|grimace|dentist|grinning	обличчя з гримасою	дивно|крінж|капець|усмішка|гримаса|дантист|посмішка|кривляння|скривлене|стоматолог
+😮‍💨	face exhaling	sigh|gasp|blow|smoke|groan|exhale|relief|smiley|whisper|whistle|exhausted	обличчя, що видихає	вдих|свист|смайл|туман|видих|стогін|шепотіння|втомлений|виснажений|полегшення
+🤥	lying face	lie|liar|pinocchio	обличчя, що бреше	обман|брехло|брехун|брехня|збрехав|піноккіо|неправда
+🫨	shaking face	omg|wow|whoa|daze|crazy|shock|panic|vibrate|surprise|earthquake	тремтливе обличчя	шок|смайл|паніка|сюрприз|вібрація|тремтіння|землетрус|Боже мій!|ошелешення|несподіванка
+😌	relieved face	zen|calm|peace|relief	заспокоєне обличчя	дзен|спокій|полегшення|задоволення
+😔	pensive face	sad|died|lost|sucks|awful|bored|losing|dejected|disappointed	замислене обличчя	роздуми|засмучений|задумливий|розчарований|занепокоєння
+😪	sleepy face	sad|good|sleep|tired|night|crying	заспане обличчя	сон|втомлениий|засмучений
+🤤	drooling face		обличчя, що пускає слину	слина|голодний
+😴	sleeping face	nap|zzz|bed|yawn|good|tired|night|sleep|whatever	обличчя, що спить	сон|ніч|спати|втома|заснув|добраніч|стомлений
+😷	face with medical mask	dr|sick|cold|germs|doctor|dentist|medicine|dermatologist	обличчя в медичній масці	лікар|маска|хворий|застуда|холодний|інфекція|медицина
+🤒	face with thermometer	ill|sick	обличчя з термометром	хворий|термометр
+🤕	face with head-bandage	ouch|hurt|injury|bandage	обличчя з головною повʼязкою	рана|травма|болить|голова|пов’язка|поранений
+🤢	nauseated face	sick|vomit|gross|nasty	обличчя, яке нудить	хвора|хворий|укачує|погано|нудота|блювота|закачує
+🤮	face vomiting	ew|up|sick|spew|barf|puke|vomit|gross|throw	обличчя, що блює	нудить|нудота|блювота|блювання|отруївся|мені погано
+🤧	sneezing face	flu|sick|fever|sneeze|gesundheit	обличчя, що чхає	ОРЗ|грип|апчхи|чхання|нежить|застуда|хвороба
+🥵	hot face	heat|dying|stroke|tongue|panting|sweating|feverish|red-faced	розпашіле обличчя	піт|жар|спека|задуха|гаряче|палати|помирає|гарячий|гарячка|червоне лице|червонощокий|тепловий удар|сонячний удар|висолоплений язик
+🥶	cold face	blue|teeth|subzero|icicles|freezing|frostbite	замерзле обличчя	мороз|холод|бурулька|замерзлий|синє лице|зуб на зуб|обмороження|синє обличчя|цокотить зубами|посинілий від холоду
+🥴	woozy face	eyes|wavy|mouth|tipsy|drunk|dizzy|uneven|intoxicated	очманіле обличчя	кайф|дурман|п’яний|косі очі|захмелілий|одурманений|інтоксикація|запаморочення|очі розбігаються|язик заплітається
+😵	face with crossed-out eyes	out|dead|sick|tired|dizzy|feels|knocked	запаморочене обличчя	запаморочений
+😵‍💫	face with spiral eyes	omg|whoa|woah|woozy|dizzy|smiley|trouble|confused|hypnotized	очі-спіралі	ох|ого|шок|смайл|гіпноз|у шоці|погано|заносить|проблема|нічого собі|запаморочення
+🤯	exploding head	no|way|mind|blown|shocked|explode	голова, що вибухає	шок|неймовірно|винос мозку|не може бути
+🤠	cowboy hat face	cowgirl	обличчя у ковбойському капелюсі	ковбой|капелюх|широко усміхнене обличчя у ковбойському капелюсі
+🥳	partying face	hat|horn|bday|happy|party|hooray|excited|birthday|celebrate|celebration	святкове обличчя	дудка|свято|ріжок|ковпак|вечірка|радість|вітання|капелюх|трубочка|збуджений|святкування|схвильований|день народження
+🥸	disguised face	spy|nose|tash|tache|person|eyebrow|glasses|disguise|mustache|incognito|moustache	замасковане обличчя	ніс|вуса|маска|людина|шпигун|окуляри|камуфляж|інкогніто|накладний ніс|накладні вуса
+😎	smiling face with sunglasses	bro|win|rad|cool|swag|slay|smile|beach|style|bright|shades|awesome|relaxed|chilling	усміхнене обличчя в темних окулярах	бро|сонце|темні|чувак|круто|крутий|усмішка|яскраво|окуляри|посмішка
+🤓	nerd face	geek|smart|gifted|brainy|expert|clever|glasses|intelligent	обличчя всезнайка	гік|дока|ботан|дойда|унікум|навчання|зацікавленість
+🧐	face with monocle	rich|fancy|stuffy|classy|wealthy	обличчя в моноклі	лупа|монокль|пановитий|придивлятися|збільшувальне скло
+😕	confused face	hm|meh|not|sad|sure|sorry|dunno|frown|befuddled|confusing	спантеличене обличчя	ні|гм|аякже|сумний|не знаю|невдоволений|спантеличений|не задоволений
+🫤	face with diagonal mouth	meh|wtv|doubt|unsure|whatever|confused|confusion|skeptical|frustrated|frustration|disappointed	обличчя з ротом навскіс	та ну|сумнів|байдуже|так собі|скептицизм|розчарований|невпевненість
+😟	worried face	sad|worry|stress|nerves|anxious|nervous|surprised|butterflies	стурбоване обличчя	нерви|стрес|сумний|здивований|тривожність|турбуватися|стурбований|занепокоєння
+🙁	slightly frowning face	sad|frown	трохи похмуре обличчя	сумний|нахмурений
+☹️	frowning face	sad|frown	похмуре обличчя	злий|сумний|розчарований|незадоволений
+😮	face with open mouth	omg|wow|you|whoa|unreal|forgot|shocked|believe|sympathy|surprised|unbelievable	обличчя з відкритим ротом	шок|ого|рот|вау|отакої|відкритий|співчуття|не може бути
+😯	hushed face	omg|whoa|woah|epic|stunned|surprised	здивоване і збентежене обличчя з бровами	брови|отакої|вражений|нічого собі|приголомшений
+😲	astonished face	no|way|omg|cost|shocked|totally	вражене обличчя	ні|шок|подив|отакої|здивоване|абсолютно|здивований|не може бути
+😳	flushed face	hot|wow|jeez|heat|geez|what|dead|dazed|crazy|amazed|awkward|disbelief|impressed|embarrassed	зашаріле обличчя	вау|сором|ніяково|та годі|рум’янець|незручний|здивований|не може бути|присоромлений
+🥺	pleading face	why|sad|not|big|eyes|puppy|mercy|please|pretty|begging	благальне обличчя	очі|сумно|молити|великі|просити|жалібне|благання|прохання|жалісливе|будь ласка|щенячі очі|випрошувати
+🥹	face holding back tears	cry|joy|sad|aww|proud|resist|please|grateful|feelings|gratitude|admiration|embarrassed	обличчя, що ледве стримує сльози	сум|мило|плач|щастя|радості|пишаюся|гордість|вдячність|будь ласка|схвильований
+😦	frowning face with open mouth	wow|what|scary|guard|frown|caught|scared|surprise	похмуре обличчя з відкритим ротом	рот|вау|страх|наляканий|відкритий|нахмурений|нічого собі
+😧	anguished face	wow|what|scary|forgot|scared|unhappy|stressed|surprise	стражденне обличчя	стрес|забув|переляк|страждання|здивований|не може бути|незадоволений|спантеличений
+😨	fearful face	fear|blame|scared|afraid|worried|anxious	налякане обличчя	страх|боюся|переляк|боязкий|наляканий
+😰	anxious face with sweat	eek|open|blue|cold|yikes|mouth|scared|rushed|nervous	занепокоєне обличчя з потом	рот|піт|синій|нерви|холодно|спітніти|холодний|відкритий|розчарований
+😥	sad but relieved face	not|time|whew|call|close|sweat|anxious|complicated|disappointed	cумне, але втішене обличчя	фух|сльози|плакати|полегшення|заспокоєне|все складно|розчароване|розчарування
+😢	crying face	sad|cry|miss|tear|feels|awful|triste|unhappy	обличчя, що плаче	плач|сумую|сумний|сльоза|нещасний
+😭	loudly crying face	sad|cry|sob|tear|unhappy|bawling	обличчя, що гучно ридає	плач|гірке|потік|сльози|сумний|ридання|нещасний|котяться
+😱	face screaming in fear	woah|epic|munch|scream|scared|shocked|surprised	обличчя, що кричить із переляку	крик|зойк|страх|переляк|епічний|вражений|шокований|наляканий
+😖	confounded face	mad|sad|feels|cringe|annoyed|confused|distraught|frustrated	збентежене обличчя	злий|гнів|крінж|сумний|сердитий|розлючений|збентежений|розчарований
+😣	persevering face	focus|headache|persevere|concentrate|concentration	невідступне обличчя	увага|завзяте|упертість|зосередження|невдоволений|концентрація|розчарований
+😞	disappointed face	sad|fail|awful|blame|losing|unhappy|dejected	розчароване обличчя	сумний|провина|невдача|програш|нещасний|винуватий|засмучений|розчарований
+😓	downcast face with sweat	sad|cold|yikes|close|feels|scared|nervous|headache	понурене обличчя в поту	піт|сум|нерви|болить|голова|краплі|холодний|наляканий|понурений|знервований|розчарований
+😩	weary face	sad|mad|nooo|fail|tired|feels|sleepy|hungry|crying|unhappy	замучене обличчя	ні|спати|сумний|втомлене|позіхати|зморений|нещасний|стомлений|розчарований|розчарування
+😫	tired face	sad|nap|cost|feels|sneeze	стомлене обличчя	стомлений|розчарована|розчарований|розчарування
+🥱	yawning face	nap|zzz|yawn|sleep|tired|bored|night|bedtime|whatever|goodnight	обличчя, що позіхає	ніч|сон|позіхати|добраніч|заспаний|стомлений|знуджений|позіхайло|хоче спати
+😤	face with steam from nose	mad|won|fume|fury|anger|feels|angry|fuming|furious|unhappy|triumph	обличчя, що сердито видихає	лють|гнів|тріумф|злість|шалений|сердитий|розлючений|пара з носа|розгніваний|роздратований
+😡	enraged face	mad|red|rage|upset|shade|anger|feels|angry|unhappy|pouting	обличчя, що дується	злий|гнів|нещасний|сердитий|червоний|насуплений|невдоволений
+😠	angry face	mad|rage|upset|shade|anger|blame|feels|unhappy|frustrated	сердите обличчя	злий|сердитий
+🤬	face with symbols on mouth	mad|censor|pissed|cursing|cussing|swearing	обличчя із символами в роті	гнів|матюк|лайка|суворий|цензура|лаятися|не скажу|сердитий
+😈	smiling face with horns	evil|tale|shade|smile|demon|devil|fairy|purple|fantasy	усміхнене обличчя з рогами	казка|ріжки|монстр|посмішка|фантазія|диявольська посмішка
+👿	angry face with horns	imp|evil|tale|demon|shade|devil|fairy|purple|fantasy|mischievous	сердите обличчя з рогами	демон|дідько|диявол|чортеня|фантазія
+💀	skull	i’m|yolo|tale|lmao|body|face|dead|fairy|death|monster	череп	тіло|казка|смерть|монстр|обличчя
+☠️	skull and crossbones	face|dead|bone|death|monster	череп і кістки	тіло|скелет|смерть|монстр|пірати|обличчя|перехрещені
+💩	pile of poo	bs|fml|doo|smh|turd|dung|face|stink|comic|smelly|monster	усміхнена купа лайна	пупу|жарт|кака|лайно|екскременти
+🤡	clown face		обличчя клоуна	цирк|клоун
+👹	ogre	face|mask|tale|scary|devil|fairy|monster|fantasy|creature	велетень-людожер	казка|монстр|обличчя|людожер|фантазія|японський|створіння
+👺	goblin	face|mask|tale|mean|angry|fairy|monster|fantasy|creature	гоблін	казка|монстр|обличчя|фантазія|японський|створіння
+👻	ghost	boo|face|tale|scary|fairy|silly|monster|fantasy|excited|haunting|creature|halloween	привид	казка|монстр|каспер|обличчя|фантазія|створіння
+👽	alien	ufo|face|tale|space|fairy|monster|fantasy|creature|extraterrestrial	прибулець	нло|чужий|казка|обличчя|створіння|позаземний
+👾	alien monster	ufo|game|tale|face|space|fairy|fantasy|creature|pixelated|extraterrestrial	іншопланетний монстр	нло|космос|обличчя|фантазія|створіння|прибулець|позаземний
+🤖	robot	face|monster	робот	монстр|голова|обличчя
+😺	grinning cat	open|face|mouth|smile|animal|smiling	широко всміхнений кіт	паща|кішка|морда|весело|усмішка|сміється|посмішка|відкритий|усміхнений
+😸	grinning cat with smiling eyes	eye|grin|face|smile|animal	широко всміхнений кіт з усміхом в очах	око|морда|усмішка|усміхнений кіт
+😹	cat with tears of joy	lol|tear|face|laugh|animal	кіт зі сльозами радості	морда|сльози|смішно|радість
+😻	smiling cat with heart-eyes	eye|love|face|heart|smile|animal	усміхнений кіт з очима як серця	око|серце|щастя|морда|усмішка|кохання|посмішка|щасливий
+😼	cat with wry smile	face|ironic|animal	кіт із кривою посмішкою	морда|котяча|сумніви|глузлива|посмішка|іронічний|скривлена
+😽	kissing cat	eye|face|kiss|animal|closed	кіт, що цілує	око|очі|морда|тварина|поцілунок|заплющений
+🙀	weary cat	oh|face|animal|surprised	шокований кіт	ой|шок|морда|котяча|сюрприз|зненацька|здивування|не може бути
+😿	crying cat	cry|sad|tear|face|animal	кіт, що плаче	плач|морда|сумна|сльоза|котяча|сумний|зарюмана
+😾	pouting cat	face|animal	сердитий кіт	морда|котяча|сердита|насуплений
+🙈	see-no-evil monkey	no|omg|smh|hide|evil|face|watch|secret|forgot|scared|gesture|forbidden|prohibited|embarrassed	мавпа, що не бачить	зло|бачити|обличчя|заборонено
+🙉	hear-no-evil monkey	no|tmi|shh|hear|face|ears|evil|secret|animal|listen|gesture|forbidden|prohibited	мавпа, що не чує	зло|чути|обличчя|заборонено
+🙊	speak-no-evil monkey	no|oops|evil|face|quiet|speak|secret|animal|stealth|gesture|forbidden|prohibited	мавпа, що не говорить	ой|зло|мовчу|секрет|обличчя|говорити|заборонено
+💌	love letter	mail|heart|romance|valentine	любовний лист	пошта|серце|кохання|закоханість|закохансіть
+💘	heart with arrow	ily|143|love|date|cupid|adorbs|romance|emotion|valentine	серце, пробите стрілою	стріла|купідон|закоханість
+💝	heart with ribbon	ily|143|xoxo|kisses|emotion|valentine|anniversary	серце зі стрічкою	стрічка|кохання|валентин
+💖	sparkling heart	ily|143|good|xoxo|night|kisses|sparkle|emotion|morning|excited	серце, що виблискує	ятк|ятл|сяйво|щастя|люблю|кохаю|рожеве|блискуче|блискітки|захоплення
+💗	growing heart	ily|143|muah|xoxo|pulse|kisses|excited|emotion|nervous	серце, що зростає	ятк|ятл|емоція|нервувати|захоплення|я тебе кохаю|збільшується|я тебе люблю
+💓	beating heart	ily|143|love|pulse|cardio|emotion|pulsating	серце, що бʼється	ятк|ятл|люблю|биття|кохаю|кардіо|емоція|кохання|пульсуюче|пульсувати
+💞	revolving hearts	143|heart|adorbs|emotion|anniversary	серця, що обертаються	серце|любов|емоція|річниця|кохання|обертатися
+💕	two hearts	ily|143|xoxo|love|date|heart|loving|kisses|dating|emotion|anniversary	два серця	ятк|ятл|пара|любов|кохаю|люблю|кохання|поцілунок
+💟	heart decoration	143|white|purple|emotion	прикраса із серцем	143|серце|білий|кохання|фіолетовий|стилізоване
+❣️	heart exclamation	mark|heavy|punctuation	знак оклику у формі серця	серце|форма|жирний|розділовий|пунктуація|стилізований
+💔	broken heart	sad|break|lonely|emotion|crushed	розбите серце	сум|емоція|розлука|самотній|розбивати
+❤️‍🔥	heart on fire	lust|love|burn|sacred	палке серце	опік|жага|любов|священне серце
+❤️‍🩹	mending heart	well|healthier|improving|recovering|recuperating	серце, що заживає	одужання|здоровий|поправка|вже краще|лікування|здоровіший|покращення
+❤️	red heart	love|emotion	червоне серце	любов|емоція|кохання
+🩷	pink heart	ily|143|like|love|cute|sweet|special|emotion|adorable	рожеве серце	люблю|любов|милий|добрий|емоція|рожевий|солодкий|чарівний|особливий|подобається
+🧡	orange heart	143	оранжеве серце	кохання|помаранчевий
+💛	yellow heart	ily|143|love|emotion|cardiac	жовте серце	жовтий|кохання
+💚	green heart	ily|143|love|emotion|romantic	зелене серце	кохання|зелений
+💙	blue heart	ily|143|love|romance|emotion	синє серце	синій|холодне серце
+🩵	light blue heart	ily|sky|143|love|teal|like|cyan|cute|emotion|special	блакитне серце	любов|синій|люблю|милий|емоція|ціановий|блакитний|особливий|подобатися|світло-синій
+💜	purple heart	ily|143|love|emotion|bestest	пурпурове серце	бузковий|пурпурний|фіолетовий|шарлатовий|пурпуровий|фіолетове серце
+🤎	brown heart	143	коричневе серце	
+🖤	black heart	evil|wicked	чорне серце	зло|заздрість
+🩶	grey heart	ily|143|love|gray|slate|silver|special|emotion	сіре серце	люблю|сірий|любов|емоція|срібний|особливий|графітовий
+🤍	white heart	143	біле серце	
+💋	kiss mark	lips|sexy|heart|dating|romance|emotion	слід цілунку	губи|серце|вуста|відбиток|поцілунок|закоханість
+💯	hundred points	a+|yup|100|TRUE|full|keep|point|score|agree|fleek|truth|clearly|perfect|faithful|definitely	cто балів	100|очок|очки|точно|число|рахунок|максимум|результат
+💢	anger symbol	mad|upset|angry|comic	символ гніву	злий|гнів|комікси|розлючений
+💥	collision	boom|bomb|comic|explode|collide	зіткнення	бум|бах|іскра|вибух|спалах|комікси
+💫	dizzy	star|comic|shining|shooting	символ запаморочення	зірка|фортуна|комікси|щаслива зірка
+💦	sweat droplets	wet|work|drip|water|comic|drops|squirt|droplet|splashing	краплі поту	піт|вода|бризки|комікси
+💨	dashing away	go|fart|fast|dash|smoke|comic|cloud|running	порив вітру	біг|мчати|швидко|комікси|стрімкість
+🕳️	hole		лунка	діра
+💬	speech balloon	sms|talk|text|comic|bubble|dialog|typing|message	текстова булька	діалог|розмова|комікси|хмаринка
+👁️‍🗨️	eye in speech bubble	witness|balloon	око в текстовій бульці	свідок|значок свідка|проти переслідування|що символізує кампанію проти залякування
+🗨️	left speech bubble	dialog|balloon	хмаринка з текстом зліва	діалог|розмова
+🗯️	right anger bubble	mad|angry|balloon	булька із сердитою реплікою	злий|хмаринка|розлючений
+💭	thought balloon	idea|think|dream|comic|cloud|wonder|invent|bubble|realize|cartoon|daydream|decisions	булька роздумів	думка|комікси|хмаринка
+💤	ZZZ	good|sleep|tired|night|comic	умовне позначення сну	ніч|сон|хрр|сплю|спить|спати|комікси|добраніч|стомлений
+👋	waving hand	yo|hi|hey|bye|g2g|gtg|cya|ttfn|ttyl|wave|later|hello|outtie|greetings	рука махає	тіло|бувай|помах|вітаю|привіт|долоня|махати|вітання|дай пʼять|до зустрічі
+🤚	raised back of hand		піднята рука тильною стороною	тильна|долоня
+🖐️	hand with fingers splayed	stop|finger|raised	піднята рука з розведеними пальцями	тіло|долоня|пальці|палець|розчепірений
+✋	raised hand	5|stop|high|five	піднята рука	тіло|стояти|долоня|дай пʼять
+🖖	vulcan salute	hand|finger	вулканське вітання	рука|спок|тіло|жест|вулкан|палець|пальці|зоряний шлях
+🫱	rightwards hand	hold|right|shake|reach	долоня вправо	рука|тримати|праворуч|потискати|права рука|простягнути|рукостискання
+🫲	leftwards hand	hold|left|reach|shake	долоня вліво	рука|тримати|ліворуч|ліва рука|потискати|простягнути|рукостискання
+🫳	palm down hand	up|pick|shoo|drop|dismiss	рука долонею вниз	киш!|взяти|зронити|підняти|відпускаю|випустити
+🫴	palm up hand	me|tell|lift|hold|know|come|offer|catch|beckon	рука долонею вгору	скажи|ловити|розкажи|тримати|підійди|впіймати|піднімати|підходити|пропозиція|підкликати
+🫷	leftwards pushing hand	stop|hold|push|slap|five|wait|high|halt|block|pause|refuse|leftward	долоня штовхає вліво	дай|стоп|пʼять|ляснути|ліворуч|припини|зупинити|штовхати|відмовити|заблокувати
+🫸	rightwards pushing hand	push|hold|slap|stop|five|wait|halt|high|block|pause|refuse|rightward	долоня штовхає вправо	дай|стоп|пʼять|ляснути|припини|праворуч|зупинити|штовхати|відмовити|заблокувати
+👌	OK hand	rad|bet|got|sure|dope|pinch|three|fleek|fosho|sweet|legit|awesome	жест «окей»	так|рука|тіло|о’кей|добре|круто|чудово|гаразд|зрозуміло
+🤌	pinched fingers	huh|ugh|zip|what|hold|hand|relax|gesture|patience|sarcastic|interrogation	зведені пальці	жест|рука|мудра|лотос|долоня|спокій|сарказм|терпіння|запитання|просвітлення|розслаблення
+🤏	pinching hand	bit|sort|small|little|amount|fingers	жест «мало»	рука|мало|щіпка|трохи|пальці|дещиця|небагато|невелика кількість
+✌️	victory hand	v|peace	жест перемоги	V|рука|тіло|перемога
+🤞	crossed fingers	hand|luck|cross|finger	схрещені пальці	рука|удача
+🫰	hand with index finger and thumb crossed	<3|love|snap|heart|money|expensive	клацання пальцями	<3|рука|любов|плати|серце|гроші|коштує|дорого|вартість
+🤟	love-you gesture	you|ILY|love|hand|three|fingers	жест «кохаю тебе»	рука|фанат|три пальці|піднята рука
+🤘	sign of the horns	hand|finger|rock-on	жест «роги»	рок|коза|рука|роги|палець|символ рогів рукою
+🤙	call me hand	hang|Shaka|loose	жест «подзвони мені»	рука|телефон|зізвонемося|подзвони мені|зателефонуй мені
+👈	backhand index pointing left	hand|point|finger	палець тильним боком, що вказує вліво	рука|показувати|тильний бік
+👉	backhand index pointing right	hand|point|finger	палець тильним боком, що вказує вправо	рука|управо|указувати|вказівний|показувати
+👆	backhand index pointing up	hand|point|finger	палець тильним боком, що вказує вгору	рука|угору|указувати|вказівний|показувати
+🖕	middle finger	hand	середній палець	рука
+👇	backhand index pointing down	hand|point|finger	палець тильним боком, що вказує вниз	униз|рука|тильний|указувати|вказівний|дивись нижче
+☝️	index pointing up	this|hand|point|finger	вказівний палець, що вказує вгору	цей|рука|угору|увага|хвилинку|зауважте|указувати
+🫵	index pointing at the viewer	you|poke|hand|finger	вказівний палець, що вказує на глядача	ти|ви|рука|указувати|показувати
+👍	thumbs up	+1|yes|hand|like|good|thumb	великі пальці вгору	+1|так|рука|тіло|супер|файно|добре|круто|класно|гаразд|чудово|схвалення|домовилися|подобається|палець угору
+👎	thumbs down	no|-1|bad|hand|good|thumb|dislike	великі пальці вниз	-1|рука|тіло|палець униз|не подобається
+✊	raised fist	hand|punch|clenched|solidarity	піднятий кулак	тіло|рука|стиснутий
+👊	oncoming fist	bro|hand|bump|rock|bruh|ttyl|boom|pound|punch|agree|correct|knuckle|clenched|absolutely	кулак, що насувається	бум|бро|рок|рука|удар|згода|абсолютно|стиснутий|правильно
+🤛	left-facing fist	leftwards	кулак уліво	рука|панч
+🤜	right-facing fist	rightwards	кулак управо	рука|удар праворуч
+👏	clapping hands	job|yay|good|hand|well|nice|clap|homie|great|prayed|awesome|excited|approval|applause|congrats|congratulations	руки, що аплодують	ура|біс|рука|браво|чудово|оплески|вітання|відмінно|плескати|аплодисменти
+🙌	raising hands	hand|hooray|praise|raised|gesture|celebration	руки, підняті для святкування	ура|рука|жест|піднята
+🫶	heart hands	<3|you|love	жест «серце»	<3|руки|любов|серце|кохання|люблю тебе
+👐	open hands	hug|jazz|hand|swerve	відкриті долоні	рука|тіло|відкритий
+🤲	palms up together	dua|pray|wish|hands|cupped	долоні, підняті разом	молитва|бажання|молитися
+🤝	handshake	deal|hand|shake|meeting|agreement	рукостискання	руки|згода|по руках|домовилися|потискання
+🙏	folded hands	beg|bow|thx|ask|hand|high|pray|cmon|five|thanks|please|blessed|gesture|appreciate	руки, стиснуті разом	рука|прошу|дякую|уклін|просити|молитва|благання|будь ласка
+✍️	writing hand	write	рука, що пише	тіло|писати
+💅	nail polish	care|done|bored|makeup|manicure|whatever|cosmetics	лак для нігтів	рука|тіло|нігті|догляд|робота|ніготь|манікюр|косметика
+🤳	selfie	phone|camera	селфі	фото|камера|телефон|автопортрет
+💪	flexed biceps	gym|bro|arm|flex|press|gains|bench|beast|curls|strong|ripped|jacked|muscle|weightlift|bodybuilder	напружений біцепс	рука|м’яз|спорт|силач|крутий|зігнутий|тренування|важкоатлет|бодибілдер|мускулистий
+🦾	mechanical arm	prosthetic|accessibility	механічна рука	протез|доступність|спеціальні можливості
+🦿	mechanical leg	prosthetic|accessibility	механічна нога	протез|доступність|спеціальні можливості
+🦵	leg	knee|limb|kick|bent|foot	нога	стопа|стегно|коліно|копняк|кінцівка|удар ногою|зігнута нога
+🦶	foot	kick|feet|stomp|ankle	ступня	удар|нога|стопи|стопа|ніжка|гомілка
+👂	ear	hear|body|sound|listen	вухо	тіло|слухаю|слухати
+🦻	ear with hearing aid	hard|accessibility	вухо зі слуховим апаратом	вади слуху|доступність|слуховий апарат|спеціальні можливості
+👃	nose	odor|body|smell	ніс	тіло
+🧠	brain	smart|intelligent	мозок	розум|мізки|інтелект
+🫀	anatomical heart	red|beat|real|organ|pulse|cardiology	серце	кров|орган|пульс|центр|червоний|анатомічний|кардіологія|внутрішній орган
+🫁	lungs	lung|organ|breath|exhalation|inhalation|respiration	легені	вдих|подих|орган|видих|легеня|дихання|внутрішній орган
+🦷	tooth	teeth|white|pearly|dentist	зуб	білий|дантист|стоматолог
+🦴	bone	dog|wishbone|skeleton	кістка	кості|скелет|собака|кальцій|кісточка|собачі ласощі
+👀	eyes	omg|eye|see|peep|look|body|face|googly	очі	око|тіло|обличчя
+👁️	eye	1|one|body	око	тіло
+👅	tongue	lick|body|slurp	язик	тіло
+👄	mouth	lips|body|kiss|beauty	рот	тіло|губи|помада|чутлива|поцілунок
+🫦	biting lip	fear|sexy|kiss|bite|worry|flirt|anxious|worried|nervous|uncomfortable	закушена нижня губа	укус|страх|флірт|нерви|помада|тривога|поцілунок|ніяковість|сексуально|хвилюватись|стурбованість
+👶	baby	goo|young|babies|infant|newborn|children|pregnant	немовля	малеча|дитина
+🧒	child	kid|young|grandchild|bright-eyed	дитина	сміх|малеча|весело|людина|неозначеної статі|гендерно-нейтральний
+👦	boy	son|kid|child|young|grandson|bright-eyed	хлопчик	малеча|людина|хлопець
+👧	girl	kid|Virgo|young|child|zodiac|daughter|bright-eyed|granddaughter	дівчинка	діва|зодіак|дівчина|хвостики|шкільниця
+🧑	person	adult	людина	хлопець|хлопчик|дорослий|неозначеної статі|гендерно-нейтральний
+👱	person: blond hair	human	людина з білявим волоссям	блонд|біляве|обличчя|світлий|волосся|світле волосся
+👨	man	bro|adult	чоловік	людина|блондин|дорослий
+🧔	person: beard	whiskers	людина з бородою	борода
+🧔‍♂️	man: beard	whiskers	чоловік із бородою	борода
+🧔‍♀️	woman: beard	whiskers	жінка з бородою	борода
+👨‍🦰	man: red hair	bro|adult	чоловік: руде волосся	людина|блондин|дорослий
+👨‍🦱	man: curly hair	bro|adult	чоловік: кучеряве волосся	людина|блондин|дорослий
+👨‍🦳	man: white hair	bro|adult	чоловік: сиве волосся	людина|блондин|дорослий
+👨‍🦲	man: bald	bro|adult	чоловік: лисина	людина|блондин|дорослий
+👩	woman	lady|adult	жінка	людина|білявка|доросла
+👩‍🦰	woman: red hair	lady|adult	жінка: руде волосся	людина|доросла|білявка
+🧑‍🦰	person: red hair	adult	людина: руде волосся	хлопець|хлопчик|дорослий|неозначеної статі|гендерно-нейтральний
+👩‍🦱	woman: curly hair	lady|adult	жінка: кучеряве волосся	людина|білявка|доросла
+🧑‍🦱	person: curly hair	adult	людина: кучеряве волосся	хлопець|хлопчик|дорослий|неозначеної статі|гендерно-нейтральний
+👩‍🦳	woman: white hair	lady|adult	жінка: сиве волосся	людина|доросла|білявка
+🧑‍🦳	person: white hair	adult	людина: сиве волосся	хлопець|хлопчик|дорослий|неозначеної статі|гендерно-нейтральний
+👩‍🦲	woman: bald	lady|adult	жінка: лисина	людина|білявка|доросла
+🧑‍🦲	person: bald	adult	людина: лисина	хлопець|хлопчик|дорослий|неозначеної статі|гендерно-нейтральний
+👱‍♀️	woman: blond hair		жінка з білявим волоссям	білява|білявка|блондинка
+👱‍♂️	man: blond hair		чоловік із білявим волоссям	волосся|блондин|білявий
+🧓	older person	old|wise|adult|elderly|grandparent	літня людина	дідусь|старий|чоловік|дорослий|старша людина|неозначеної статі|гендерно-нейтральний
+👴	old man	bald|wise|adult|gramps|grandpa|elderly|grandfather	літній чоловік	лисий|старий|дорослий|пристарілий
+👵	old woman	lady|wise|adult|granny|elderly|grandma|grandmother	літня жінка	стара|людина|бабуся|доросла|в літах
+🙍	person frowning	upset|frown|annoyed|gesture|irritated|disturbed|frustrated|disgruntled|disappointed	похмура людина	жест|смуток|невеселий|нахмурений|засмучений|невдоволений|роздратування|насуплені брови
+🙍‍♂️	man frowning	upset|frown|annoyed|gesture|irritated|disturbed|frustrated|disgruntled|disappointed	похмурий чоловік	засмучений|розчарування|насуплений чоловік
+🙍‍♀️	woman frowning	upset|frown|annoyed|gesture|irritated|disturbed|frustrated|disgruntled|disappointed	похмура жінка	засмучена|розчарування
+🙎	person pouting	sulk|scowl|frown|whine|upset|grimace|downtrodden|disappointed	людина, що дується	злий|жест|сумно|гримаса|похмурий|невеселий|насуплений|засмучений|стурбований|розчарований
+🙎‍♂️	man pouting	sulk|scowl|frown|whine|upset|grimace|downtrodden|disappointed	чоловік, що дується	злість|сердиться|сердитий чоловік
+🙎‍♀️	woman pouting	sulk|scowl|frown|whine|upset|grimace|downtrodden|disappointed	жінка, що дується	злість|сердиться
+🙅	person gesturing NO	hand|gesture|prohibit|forbidden	людина, що жестом показує «ні»	ні|жест|рука|заборонено|немає шансів
+🙅‍♂️	man gesturing NO	hand|gesture|prohibit|forbidden	чоловік, що жестом показує «ні»	ні|проти|заборона
+🙅‍♀️	woman gesturing NO	hand|gesture|prohibit|forbidden	жінка, що жестом показує «ні»	проти|заборона
+🙆	person gesturing OK	omg|hand|gesture|exercise	людина, що жестом показує «окей»	рука|жест|окей|вправа|ховатися
+🙆‍♂️	man gesturing OK	omg|hand|gesture|exercise	чоловік, що жестом показує «окей»	ок|згода|добре|домовились
+🙆‍♀️	woman gesturing OK	omg|hand|gesture|exercise	жінка, що жестом показує «окей»	ок|згода|добре
+💁	person tipping hand	flip|sassy|fetch|flick|gossip|sarcasm|whatever|sarcastic|seriously	людина, що простягає руку допомоги	чайові|байдуже|сарказм|довідка|серйозно|допомога|інформація
+💁‍♂️	man tipping hand	flip|sassy|fetch|flick|gossip|sarcasm|whatever|sarcastic|seriously	чоловік, що простягає руку допомоги	секрет|не знаю|можливо|відповідати|тягнути руку|нестриманість
+💁‍♀️	woman tipping hand	flip|sassy|fetch|flick|gossip|sarcasm|whatever|sarcastic|seriously	жінка, що простягає руку допомоги	відповідати|тягнути руку|нестриманість
+🙋	person raising hand	me|pick|know|here|raise|gesture|question	людина з піднятою рукою	тут|мене|жест|можу|вітання|оберіть|щасливий|виберіть
+🙋‍♂️	man raising hand	me|pick|know|here|raise|gesture|question	чоловік із піднятою рукою	рука|піднята рука
+🙋‍♀️	woman raising hand	me|pick|know|here|raise|gesture|question	жінка з піднятою рукою	рука|піднята рука
+🧏	deaf person	ear|hear|gesture|accessibility	людина з порушенням слуху	слух|чути|глухота|вада слуху|доступність|спеціальні можливості
+🧏‍♂️	deaf man	ear|hear|gesture|accessibility	чоловік із порушенням слуху	слух|глухий|глухота|обмежені можливості
+🧏‍♀️	deaf woman	ear|hear|gesture|accessibility	жінка з порушенням слуху	слух|глуха|глухота|обмежені можливості
+🙇	person bowing	beg|ask|bow|pity|sorry|favor|regret|apology|gesture|forgive|meditate|meditation	людина, що вклоняється	жест|шкода|уклін|вибач|поклон|благати|жалкувати|розкаяння|співчувати
+🙇‍♂️	man bowing	beg|ask|bow|pity|sorry|favor|regret|apology|gesture|forgive|meditate|meditation	чоловік, що вклоняється	покора|повага|вибачення
+🙇‍♀️	woman bowing	beg|ask|bow|pity|sorry|favor|regret|apology|gesture|forgive|meditate|meditation	жінка, що вклоняється	покора|повага|вибачення
+🤦	person facepalming	oh|no|smh|omg|shock|again|bewilder|facepalm|disbelief|exasperation	людина з долонею до обличчя	рука|боже|сором|фейспалм|розчарування|роздратування|скільки можна
+🤦‍♂️	man facepalming	oh|no|smh|omg|shock|again|bewilder|facepalm|disbelief|exasperation	чоловік із долонею до обличчя	рука|сором|о боже|фейспалм|не може бути|скільки можна|що підносить долоню до обличчя
+🤦‍♀️	woman facepalming	oh|no|smh|omg|shock|again|bewilder|facepalm|disbelief|exasperation	жінка, що підносить долоню до обличчя	рука|сором|о боже|фейспалм|розчарування|не може бути|скільки можна
+🤷	person shrugging	idk|who|knows|shrug|maybe|doubt|guess|dunno|whatever|ignorance|indifference	людина, що знизує плечима	сумнів|мабуть|хтозна|байдуже|не знаю|невідомо|знизування|байдужість|розгубленість
+🤷‍♂️	man shrugging	idk|who|knows|shrug|maybe|doubt|guess|dunno|whatever|ignorance|indifference	чоловік, що знизує плечима	хтозна|не знаю|байдуже|все одно|без поняття|розгубленість
+🤷‍♀️	woman shrugging	idk|who|knows|shrug|maybe|doubt|guess|dunno|whatever|ignorance|indifference	жінка, що знизує плечима	хтозна|не знаю|байдуже|все одно|без поняття|розгубленість
+🧑‍⚕️	health worker	nurse|doctor|therapist	медик	лікар|терапевт|медицина|медсестра
+👨‍⚕️	man health worker	nurse|doctor|therapist	медичний працівник	медик|лікар|робота|чоловік|медбрат|терапевт|медицина|охорона здоровʼя
+👩‍⚕️	woman health worker	nurse|doctor|therapist	медична працівниця	медик|лікар|жінка|робота|терапевт|медицина|медсестра|охорона здоровʼя
+🧑‍🎓	student	graduate	слухач	студент|випускник
+👨‍🎓	man student	graduate	студент	бонет|чоловік|випускник|абітурієнт
+👩‍🎓	woman student	graduate	студентка	жінка|бонет|випускниця|абітурієнтка
+🧑‍🏫	teacher	lecturer|professor|instructor	освітянин	учитель|викладач|інструктор
+👨‍🏫	man teacher	lecturer|professor|instructor	учитель	робота|чоловік|вчитель|професор|викладач|інструктор
+👩‍🏫	woman teacher	lecturer|professor|instructor	учителька	жінка|робота|професор|вчителька|викладачка|інструктор
+🧑‍⚖️	judge	law|scales|justice	суддя	терези
+👨‍⚖️	man judge	law|scales|justice	суддя-чоловік	суддя|закон|терези|робота|чоловік|правосуддя
+👩‍⚖️	woman judge	law|scales|justice	жінка-суддя	суддя|закон|жінка|робота|правосуддя|справедливість|терези правосуддя
+🧑‍🌾	farmer	rancher|gardener	селянин	скотар|землероб|садівник
+👨‍🌾	man farmer	rancher|gardener	фермер	чоловік|господар|садівник
+👩‍🌾	woman farmer	rancher|gardener	фермерка	жінка|фермер|робота|садівник|садівниця|господарка
+🧑‍🍳	cook	chef	куховар	шеф|кухар
+👨‍🍳	man cook	chef	кухар	робота|чоловік|кулінар|шев-повар|шеф-кухар
+👩‍🍳	woman cook	chef	кухарка	кухар|повар|жінка|робота|шеф-повар|кулінарка|шеф-кухарка
+🧑‍🔧	mechanic	plumber|electrician|tradesperson	фахівець із механіки	механік|майстер|електрик|сантехнік
+👨‍🔧	man mechanic	plumber|electrician|tradesperson	механік	робота|чоловік|фахівець|електрик|сантехнік|водопровідник|електротехнік
+👩‍🔧	woman mechanic	plumber|electrician|tradesperson	жінка-механік	жінка|робота|майстриня|полагодити
+🧑‍🏭	factory worker	assembly|industrial	фабричний працівник	завод|конвеєр|робітник|промисловість
+👨‍🏭	man factory worker	assembly|industrial	робітник	завод|фабрика|чоловік|конвеєр|трудівник|промисловий
+👩‍🏭	woman factory worker	assembly|industrial	робітниця	завод|жінка|монтаж|зварка|фабрика|конвеєр|робітник|трудівниця|промисловий
+🧑‍💼	office worker	manager|business|architect|white-collar	офісний працівник	бізнес|менеджер|архітектор|білий комірець
+👨‍💼	man office worker	business|architect|white-collar	службовець	офіс|чоловік|менеджер|архітектор
+👩‍💼	woman office worker	manager|business|architect|white-collar	службовка	офіс|жінка|менеджер|архітектор|ділова жінка
+🧑‍🔬	scientist	chemist|engineer|physicist|biologist|mathematician	науковий працівник	фізик|хімік|біолог|інженер|науковець
+👨‍🔬	man scientist	chemist|engineer|physicist|biologist|mathematician	науковець	фізик|хімік|наука|біолог|чоловік|інженер
+👩‍🔬	woman scientist	chemist|engineer|physicist|biologist|mathematician	жінка-науковець	наука|жінка|робота|науковець
+🧑‍💻	technologist	coder|inventor|software|computer|developer	технічний працівник	технолог|розробник|винахідник|програміст|програмне забезпечення
+👨‍💻	man technologist	coder|inventor|software|computer|developer	технолог	робота|чоловік|комп’ютер|розробник|винахідник|програміст|кодувальник|технік-програміст
+👩‍💻	woman technologist	coder|inventor|software|computer|developer	жінка-технолог	жінка|робота|винахідниця|кодувальниця|технік-програміст|офісна працівниця
+🧑‍🎤	singer	star|rock|actor|entertainer	вокаліст	рок|зірка|актор|співак|артист
+👨‍🎤	man singer	star|rock|actor|entertainer	співак	рок|зірка|пісняр|соліст|артист|людина|чоловік|виконавець
+👩‍🎤	woman singer	star|rock|actor|entertainer	співачка	рок|жінка|зірка|людина|солістка|артистка|виконавиця
+🧑‍🎨	artist	palette	художник	митець|палітра
+👨‍🎨	man artist	palette	чоловік-художник	маляр|робота|митець|палітра|творець|художник|пензлики|живописець
+👩‍🎨	woman artist	palette	художниця	робота|палітра|малярка|пензлики|жінка-митець
+🧑‍✈️	pilot	plane	авіапілот	пілот|літак
+👨‍✈️	man pilot	plane	пілот	літак|робота|чоловік|льотчик|авіатор|капітан літака
+👩‍✈️	woman pilot	plane	жінка-пілот	літак|пілот|жінка|робота|льотчиця|стюардеса
+🧑‍🚀	astronaut	space|rocket	космонавт	ракета
+👨‍🚀	man astronaut	space|rocket	астронавт	робота|космос|ракета|чоловік|космонавт
+👩‍🚀	woman astronaut	space|rocket	астронавтка	жінка|ракета|робота|космонавтка
+🧑‍🚒	firefighter	fire	вогнеборець	пожежник|пожежна машина
+👨‍🚒	man firefighter	fire	пожежник	робота|чоловік|вогнеборець|пожежний автомобіль
+👩‍🚒	woman firefighter	fire	жінка-пожежник	жінка|робота|пожежник|пожежний автомобіль
+👮	police officer	law|cop|over|arrest|pulled|citation|apprehend|undercover	працівник поліції	коп|офіцер|поліція|штрафувати|співробітник|поліцейський
+👮‍♂️	man police officer	law|cop|over|arrest|pulled|citation|apprehend|undercover	поліцейський	чоловік|поліція
+👮‍♀️	woman police officer	law|cop|over|arrest|pulled|citation|apprehend|undercover	жінка-поліцейський	коп|штраф|жінка|офіцер|поліція|полісменка|поліцейська|поліцейський|працівниця поліції
+🕵️	detective	spy|sleuth	детектив	сищик|шпигун|робота|розслідування
+🕵️‍♂️	man detective	spy|sleuth	чоловік-детектив	шпик|сищик|шпигун|чоловік|детектив
+🕵️‍♀️	woman detective	spy|sleuth	жінка-детектив	жінка|шпигун|робота|докази|людина|детектив|розслідування
+💂	guard	london|palace|helmet|buckingham	варта	чати|караул|охорона|сторожа
+💂‍♂️	man guard	london|palace|helmet|buckingham	вартовий	страж|чатовий|вартівник
+💂‍♀️	woman guard	london|palace|helmet|buckingham	вартова	жінка|страж|чатова|Лондон|охорона|гвардія|охоронець|вартівниця|Букінгемський
+🥷	ninja	sly|war|fight|secret|skills|hidden|person|stealth|soldier|assassin	ніндзя	воїн|маска|боєць|людина|вбивця|потайки|покрадьки|крадькома|найманець|невидимка
+👷	construction worker	hat|fix|man|work|build|repair|person|hardhat|rebuild|remodel	будівельник	каска|шолом|ремонт|робота|будувати|робітник|працівник|будівництво
+👷‍♂️	man construction worker	fix|hat|work|build|repair|hardhat|rebuild|remodel	чоловік-будівельник	чоловік|робітник|будівельник|будівництво
+👷‍♀️	woman construction worker	hat|fix|man|work|build|repair|hardhat|rebuild|remodel	жінка-будівельник	жінка|робота|робітник|робітниця|будівельник|будівництво
+🫅	person with crown	royal|noble|regal|monarch	людина з короною на голові	цар|монарх|корона|король|королева|аристократія|королівський|королівська особа
+🤴	prince	king|tale|royal|crown|fairy|fantasy	принц	корона|робота|королевич|королівство
+👸	princess	tale|queen|royal|crown|fairy|fantasy	принцеса	корона|робота|чарівна|казкова|королева|королівна
+👳	person wearing turban		людина в тюрбані	тюрбан
+👳‍♂️	man wearing turban		чоловік у тюрбані	тюрбан
+👳‍♀️	woman wearing turban		жінка в тюрбані	тюрбан
+👲	person with skullcap	pi|hat|mao|cap|gua|Chinese	чоловік у китайській шапці	кругла|шапочка|гуа пі мао
+🧕	woman with headscarf	head|hijab|tichel|bandana|kerchief|mantilla	жінка в хустині	тихля|хіджаб|хустина|мантилья|монахиня
+🤵	person in tuxedo	formal|wedding	людина в смокінгу	прийом|чоловік|смокінг|офіціант|наречений
+🤵‍♂️	man in tuxedo	groom|formal|wedding	чоловік у смокінгу	смокінг
+🤵‍♀️	woman in tuxedo	formal|wedding	жінка в смокінгу	смокінг
+👰	person with veil	wedding	людина у фаті	фата|весілля|наречена
+👰‍♂️	man with veil	wedding	чоловік у фаті	фата|вуаль
+👰‍♀️	woman with veil	bride|wedding	жінка у фаті	фата|вуаль
+🤰	pregnant woman		вагітна жінка	вагітність
+🫃	pregnant man	full|belly|overeat|bloated	чоловік із «вагітним» животом	живіт|наївся|переїдання|вагітність|здуття живота|вагітна людина
+🫄	pregnant person	full|belly|stuffed|overeat|bloated	вагітна людина	ситість|переїдання|вагітність|великий живіт|здуття живота
+🤱	breast-feeding	mom|baby|woman|mother|breast|feeding|nursing	грудне вигодовування	груди|немовля|турбота|годування|материнство|молоко матері|новонароджена|новонароджений
+👩‍🍼	woman feeding baby	mom|feed|nanny|mother|nursing|newborn	жінка годує дитину	мати|мама|людина|догляд|матуся|дитина|немовля|годування|батьківство|материнство
+👨‍🍼	man feeding baby	dad|feed|nanny|father|nursing|newborn	чоловік годує дитину	тато|дитина|людина|батько|догляд|немовля|турбота|няньчити|годування|батьківство
+🧑‍🍼	person feeding baby	feed|nanny|parent|newborn|nursing	людина годує дитину	мама|мати|тато|догляд|дитина|батько|немовля|годування|батьківство|годувати немовля
+👼	baby angel	face|tale|fairy|church|fantasy	янголятко	казка|ангел|обличчя|немовля|фантазія
+🎅	Santa Claus	tale|xmas|merry|fairy|father|fantasy|holiday|Christmas|celebration	Санта Клаус	дід|казка|різдво|Новий рік|святкування|Святий Миколай
+🤶	Mrs. Claus	Mrs|xmas|tale|merry|santa|fairy|mother|fantasy|holiday|Christmas|celebration	Пані Клаус	зима|свята|жінка|Різдво|Новий рік
+🧑‍🎄	Mx Claus	tale|xmas|merry|santa|fairy|fantasy|holiday|Christmas|celebration	Мікс Клаус	свято|санта|людина|різдво|шапка санти|різдвяні свята
+🦸	superhero	hero|good|superpower	супергерой	герой|добро|добрий|героїня|супермен|суперсили|суперсила
+🦸‍♂️	man superhero	hero|good|superpower	чоловік-супергерой	добро|герой|чоловік|суперсила
+🦸‍♀️	woman superhero	hero|good|superpower	жінка-супергерой	жінка|супер|герой|добро
+🦹	supervillain	bad|evil|villain|criminal|superpower	суперзлодій	зло|лихий|поганий|лиходій|суперсила|суперлиходій|суперзлочинець
+🦹‍♂️	man supervillain	bad|evil|villain|criminal|superpower	суперлиходій	зло|чоловік|суперсила
+🦹‍♀️	woman supervillain	bad|evil|villain|criminal|superpower	суперлиходійка	зло|жінка|суперсила
+🧙	mage	play|witch|spell|magic|wizard|summon|fantasy|sorcery|sorcerer|sorceress	маг	відьма|чаклун|чародій|чарівник|Гендольф|Старік-Хотабич
+🧙‍♂️	man mage	play|witch|spell|magic|wizard|summon|fantasy|sorcery|sorcerer|sorceress	чаклун	чародій
+🧙‍♀️	woman mage	play|witch|spell|magic|wizard|summon|fantasy|sorcery|sorcerer|sorceress	чаклунка	відьма|чародійка
+🧚	fairy	myth|tale|pixie|wings|person|fantasy	фея	Пак|казка|крила|Оберон|Титанія|метелик
+🧚‍♂️	man fairy	Puck|tale|myth|pixie|wings|Oberon|person|fantasy	чоловік-фея	Пак|Оберон
+🧚‍♀️	woman fairy	myth|tale|pixie|wings|person|Titania|fantasy	жінка-фея	Титанія
+🧛	vampire	fangs|scary|blood|teeth|undead|Dracula|halloween|supernatural	вампір	опир|упир|костюм|погань|Дракула|нечисть|Хелловін|нечиста сила
+🧛‍♂️	man vampire	scary|teeth|blood|fangs|undead|halloween|supernatural	чоловік-вампір	упир|вампір|Дракула
+🧛‍♀️	woman vampire	scary|teeth|blood|fangs|undead|halloween|supernatural	жінка-вампір	упириця
+🧜	merperson	sea|ocean|siren|trident|creature|folklore|fairytale	казкова водяна істота	Сирена|русалка|фольклор|жінка-русалка|людина-русалка|чоловік-русалка|морські створіння
+🧜‍♂️	merman	sea|siren|ocean|Triton|trident|Neptune|creature|Poseidon|folklore|fairytale	чоловік-русалка	Тритон
+🧜‍♀️	mermaid	sea|ocean|siren|trident|creature|folklore|merwoman|fairytale	русалка	жінка-русалка
+🧝	elf	myth|elves|magic|fantasy|folklore|enchantment	ельф	казка|чаклун|Леголас|магічний
+🧝‍♂️	man elf	myth|elves|magic|fantasy|folklore|enchantment	чоловік-ельф	чарівний
+🧝‍♀️	woman elf	myth|elves|magic|fantasy|folklore|enchantment	жінка-ельф	чарівна
+🧞	genie	rub|myth|jinn|lamp|djinn|wishes|fantasy	джин	примха|бажання|міфічний|чарівна лампа|казкова лампа
+🧞‍♂️	man genie	rub|myth|jinn|lamp|djinn|wishes|fantasy	чоловік-джин	джин
+🧞‍♀️	woman genie	rub|myth|jinn|lamp|djinn|wishes|fantasy	жінка-джин	джин
+🧟	zombie	dead|scary|horror|undead|walking|halloween|apocalypse	зомбі	жах|зобмі|монстр|нечисть|хеллоуін|живий мрець
+🧟‍♂️	man zombie	dead|scary|horror|undead|walking|halloween|apocalypse	чоловік-зомбі	упир|зомбі|живий мрець
+🧟‍♀️	woman zombie	dead|scary|horror|undead|walking|halloween|apocalypse	жінка-зомбі	зомбі|нечисть|упириця|живий мрець
+🧌	troll	tale|fairy|monster|fantasy	троль	казка|монстр|фентезі|тролінг
+💆	person getting massage	spa|face|salon|relax|soothe|tension|therapy|headache|treatment	людина, якій роблять масаж голови	салон|релакс|догляд|голова|обличчя|турбота|відпочинок
+💆‍♂️	man getting massage	spa|face|salon|relax|soothe|tension|therapy|headache|treatment	чоловік, якому роблять масаж голови	обличчя|розслаблення|чоловічий салон
+💆‍♀️	woman getting massage	spa|face|salon|relax|soothe|tension|therapy|headache|treatment	жінка, якій роблять масаж голови	обличчя|розслаблення
+💇	person getting haircut	cut|chop|hair|groom|style|barber|shears|parlor|beauty|cosmetology	людина, якій роблять стрижку	салон|краса|перукар|стрижка|зачіска|волосся|косметологія
+💇‍♂️	man getting haircut	cut|chop|hair|style|groom|shears|person|barber|parlor|beauty|cosmetology	чоловік, якому роблять стрижку	салон|стрижка|волосся
+💇‍♀️	woman getting haircut	cut|chop|hair|style|groom|shears|person|barber|parlor|beauty|cosmetology	жінка, якій роблять стрижку	стрижка|волосся
+🚶	person walking	man|walk|hike|pace|gait|amble|stroll|stride|pedestrian	людина, що йде пішки	іти|крок|гуляти|пішохід|прогулянка
+🚶‍♂️	man walking	hike|walk|pace|gait|amble|stroll|stride|pedestrian	чоловік, що йде пішки	йти|гуляти|прогулянка
+🚶‍♀️	woman walking	man|walk|hike|pace|gait|amble|stroll|stride|pedestrian	жінка, що йде пішки	йти|гуляти|прогулянка
+🧍	person standing	stand	людина, що стоїть	стояти|стоячи|стоячки|стояння
+🧍‍♂️	man standing	stand	чоловік, що стоїть	стоячи|стоячки
+🧍‍♀️	woman standing	stand	жінка, що стоїть	стоячи|стоячки
+🧎	person kneeling	knees|kneel	людина навколішках	коліна|на колінах|опускатися навколішки
+🧎‍♂️	man kneeling	knees|kneel	чоловік навколішках	коліна|навколішки|на колінах
+🧎‍♀️	woman kneeling	knees|kneel	жінка навколішках	коліна|навколішки|на колінах
+🧑‍🦯	person with white cane	blind|probing|accessibility	людина з тактильним ціпком	біла|ціпок|білий|незрячі|тростина|доступність|спеціальні можливості
+👨‍🦯	man with white cane	blind|probing|accessibility	чоловік із тактильною тростиною	біла|ціпок|білий|сліпий|тростина|незрячий|доступність|спеціальні можливості
+👩‍🦯	woman with white cane	blind|probing|accessibility	жінка з тактильною тростиною	біла|ціпок|сліпа|білий|незряча|тростина|доступність|спеціальні можливості
+🧑‍🦼	person in motorized wheelchair	accessibility	людина на моторизованому візку	колісне крісло|спеціальні можливості
+👨‍🦼	man in motorized wheelchair	accessibility	чоловік у візку з електроприводом	візок|людина|доступність|колісне крісло|спеціальні можливості
+👩‍🦼	woman in motorized wheelchair	accessibility	жінка у візку з електроприводом	візок|людина|доступність|колісне крісло|спеціальні можливості
+🧑‍🦽	person in manual wheelchair	accessibility	людина у візку з ручним керуванням	колісне крісло|спеціальні можливості
+👨‍🦽	man in manual wheelchair	accessibility	чоловік у візку з ручним приводом	візок|доступність|колісне крісло|спеціальні можливості
+👩‍🦽	woman in manual wheelchair	accessibility	жінка у візку з ручним приводом	візок|людина|доступність|колісне крісло|спеціальні можливості
+🏃	person running	run|move|race|fast|rush|speed|hurry|quick|racing|marathon	людина, що біжить	біг|спорт|швидкий|марафон|змагання|навздогін|поспішати
+🏃‍♂️	man running	run|move|race|fast|rush|speed|hurry|quick|racing|marathon	чоловік, що біжить	біг|спорт|втеча
+🏃‍♀️	woman running	run|move|race|fast|rush|speed|hurry|quick|racing|marathon	жінка, що біжить	біг|спорт|втеча|змагання|на перегонки
+💃	woman dancing	let’s|flair|tango|salsa|dance|groove|festive|elegant|flamenco	жінка, що танцює	танок|сукня|танго|танець|сальса|фламенко
+🕺	man dancing	let’s|flair|tango|salsa|dance|groove|festive|elegant|flamenco	чоловік, що танцює	танці|шоумен|співак
+🕴️	person in suit levitating	business	чоловік у діловому костюмі, що левітує	костюм|бізнес
+👯	people with bunny ears	bff|ear|pair|twin|party|bestie|dancer|double|soulmate|identical|counterpart	люди з кролячими вухами	вуха|пара|жінка|кролик|вечірка|дівчина|однакові|близнюки|танцівниці|танцівниця|найкращі друзі
+👯‍♂️	men with bunny ears	bff|ear|pair|twin|party|people|dancer|bestie|double|soulmate|identical|counterpart	чоловіки з кролячими вухами	парубки|розваги|вечірка
+👯‍♀️	women with bunny ears	bff|ear|pair|twin|party|people|dancer|bestie|double|soulmate|identical|counterpart	жінки з кролячими вухами	розваги|вечірка
+🧖	person in steamy room	spa|day|sauna|steam|relax|unwind|pamper|luxurious	людина в паркому приміщенні	сауна|хамам|релакс|парильня
+🧖‍♂️	man in steamy room	spa|day|sauna|steam|relax|unwind|pamper|luxurious	чоловік у паркому приміщенні	сауна|парильня
+🧖‍♀️	woman in steamy room	spa|day|sauna|steam|relax|unwind|pamper|luxurious	жінка в паркому приміщенні	сауна|парильня
+🧗	person climbing	up|rock|scale|climb|mountain	людина, що лізе скелею	скелелаз|альпінізм|альпініст|лізти вгору
+🧗‍♂️	man climbing	up|rock|scale|climb|mountain	чоловік-скелелаз	скелелаз
+🧗‍♀️	woman climbing	up|rock|scale|climb|mountain	жінка-скелелаз	скелелаз
+🤺	person fencing	sword|fencer	фехтувальник	шабля|спорт|шпага|змагання|фехтування|фехтувальниця
+🏇	horse racing	sport|riding|jockey|racehorse	кінні перегони	кінь|спорт|жокей|біговий кінь
+⛷️	skier	ski|snow	лижник	сніг|лижі|спорт
+🏂	snowboarder	ski|snow|sport	сноубордист	сніг|лижі|спорт|сноуборд
+🏌️	person golfing	pga|tee|ball|putt|golf|caddy|range|green|birdie|driving	людина, що грає в гольф	удар|поле|м’яч|клюшка|ключка|спортсмен
+🏌️‍♂️	man golfing	pga|tee|ball|putt|golf|caddy|range|green|birdie|driving	гольфіст	гольф|чоловік
+🏌️‍♀️	woman golfing	pga|tee|ball|putt|golf|caddy|range|green|birdie|driving	гольфістка	спорт|жінка|гольф
+🏄	person surfing	surf|swell|waves|beach|ocean|sport	людина, що займається серфінгом	пляж|хвилі|океан|серфер|серфінг|спортсмен
+🏄‍♂️	man surfing	surf|swell|waves|beach|ocean|sport	серфінгіст	чоловік|серфінг
+🏄‍♀️	woman surfing	surf|waves|swell|sport|ocean|beach|person	серфінгістка	спорт|жінка|серфінг
+🚣	person rowing boat	row|oar|lake|raft|river|canoe|cruise|paddle|fishing	людина, що веслує на човні	рафт|човен|річка|каное|озеро|весло|гребля|рибалка|байдарка|транспорт
+🚣‍♂️	man rowing boat	row|oar|lake|raft|river|canoe|cruise|paddle|fishing	чоловік, що веслує на човні	човен|весловий човен
+🚣‍♀️	woman rowing boat	row|oar|lake|raft|river|canoe|cruise|paddle|fishing	жінка, що веслує на човні	човен|весловий човен
+🏊	person swimming	swim|sport|triathlon|freestyle	людина, що пливе	вода|спорт|плавець|плавати|триатлон|плавання|водний спорт
+🏊‍♂️	man swimming	swim|sport|triathlon|freestyle	плавець	чоловік|плавання
+🏊‍♀️	woman swimming	man|swim|sport|triathlon|freestyle	плавчиня	спорт|жінка|плавання
+⛹️	person bouncing ball	net|throw|player|dribble|athletic|basketball|championship	людина, що веде мʼяч	гравець|баскетбол|спортсмен|вести мʼяч|точний кидок
+⛹️‍♂️	man bouncing ball	net|throw|player|dribble|athletic|basketball|championship	чоловік, що веде мʼяч	м’яч
+⛹️‍♀️	woman bouncing ball	net|throw|player|dribble|athletic|basketball|championship	жінка, що веде мʼяч	м’яч|спорт|баскетбол
+🏋️	person lifting weights	weight|lifter|workout|barbell|deadlift|bodybuilder|powerlifting	важкоатлет	спорт|тягар|людина|бодібілдер|станова тяга|паверліфтинг
+🏋️‍♂️	man lifting weights	weight|lifter|workout|barbell|deadlift|bodybuilder|powerlifting	штангіст	чоловік|важка атлетика
+🏋️‍♀️	woman lifting weights	weight|lifter|workout|barbell|deadlift|bodybuilder|powerlifting	штангістка	спорт|жінка|людина|силачка|тренування|важка атлетика
+🚴	person biking	bike|sport|cycle|riding|bicycle|cyclist|bicyclist	людина, що їде на велосипеді	спортсмен|велосипед|їзда на велосипеді|кататися на велосипеді
+🚴‍♂️	man biking	bike|sport|cycle|riding|bicycle|cyclist|bicyclist	велосипедист	ровер|велик|чоловік|велосипед
+🚴‍♀️	woman biking	bike|sport|cycle|riding|bicycle|cyclist|bicyclist	велосипедистка	ровер|жінка|велик|велосипед
+🚵	person mountain biking	bike|sport|cycle|riding|bicycle|cyclist|bicyclist	людина, що їде на гірському велосипеді	гора|велосипед|спортсмен|гірський велосипед|їзда на велосипеді|кататися на велосипеді
+🚵‍♂️	man mountain biking	bike|sport|cycle|riding|bicycle|cyclist|bicyclist	гірський велосипедист	гори|чоловік|велосипед
+🚵‍♀️	woman mountain biking	bike|sport|cycle|riding|bicycle|cyclist|bicyclist	гірська велосипедистка	гори|жінка|спорт|перегони|велосипед
+🤸	person cartwheeling	flip|happy|active|excited|cartwheel|somersault|gymnastics	людина, що перевертається «колесом»	спорт|колесо|акробат|щасливий|активний|гімнастика|піднесений
+🤸‍♂️	man cartwheeling	flip|happy|active|excited|cartwheel|somersault|gymnastics	чоловік, що перевертається «колесом»	спорт|сальто|колесо|акробат|активний|гімнастика
+🤸‍♀️	woman cartwheeling	flip|happy|active|excited|cartwheel|somersault|gymnastics	жінка, що перевертається «колесом»	спорт|сальто|колесо|переворот|акробатика|гімнастика
+🤼	people wrestling	ring|duel|combat|wrestle|grapple|tournament	борці	бій|дуель|спорт|людина|борець|двобій|поєдинок|боротьба|турнір із вільної боротьби
+🤼‍♂️	men wrestling	ring|duel|combat|wrestle|grapple|tournament	борець	дуель|спорт|людина|двобій|чоловік|боротися|боротьба|поєдинок|турнір із вільної боротьби
+🤼‍♀️	women wrestling	ring|duel|combat|wrestle|grapple|tournament	борчиня	бій|борці|жінка|спорт|турнір|двобій|боротьба|боротися|на рингу|поєдинок
+🤽	person playing water polo	sport|swimming	людина, що грає у ватерполо	поло|вода|спорт|плавання|водне поло|водний спорт
+🤽‍♂️	man playing water polo	sport|swimming	ватерполіст	поло|спорт|людина|чоловік|плавання|водне поло|водний спорт
+🤽‍♀️	woman playing water polo	sport|swimming	ватерполістка	поло|жінка|спорт|людина|плавання|водне поло|водний спорт
+🤾	person playing handball	lob|toss|ball|hurl|sport|throw|pitch|chuck|catch|athletics	людина, що грає у гандбол	м’яч|спорт|кидок|подача|ловити|перекидати мʼяч
+🤾‍♂️	man playing handball	lob|toss|ball|hurl|sport|throw|pitch|chuck|catch|athletics	гандболіст	гол|гра|спорт|чоловік|гандбол|змагання
+🤾‍♀️	woman playing handball	lob|toss|ball|hurl|sport|throw|pitch|chuck|catch|athletics	гандболістка	мʼяч|спорт|кидок|жінка|подача|гандбол|перекидати мʼяч
+🤹	person juggling	act|skill|handle|manage|juggle|balance|balancing|multitask	людина, що жонглює	цирк|фокус|уміння|баланс|жонглер|впоратися|жонглювання|багатозадачність
+🤹‍♂️	man juggling	act|skill|handle|juggle|balance|balancing|multitask	жонглер	фокус|людина|баланс|чоловік|жонглювання|багатозадачність
+🤹‍♀️	woman juggling	act|skill|handle|manage|juggle|balance|balancing|multitask	жонглерка	жінка|жонглювання|багатозадачність
+🧘	person in lotus position	zen|yogi|yoga|legs|cross|relax|peace|legged|serenity|meditation	людина в позі лотоса	йога|дзен|релакс|нірвана|медитація|поза лотоса|схрещені ноги
+🧘‍♂️	man in lotus position	zen|yogi|yoga|legs|cross|relax|peace|legged|serenity|meditation	чоловік у позі лотоса	йога|медитація|поза лотоса
+🧘‍♀️	woman in lotus position	zen|yogi|yoga|legs|cross|relax|peace|legged|serenity|meditation	жінка в позі лотоса	йога|медитація
+🛀	person taking bath	tub	людина, що приймає ванну	ванна|купатися|приймати ванну
+🛌	person in bed	zzz|nap|good|sleep|tired|night|hotel	людина в ліжку	ніч|сон|спати|ліжко|готель|добраніч|стомлений
+🧑‍🤝‍🧑	people holding hands	bff|bae|hand|hold|flirt|twins|bestie|dating|couple|friends	люди, що тримаються за руки	пара|рука|тримати
+👭	women holding hands	bff|bae|hand|hold|girls|twins|flirt|couple|bestie|dating|friends|sisters	жінки, що тримаються за руки	рука|пара|дівчата|подруги|подружки
+👫	woman and man holding hands	bff|bae|hand|hold|flirt|twins|bestie|dating|couple|friends	жінка й чоловік, що тримаються за руки	пара|флірт|дружба|тримати|близнята|побачення
+👬	men holding hands	bff|bae|hand|boys|hold|flirt|twins|bestie|couple|dating|friends|brothers	чоловіки, що тримаються за руки	лгбт|пара|флірт|хлопці|зодіак|дружба|близнюки|Близнята
+💏	kiss	bae|date|love|mwah|babe|xoxo|heart|person|couple|dating|romance|together|anniversary	чоловік і жінка, що цілуються	пара|любов|людина|річниця|кохання|стосунки|поцілунок|побачення|закоханість
+👩‍❤️‍💋‍👨	kiss: woman, man	bae|date|love|mwah|babe|xoxo|heart|person|couple|dating|romance|together|anniversary	чоловік і жінка, що цілуються: жінка і чоловік	пара|любов|людина|річниця|кохання|стосунки|поцілунок|побачення|закоханість
+👨‍❤️‍💋‍👨	kiss: man, man	bae|date|love|mwah|babe|xoxo|heart|person|couple|dating|romance|together|anniversary	чоловік і жінка, що цілуються: чоловік і чоловік	пара|любов|людина|річниця|кохання|стосунки|поцілунок|побачення|закоханість
+👩‍❤️‍💋‍👩	kiss: woman, woman	bae|date|love|mwah|babe|xoxo|heart|person|couple|dating|romance|together|anniversary	чоловік і жінка, що цілуються: жінка і жінка	пара|любов|людина|річниця|кохання|стосунки|поцілунок|побачення|закоханість
+💑	couple with heart	bae|you|kiss|love|babe|person|dating|romance|together|anniversary|relationship	чоловік і жінка із серцем між ними	пара|серце|кохання|стосунки|побачення|кохаю тебе|закоханість
+👩‍❤️‍👨	couple with heart: woman, man	bae|you|kiss|love|babe|person|dating|romance|together|anniversary|relationship	чоловік і жінка із серцем між ними: жінка і чоловік	пара|серце|кохання|стосунки|побачення|кохаю тебе|закоханість
+👨‍❤️‍👨	couple with heart: man, man	bae|you|kiss|love|babe|person|dating|romance|together|anniversary|relationship	чоловік і жінка із серцем між ними: чоловік і чоловік	пара|серце|кохання|стосунки|побачення|кохаю тебе|закоханість
+👩‍❤️‍👩	couple with heart: woman, woman	bae|you|kiss|love|babe|person|dating|romance|together|anniversary|relationship	чоловік і жінка із серцем між ними: жінка і жінка	пара|серце|кохання|стосунки|побачення|кохаю тебе|закоханість
+👪	family	child	родина	тато|мама|сімʼя|матір|батько|дитина
+👨‍👩‍👦	family: man, woman, boy	child	родина: чоловік, жінка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👩‍👧	family: man, woman, girl	child	родина: чоловік, жінка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👨‍👩‍👧‍👦	family: man, woman, girl, boy	child	родина: чоловік, жінка, дівчинка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👩‍👦‍👦	family: man, woman, boy, boy	child	родина: чоловік, жінка, хлопчик і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👩‍👧‍👧	family: man, woman, girl, girl	child	родина: чоловік, жінка, дівчинка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👨‍👨‍👦	family: man, man, boy	child	родина: чоловік, чоловік і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👨‍👧	family: man, man, girl	child	родина: чоловік, чоловік і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👨‍👨‍👧‍👦	family: man, man, girl, boy	child	родина: чоловік, чоловік, дівчинка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👨‍👦‍👦	family: man, man, boy, boy	child	родина: чоловік, чоловік, хлопчик і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👨‍👧‍👧	family: man, man, girl, girl	child	родина: чоловік, чоловік, дівчинка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👩‍👩‍👦	family: woman, woman, boy	child	родина: жінка, жінка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👩‍👩‍👧	family: woman, woman, girl	child	родина: жінка, жінка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👩‍👩‍👧‍👦	family: woman, woman, girl, boy	child	родина: жінка, жінка, дівчинка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👩‍👩‍👦‍👦	family: woman, woman, boy, boy	child	родина: жінка, жінка, хлопчик і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👩‍👩‍👧‍👧	family: woman, woman, girl, girl	child	родина: жінка, жінка, дівчинка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👨‍👦	family: man, boy	child	родина: чоловік і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👦‍👦	family: man, boy, boy	child	родина: чоловік, хлопчик і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👧	family: man, girl	child	родина: чоловік і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👨‍👧‍👦	family: man, girl, boy	child	родина: чоловік, дівчинка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👨‍👧‍👧	family: man, girl, girl	child	родина: чоловік, дівчинка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👩‍👦	family: woman, boy	child	родина: жінка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👩‍👦‍👦	family: woman, boy, boy	child	родина: жінка, хлопчик і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👩‍👧	family: woman, girl	child	родина: жінка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+👩‍👧‍👦	family: woman, girl, boy	child	родина: жінка, дівчинка і хлопчик	тато|мама|сімʼя|матір|батько|дитина
+👩‍👧‍👧	family: woman, girl, girl	child	родина: жінка, дівчинка і дівчинка	тато|мама|сімʼя|матір|батько|дитина
+🗣️	speaking head	face|speak|silhouette	голова, що говорить	силует|віщати|обличчя|говорити|оголошення|оголошувати
+👤	bust in silhouette	shadow|mysterious	силует бюсту людини	тінь|бюст|загадка|таємниця|інкогніто
+👥	busts in silhouette	bff|bust|friend|people|everyone	силуети двох людських бюстів	люди|бюст|силует
+🫂	people hugging	hug|love|hello|thanks|comfort|embrace|goodbye|farewell|friendship	люди обіймаються	втіха|любов|обійми|дружба|прощання|вдячність|підтримка|привітання
+👣	footprints	omw|walk|print|clothing|barefoot|footprint	сліди ніг	тіло|слід|нога|одяг|стопи|ступні|відбитки|відбиток
+🐵	monkey face	banana|animal	морда мавпи	мавпа|тварина|мавпяча морда
+🐒	monkey	banana|animal	мавпа	тварина
+🦍	gorilla	animal	горила	мавпа|тварина
+🦧	orangutan	ape|monkey|animal	орангутанг	мавпа|примат|тварина|антропоїд|людиноподібна
+🐶	dog face	pet|puppy|adorbs|animal|puppies	морда собаки	пес|собака|тварина|собача морда
+🐕	dog	pet|animal	собака	пес|тварина|домашня тварина
+🦮	guide dog	blind|animal|accessibility	собака-поводир	поводир|доступність|для незрячих|спеціальні можливості
+🐕‍🦺	service dog	animal|assistance|accessibility	службовий собака	тварина|супровід|допомога|доступність|спеціальні можливості
+🐩	poodle	dog|fluffy|animal	пудель	пес|собака|тварина
+🐺	wolf	face|animal	вовк	хижак|морда|вовча|тварина
+🦊	fox	face|animal	лис	морда|хитрий|тварина
+🦝	raccoon	sly|animal|curious	єнот	ракун|хитрий|цікавий|тварина|шибеник|полоскун
+🐱	cat face	pet|kitty|animal|kitten	морда кота	кіт|тварина|котяча морда|домашня тварина
+🐈	cat	pet|animal|kitten	кіт	коша|тварина|домашній улюбленець
+🐈‍⬛	black cat	meow|animal|feline|unlucky|halloween	чорний кіт	мяу|кішка|нещастя|тварина|невдаха|невдача|погана прикмета
+🦁	lion	Leo|mane|face|roar|rawr|order|alpha|strong|zodiac|animal|safari	лев	знак|морда|хижак|зодіак|тварина
+🐯	tiger face	cat|big|animal|predator	морда тигра	тигр|хижак|тварина
+🐅	tiger	zoo|big|cat|animal|predator	тигр	хижак|тварина
+🐆	leopard	zoo|big|cat|animal|predator	леопард	хижак|тварина|дика кішка
+🐴	horse face	farm|equine|animal|dressage	голова коня	лоша|кінь|морда|кобила|тварина
+🫎	moose	elk|alces|mammal|animal|antlers	лось	роги|лосиха|тварина|ссавець
+🫏	donkey	ass|mule|hinny|burro|mammal|animal|stubborn	віслюк	мул|осел|ішак|ослиця|упертий|упертюх|ссавець|тварина
+🐎	horse	farm|racing|animal|racehorse|equestrian	кінь	кінні|скачки|тварина|перегони|верхогони
+🦄	unicorn	face	єдиноріг	морда|голова|казковий
+🦓	zebra	stripe|animal	зебра	смуга|тварина
+🦌	deer	animal	олень	рога|тварина
+🦬	bison	herd|wisent|animal|buffalo	бізон	зубр|роги|стадо|худоба|буйвол|тварина|рогата тварина|свійська тварина
+🐮	cow face	moo|milk|farm|animal	морда корови	корова|тварина|коров’яча морда|коровʼяча морда
+🐂	ox	farm|bull|zodiac|Taurus|animal	бик	віл|телець|зодіак|тварина
+🐃	water buffalo	zoo|animal	буйвіл	тварина
+🐄	cow	moo|milk|farm|animal	корова	му|ферма|молоко|тварина
+🐷	pig face	farm|pork|bacon|animal	рило свині	свиня|морда|порося|тварина
+🐖	pig	sow|pork|farm|bacon|animal	свиня	льоха|порося|тварина|свиноматка
+🐗	boar	pig|animal	вепр	кнур|кабан|тварина
+🐽	pig nose	face|farm|smell|snout|animal	свинячий пʼятак	рило|свиня|морда
+🐏	ram	zoo|male|sheep|Aries|horns|animal|zodiac	баран	овен|вівця|зодіак|тварина|гороскоп
+🐑	ewe	baa|lamb|farm|wool|sheep|animal|female|fluffy	вівця	ягня|ферма|вовна|тварина
+🐐	goat	milk|farm|zodiac|animal|Capricorn	цап	козел|зодіак|козеріг|тварина|гороскоп
+🐪	camel	one|hump|animal|desert|dromedary	одногорбий верблюд	горб|Сахара|тварина|пустеля|дромадер
+🐫	two-hump camel	two|hump|animal|desert|bactrian	двогорбий верблюд	горб|пустеля|тварина|караван|бактріан
+🦙	llama	wool|vicuña|alpaca|animal|guanaco	лама	вовна|хутро|шерсть|альпака|тварина|вікунья|гуанако
+🦒	giraffe	spots|animal	жирафа	плями|тварина
+🐘	elephant	animal	слон	тварина
+🦣	mammoth	tusk|wooly|large|animal|extinction	мамонт	бивень|тварина|великий|вимирання|волохатий|кам’яний вік
+🦏	rhinoceros	animal	носоріг	сафарі|тварина
+🦛	hippopotamus	hippo|animal	бегемот	тварина|ссавець|гіпопотам
+🐭	mouse face	animal	морда миші	миша|пацюк|тварина
+🐁	mouse	animal	миша	тварина
+🐀	rat	animal	щур	пацюк|тварина
+🐹	hamster	pet|face|animal	хомʼяк	морда|хом’як|тварина|домашня тварина
+🐰	rabbit face	pet|bunny|animal	морда кроля	заєць|кролик|тварина
+🐇	rabbit	pet|bunny|animal	кролик	кріль|заєць|тварина
+🐿️	chipmunk	animal|squirrel	бурундук	білка|тварина|вивірка
+🦫	beaver	dam|teeth|animal	бобер	зуби|бобри|гризти|гребля|боброва|тварина|зубатий|бобровидні
+🦔	hedgehog	spiny|animal	їжак	колючки|колючий|голчастий
+🦇	bat	animal|vampire	кажан	вампір|тварина
+🐻	bear	face|growl|honey|animal|grizzly	ведмідь	морда|тварина|ведмежа|ведмедева
+🐻‍❄️	polar bear	white|animal|arctic	полярний ведмідь	білий|арктичний
+🐨	koala	bear|face|down|under|animal|australia|marsupial	коала	морда|тварина|ведмідь
+🐼	panda	face|animal|bamboo	панда	морда|тварина
+🦥	sloth	slow|lazy	лінивець	млявий|тварина|ледачий|лінивий|повільний
+🦦	otter	animal|playful|fishing	видра	рибалка|тварина|грайливий|водяний звір
+🦨	skunk	stink|animal	скунс	тхнути|сморід|тварина|смердіти
+🦘	kangaroo	jump|joey|animal|marsupial	кенгуру	сумка|торбун|стрибок|тварина|сумчасті|стрибати|Австралія|сумчастий|кенгурятко
+🦡	badger	honey|pester|animal	борсук	хутро|медоїд|ссавець|тварина|куницеві|мустелові
+🐾	paw prints	feet|print	сліди лап	слід|відбитки лап
+🦃	turkey	bird|gobble|thanksgiving	індик	птах|індичка
+🐔	chicken	bird|animal|ornithology	курка	птах|курча|квочка
+🐓	rooster	bird|animal|ornithology	півень	птах|когут
+🐣	hatching chick	egg|bird|baby|animal	курча, що вилуплюється	птах|пташка|Великдень|вилуплюватися|новонароджений|прокльовуватися
+🐤	baby chick	bird|animal|ornithology	мале курча	курка
+🐥	front-facing baby chick	bird|animal|newborn|ornithology	курча, що стоїть	пташа|анфас|пташка|пискля|тварина|орнітологія
+🐦	bird	animal|ornithology	птах	пташка
+🐧	penguin	bird|animal|antarctica|ornithology	пінгвін	птах
+🕊️	dove	fly|bird|peace|ornithology	голуб	мир|птах|літати
+🦅	eagle	bird|animal|ornithology	орел	птах|хижак
+🦆	duck	bird|animal|ornithology	качка	птах
+🦢	swan	bird|ugly|animal|cygnet|duckling|ornithology	лебідь	птах|озеро|тварина|лебеденя|гидке каченя|гидке качення
+🦉	owl	wise|bird|animal|ornithology	сова	ніч|птах|пізно|безсоння|мудрість
+🦤	dodo	bird|large|animal|extinction|ornithology	дронт	птах|додо|тварина|великий|вимирання|маврикійський
+🪶	feather	bird|light|flight|plumage	пір’їна	птах|перо|політ|пір’я|невагома|оперення
+🦩	flamingo	bird|animal|tropical|flamboyant|ornithology	фламінго	птах|тропіки|рожевий|тропічний
+🦚	peacock	bird|proud|peahen|pretty|animal|colorful|ornithology|ostentatious	павич	птах|пава|хвіст|фазан|павлін|тварина|красива|кольоровий|зарозумілий|хвалькуватий
+🦜	parrot	bird|talk|pirate|animal|ornithology	папуга	ара|птах|пірат|тварина|папужка|балакучий|розмовляє
+🪽	wing	fly|bird|soar|ascend|angelic|aviation|heavenly|mythology	крило	міф|птах|політ|ангел|летіти|авіація|небесний
+🐦‍⬛	black bird	caw|crow|rook|beak|raven|animal|corvid|ornithology	чорний птах	крук|дрізд|ворон|дзьоб|тварина|каркати
+🪿	goose	fowl|honk|duck|bird|geese|silly|flock|animal|gaggle|gander|ornithology	гусак	га|клин|птах|зграя|птиця|гуска|бешкет|тварина
+🐸	frog	face|animal	жаба	морда|жабина|болото|тварина|жабʼяча
+🐊	crocodile	zoo|animal	крокодил	хижак|тварина|алігатор
+🐢	turtle	animal|tortoise|terrapin	черепаха	тварина
+🦎	lizard	animal|reptile	ящірка	плазун|рептилія
+🐍	snake	zodiac|bearer|animal|serpent|Ophiuchus	змія	змій|зодіак|гадюка|змієносець
+🐲	dragon face	tale|fairy|animal	голова дракона	казка|дракон|зелений дракон
+🐉	dragon	tale|fairy|animal|knights	дракон	казка
+🦕	sauropod	dinosaur|diplodocus|brontosaurus|brachiosaurus	завропод	динозавр|диплодок|зауропод|апатозавр|бронтозавр|брахіозавр
+🦖	T-Rex	T|Rex|dinosaur	тиранозавр	Динозавр
+🐳	spouting whale	face|ocean|beach|animal	кит, що пускає фонтан	пляж|океан|тварина|обличчя
+🐋	whale	ocean|beach|animal	кит	
+🐬	dolphin	ocean|beach|animal|flipper	дельфін	плавець
+🦭	seal	sea|lion|ocean|animal	тюлень	океан|тварина|арктика|морський лев|морський котик
+🐟	fish	Pisces|zodiac|animal|dinner	риба	риби|зодіак|гороскоп
+🐠	tropical fish	animal	тропічна риба	море|океан|тропічний
+🐡	blowfish	fish|animal	риба-куля	риба
+🦈	shark	fish|animal	акула	риба
+🐙	octopus	ocean|animal|creature	восьминіг	
+🐚	spiral shell	sea|conch|beach|animal	морська мушля	спіральний|спіральна мушля
+🪸	coral	sea|reef|ocean|change|climate	корал	риф|море|океан|зміна клімату
+🪼	jellyfish	sea|life|burn|ouch|ocean|sting|jelly|animal|marine|aquarium|plankton|tentacles|invertebrate	медуза	опік|жало|море|океан|тварина|морський|щупальці|безхребетний
+🐌	snail	slug|nature|animal|garden|escargot	равлик	петрик|слимак|тварина|природа|павлик-равлик
+🦋	butterfly	pretty|insect	метелик	комаха|гарний
+🐛	bug	insect|garden|animal	комаха	гусінь|комашка|комашина
+🐜	ant	insect|garden|animal	мураха	комаха
+🐝	honeybee	bee|honey|nature|spring|insect|animal|bumblebee	бджола	комаха
+🪲	beetle	bug|insect|animal	жук	кузка|жучок|комаха|кузька|тварина|бронзівка
+🐞	lady beetle	insect|nature|animal|garden	сонечко	жучок|комаха|корівка
+🦗	cricket	bug|insect|animal|Orthoptera|grasshopper	цвіркун	жук|коник|тарган|комаха|кукарача
+🪳	cockroach	pest|roach|animal|insect	тарган	прусак|комаха|тварина|шкідник|паразит|непроханий гість
+🕷️	spider	insect|animal	павук	комаха
+🕸️	spider web		павутиння	павук|павутина
+🦂	scorpion	zodiac|Scorpio|Scorpius	скорпіон	зодіак
+🦟	mosquito	pest|bite|virus|fever|insect|malaria|disease	комар	укус|вірус|москіт|комаха|хвороба|гарячка|малярія
+🪰	fly	pest|maggot|insect|animal|rotting|disease	муха	крила|гниль|комаха|хвороба|личинка|шкідник|дзижчання
+🪱	worm	animal|annelid|parasite|earthworm	хробак	паразит|наживка|червʼяк|тварина|дощовий хробак|дощовий червʼяк|кільчастий черв|земляний червʼяк
+🦠	microbe	virus|amoeba|science|bacteria	мікроб	вірус|наука|амеба|хвороба|бактерія|бактерії|мікроорганізм
+💐	bouquet	date|love|plant|flower|romance|birthday|anniversary	букет	рози|квіти|квітка|рослина|кохання
+🌸	cherry blossom	plant|spring|flower	вишневий цвіт	вишня|квітка|рослина
+💮	white flower		біла квітка	
+🪷	lotus	calm|peace|purity|flower|beauty|serenity|Hinduism|Buddhism	лотос	лад|мир|краса|спокій|квітка|буддизм|індуїзм|гармонія|символ чистоти|безтурботність|врівноваженість
+🏵️	rosette	plant	розета	бутон|квітка|рослина|розетка|чорнобривець
+🌹	rose	red|love|plant|beauty|flower|elegant|valentine	троянда	квітка|рослина|червона троянда
+🥀	wilted flower	dying	привʼяла троянда	квітка|зів’яла|завʼяла троянда
+🌺	hibiscus	plant|flower	гібіскус	квітка|рослина
+🌻	sunflower	sun|plant|flower|outdoors	соняшник	сонце|сонях|квітка|рослина
+🌼	blossom	plant|flower|buttercup|dandelion	жовта квітка	рослина|ромашка
+🌷	tulip	plant|growth|flower|blossom	тюльпан	квітка|рослина|рожевий тюльпан
+🪻	hyacinth	shrub|lilac|plant|bloom|spring|violet|purple|indigo|flower|lupine|lavender|bluebonnet|snapdragon	гіацинт	весна|квітка|рослина|фіолетовий
+🌱	seedling	young|plant|sprout|sapling	сіянець	листя|рослина|паросток|саджанець
+🪴	potted plant	pot|grow|decor|house|nurturing	рослина в горщику	декор|догляд|горщик|домашня|кімнатна
+🌲	evergreen tree	pine|forest|christmas	вічнозелене дерево	сосна|ялинка|рослина|вічнозелена рослина
+🌳	deciduous tree	green|forest|habitat|shedding	листяне дерево	опадає|рослина|листяний
+🌴	palm tree	plant|beach|tropical	пальма	дерево|тропіки|рослина
+🌵	cactus	plant|nature|desert|drought	кактус	рослина|пустеля
+🌾	sheaf of rice	ear|plant|grain	сніпок рису	рис|колос|рослина|пшениця
+🌿	herb	leaf|plant	лікарська рослина	листя|листок
+☘️	shamrock	plant|irish	трилисник	листя|рослина|конюшина|ірландський
+🍀	four leaf clover	4|lucky|plant|irish	чотирилисткова конюшина	4|листя|чотири|листок|щастить|рослина|фортуна
+🍁	maple leaf	falling	кленовий листок	клен|осінь|листя|дерево|рослина|опадати
+🍂	fallen leaf	fall|autumn	опале листя	осінь|листок|рослина|опадати|листопад|опалий листок
+🍃	leaf fluttering in wind	blow|flutter	листя, що кружляє за вітром	дути|вітер|листок|рослина|кружляти
+🪹	empty nest	home|branch	порожнє гніздо	дім|гілка|гніздечко|гніздування
+🪺	nest with eggs	egg|bird|branch	гніздо з пташиними яйцями	птах|яйце|яйця|гілка|гніздечко|гніздування
+🍄	mushroom	fungus|toadstool	гриб	мухомор|плодове тіло
+🍇	grapes	grape|fruit|Dionysus	виноград	їжа|плід|ягоди
+🍈	melon	fruit|cantaloupe	диня	їжа|плід|фрукт
+🍉	watermelon	fruit	кавун	їжа|плід|літо
+🍊	tangerine	c|fruit|orange|vitamin|nectarine	танжерин	їжа|плід|фрукт|помаранч|мандарин|оранжевий
+🍋	lemon	sour|fruit|citrus	лимон	плід|цитрус|жовтий лимон
+🍌	banana	fruit|potassium	банан	їжа|плід|фрукт
+🍍	pineapple	pina|fruit|colada|tropical	ананас	їжа|плід|фрукт
+🥭	mango	food|fruit|tropical	манго	їжа|плід|фрукт|шейкер|тропічний
+🍎	red apple	ripe|food|diet|fruit|health	червоне яблуко	їжа|плід|фрукт|червоний
+🍏	green apple	fruit	зелене яблуко	їжа|епл|плід|фрукт|зелений
+🍐	pear	fruit	груша	їжа|плід|фрукт
+🍑	peach	fruit	персик	їжа|плід|фрукт|абрикос
+🍒	cherries	red|fruit|cherry|berries	вишні	їжа|ягоди|плоди|вишня|червоні|черешня
+🍓	strawberry	fruit|berry	полуниця	їжа|плід|ягода
+🫐	blueberries	food|blue|fruit|berry|berries|bilberry	лохина	їжа|синя|ягода|чорниця|сині ягоди|лісові ягоди
+🥝	kiwi fruit	food	ківі	їжа|плід|фрукт
+🍅	tomato	food|fruit|vegetable	томат	плід|овоч|помідор|сеньйор помідор|червоний помідор
+🫒	olive	food	оливка	їжа|ягода|ягоди|гілка|оливкова гілка
+🥥	coconut	piña|palm|colada	кокос	пальма|тропіки|відпустка|Піна-Колада|пінья колада
+🥑	avocado	food|fruit	авокадо	їжа|плід
+🍆	eggplant	vegetable|aubergine	баклажан	їжа|овоч
+🥔	potato	food|vegetable	картопля	їжа|овоч
+🥕	carrot	food|vegetable	морква	їжа|овоч|заяць|морквина|заяча їжа
+🌽	ear of corn	maze|farm|crops|maize	качан кукурудзи	їжа|маїс|кукурудза
+🌶️	hot pepper		гострий перець	чилі|приправа
+🫑	bell pepper	food|capsicum|vegetable	солодкий перець	їжа|овоч|паприка|зелений перець|болгарський перець|вегетаріанська їжа
+🥒	cucumber	food|pickle|vegetable	огірок	їжа|овоч|корнішон
+🥬	leafy green	bok|choy|kale|salad|cabbage|lettuce|burgers	листя салату	кель|латук|салат|листок|зелень|бок-чой|бурґери|капуста|зелені листки
+🥦	broccoli	wild|cabbage	броколі	їжа|овоч|кучерява|цвітна капуста
+🧄	garlic	flavoring	часник	їжа|спеції|приправа
+🧅	onion	flavoring	цибуля	їжа|спеції|приправа|з цибулі|цибулинний
+🥜	peanuts	nut|food|peanut|vegetable	арахіс	їжа|горіх|їстівний|земляний горіх
+🫘	beans	food|small|kidney|legume	квасоля	їжа|боби|бобові|невеликі|квасолина
+🌰	chestnut	plant|almond	каштан	горіх|рослина
+🫚	ginger root	herb|beer|spice|health|natural	імбир	пиво|спеції|коріння|здоровʼя|натуральний
+🫛	pea pod	beans|legume|veggie|soybean|edamame|vegetable	стручок гороху	біб|овоч|горох|бобові|зелений|горошок|едамаме|стручкові
+🍞	bread	food|loaf|toast|wheat|grain|carbs|restaurant	хліб	їжа|буханець|паляниця
+🥐	croissant	food|roll|bread|french|crescent|breakfast	круасан	їжа|Франція|пекарня|сніданок|французький|булочний виріб|звій півмісяцем
+🥖	baguette bread	food|french	багет	їжа|хліб|булка|випічка|франція|французький
+🫓	flatbread	food|naan|pita|arepa|bread|lavash|gordita	корж	їжа|хліб|піта|наан|арепа|лаваш|калач|паляниця|тортилья
+🥨	pretzel	twisted|convoluted	крендель	бублик|прецель|випічка|сплетений|кренделик
+🥯	bagel	bread|bakery|schmear|breakfast	бейгл	десерт|пампух|пончик|бублик|багель|начинка|випічка|булочка|сніданок
+🥞	pancakes	food|crêpe|hotcake|pancake|breakfast	млинці	їжа|креп|млинець|сніданок|налисник
+🧇	waffle	iron|breakfast|indecisive	вафля	їжа|вафлі|десерт|сніданок|солодощі|вафельний
+🧀	cheese wedge		кусень сиру	сир|їжа|шматок сиру
+🍖	meat on bone		м’ясо на кістці	їжа|кістка
+🍗	poultry leg	bone|hungry|turkey|chicken|drumstick	ніжка свійської птиці	їжа|птиця|курка|кістка|ципля "гриль"
+🥩	cut of meat	red|chop|steak|porkchop|lambchop	мʼясний філей	їжа|мʼясо|стейк|котлета|свиняча котлета|бараняча відбивна
+🥓	bacon	meat|food|breakfast	бекон	їжа|м’ясо
+🍔	hamburger	eat|food|fast|hungry|burger	гамбургер	їжа|бургер|чизбургер
+🍟	french fries	food|fast	картопля фрі	
+🍕	pizza	food|slice|cheese|hungry|pepperoni	піца	сир|їжа|шматок
+🌭	hot dog	sausage|frankfurter	хот-дог	їжа|сосиска
+🥪	sandwich	bread	сандвіч	їжа|хліб|сендвіч
+🌮	taco	mexican	тако	їжа|Мексика
+🌯	burrito	wrap|mexican	буріто	їжа|Мексика
+🫔	tamale	food|wrapped|pamonha|mexican	тамале	рол|їжа|тісто|памонья|мексика|завиванець
+🥙	stuffed flatbread	gyro|food|kebab|falafel	піта	їжа|лаваш|кебаб|начинка|фалафель
+🧆	falafel	meatball|chickpea	фалафель	нут|кулька з нуту
+🥚	egg	food|breakfast	яйце	їжа|Великдень
+🍳	cooking	up|fry|pan|egg|side|over|easy|sunny|breakfast|restaurant	готування їжі	їжа|яйце|яєчня|смажити|сніданок|пательня|сковорода
+🥘	shallow pan of food	paella|casserole	каструля з їжею	суп|їжа|плов|рагу
+🍲	pot of food	stew|soup	горщик з їжею	суп|їжа|рагу|перше|овочевий суп
+🫕	fondue	pot|ski|food|cheese|melted|chocolate	фондю	сир|лижі|альпи|какелон|шоколад|топлений|горщичок|кастрюлька|швейцарська страва
+🥣	bowl with spoon	cereal|congee|oatmeal|porridge|breakfast	миска з ложкою	їжа|суп|борщ|піала|сніданок|рисова каша
+🥗	green salad	food	зелений салат	їжа|дієта|здорове харчування
+🍿	popcorn	pop|corn|movie	попкорн	
+🧈	butter	dairy	масло	молочні продукти
+🧂	salt	mad|taste|upset|shaker|flavor|condiment	сіль	смак|спеції|сварка|аромат|солоний|приправа
+🥫	canned food	can	консерви	банка|консервовані томати
+🍱	bento box	food	обід у коробці	їжа|суші|бенто|набір суші
+🍘	rice cracker	food	рисовий крекер	рис|їжа
+🍙	rice ball	food|Japanese	рисова кулька	рис|їжа|японський
+🍚	cooked rice	food	приготований рис	їжа|варений
+🍛	curry rice	food	рис із карі	їжа
+🍜	steaming bowl	pho|soup|food|ramen|noodle|chopsticks	миска, з якої піднімається пара	їжа|суп|рамен|локшина|парувати
+🍝	spaghetti	food|pasta|meatballs|restaurant	спагеті	їжа|паста|італійська кухня
+🍠	roasted sweet potato	food	печений батат	їжа|овоч|смажити
+🍢	oden	food|stick|kebab|skewer|seafood|restaurant	оден	їжа|кебаб|шампур|морський
+🍣	sushi	food	суші	їжа
+🍤	fried shrimp	prawn|tempura	смажена креветка	їжа|темпура|смажений
+🍥	fish cake with swirl	food|pastry|restaurant	рибний рулет зі спіральним візерунком	випічка
+🥮	moon cake	autumn|yuèbǐng|festival	мункейк	Азія|юебін|свято|осінь|пиріжок|фестиваль|повний місяць|місячний пиріг|місячний пряник
+🍡	dango	stick|sweet|skewer|dessert|Japanese	рисові кульки на шпажці	данго|шампур|десерт|солодкий|японський
+🥟	dumpling	gyōza|jiaozi|pierogi|empanada|potsticker	вареник	їжа|вушко|пироги|пиріжок|галушка|пельмень
+🥠	fortune cookie	prophecy	печиво з передбаченням	пророцтво
+🥡	takeout box	pail|food|oyster|delivery|chopsticks	коробка з їжею на винос	їжа|доставка їжі|палички для їжі
+🦀	crab	zodiac|Cancer	краб	рак|зодіак
+🦞	lobster	claws|bisque|animal|seafood	омар	рак|біск|клешні|тварина|лобстер|дари моря|морепродукти|червоний лобстер
+🦐	shrimp	food|small|shellfish	креветка	їжа|морепродукт
+🦑	squid	food|animal|mollusk	кальмар	їжа|молюск
+🦪	oyster	pearl|diving	устриця	перли|мушля|устричний
+🍦	soft ice cream	food|serve|sweet|dessert|restaurant	морозиво в ріжку	м’який|десерт|пломбир|солодкий|м’яке морозиво
+🍧	shaved ice	sweet|dessert|restaurant	льодова стружка	лід|десерт|солодкий|морозиво
+🍨	ice cream	food|sweet|dessert|restaurant	морозиво	їжа|десерт|солодкий
+🍩	doughnut	food|sweet|donut|dessert|breakfast	пончик	їжа|десерт|солодкий
+🍪	cookie	chip|sweet|dessert|chocolate	печиво	десерт|солодкий|шоколадне печиво
+🎂	birthday cake	bday|happy|sweet|pastry|dessert|celebration	торт на день народження	десерт|свічки|бажання|випічка|солодкий|солодощі|святкування|святковий торт
+🍰	shortcake	cake|slice|sweet|pastry|dessert	тістечко	торт|шматок|десерт|випічка|солодкий
+🧁	cupcake	sugar|sweet|treat|bakery|dessert|sprinkles	капкейк	кекс|торт|ласощі|десерт|солодке|випічка|посипка|смаколик|тістечко|солодощі
+🥧	pie	meat|apple|slice|fruit|pastry|filling|pumpkin	пиріг	десерт|начинка|випічка
+🍫	chocolate bar	tooth|sweet|candy|dessert|halloween	плитка шоколаду	десерт|шоколад|солодкий
+🍬	candy	tooth|sweet|wrapper|dessert|cavities|halloween|restaurant	цукерка	десерт|солодкий
+🍭	lollipop	food|sweet|candy|dessert|restaurant	льодяник	десерт|цукерка|солодкий
+🍮	custard	sweet|dessert|pudding	заварний крем	їжа|пудинг|десерт|солодкий
+🍯	honey pot	jar|food|bear|sweet|barrel	горщик із медом	мед|солодкий
+🍼	baby bottle	born|milk|drink|birth|infant|babies|newborn	пляшечка для немовляти	пити|молоко|немовля|годування
+🥛	glass of milk	drink	склянка молока	напій|молоко
+☕	hot beverage	tea|cafe|chai|drink|coffee|morning|caffeine|steaming	гарячий напій	чай|кава|пити|кафе|кофеїн|паруючий|сніданок
+🫖	teapot	pot|tea|brew|food|drink	чайник	чай|їжа|посуд|напій|заварник|заварювати
+🍵	teacup without handle	cup|tea|drink|oolong|beverage	чайна чашка без вушка	їжа|суп|чай|напій|піала|гарячий|крем-суп|зелений чай
+🍶	sake	cup|bar|drink|bottle|beverage|restaurant	саке	бар|пити|чашка|напій|пляшка
+🍾	bottle with popping cork	bar|drink	пляшка з корком, що вилітає	бар|пити|тиск|вино|корок|ігристе|стріляти|шампанське|відкорковувати
+🍷	wine glass	bar|club|booze|drink|alcohol|beverage|restaurant	келих для вина	бар|пити|вино|напій
+🍸	cocktail glass	mad|bar|men|club|drink|booze|martini|alcohol	бокал для коктейлю	бар|пити|мартіні|коктейль
+🍹	tropical drink	mai|bar|tai|club|drunk|booze|party|alcohol|tropics|cocktail	тропічний напій	бар|пити|коктейль
+🍺	beer mug	bar|ale|pint|stein|drink|booze|summer|alcohol|oktoberfest|octoberfest	кухоль із пивом	бар|пиво|пити|будьмо!
+🍻	clinking beer mugs	bar|clink|booze|cheers|drinks|alcohol|bottoms|drinking	кухлі з пивом, що цокаються	бар|пиво|пиття|тости|напої|цокання|цокатися|алкоголь
+🥂	clinking glasses	drink|glass|clink|celebrate	дзвін бокалів	напій|будьмо|Новий рік|святкування
+🥃	tumbler glass	shot|whisky|liquor|scotch|whiskey	бокал віскі	напій|спиртне|алкоголь|стакан віскі
+🫗	pouring liquid	oops|pour|spill|water|glass|drink|empty|accident	склянка, з якої виливається рідина	упс|вода|напій|розлити|порожня|виливати|проливати|випадковість
+🥤	cup with straw	soft|soda|malt|water|juice|drink	стакан із соломинкою	сік|напій|содова|соломка|трубочка|соломинка|одноразовий стакан
+🧋	bubble tea	milk|food|boba|pearl	бульбашковий чай	напій|тайвань|перловий|коктейль|молочний|соломинка
+🧃	beverage box	sweet|straw|juice	пакетик із напоєм	сік|пакет|напій|соломинка|картонний|фруктовий сік
+🧉	mate	drink	мате	напій|калабас|чай із падуба
+🧊	ice	cube|cold	кубик льоду	холод|айсберг|охолоджувати
+🥢	chopsticks	hashi|kuaizi|jeotgarak	палички для їжі	хаші|о-хасі|куайцзи|чоккарак
+🍽️	fork and knife with plate	eat|dinner|cooking	виделка, ніж і тарілка	обід|вечеря|сніданок|кулінарія
+🍴	fork and knife	yum|eat|food|feed|lunch|hungry|breaky|dinner|cooking|cutlery|breakfast|delicious|restaurant	виделка та ніж	їжа|їсти|обід|смачно|вечеря|смакота|сніданок|ресторан|кулінарія|столові прибори
+🥄	spoon	eat|tableware	ложка	прибори|столові прибори
+🔪	kitchen knife	tool|chef|hocho|weapon|cooking	кухонний ніж	кухня|зброя|різати|знаряддя|готування
+🫙	jar	store|sauce|empty|nothing|condiment|container	банка	соус|слоїк|спеції|нічого|ємність|порожня|зберігання
+🏺	amphora	jug|tool|drink|weapon|zodiac|cooking|Aquarius	амфора	глек|пити|зодіак|водолій|кулінарія
+🌍	globe showing Europe-Africa	world|earth|Africa|Europe	глобус, що показує Європу й Африку	світ|земля|Європа|африка
+🌎	globe showing Americas	world|earth	глобус, що показує Америки	світ|земля|планета|Америка|Західна півкуля
+🌏	globe showing Asia-Australia	Asia|earth|world|Australia	глобус, що показує Азію і Австралію	азія|світ|земля|Австралія
+🌐	globe with meridians	web|world|earth|internet	земна куля з меридіанами	світ|глобус|меридіани
+🗺️	world map		карта світу	світ
+🗾	map of Japan		карта Японії	японія|острів|мапа Японії
+🧭	compass	magnetic|direction|navigation|orienteering	компас	магніт|напрямок|навігація|магнетизм|орієнтування|сторони світу
+🏔️	snow-capped mountain	snow|cold	гора із засніженою верхівкою	сніг|Альпи|Ельбрус|Еверест|холодний|засніжена гора
+⛰️	mountain		гора	
+🌋	volcano	nature|eruption|mountain	вулкан	лава|гора|виверження
+🗻	mount fuji	nature	гора Фудзі	Фудзи
+🏕️	camping		кемпінг	похід
+🏖️	beach with umbrella		пляж і парасолька	парасоля|відпочинок
+🏜️	desert		пустеля	оаза
+🏝️	desert island		безлюдний острів	берег|пальма
+🏞️	national park		національний парк	картина|ландшафт
+🏟️	stadium		стадіон	гра|футбол|вболівальники
+🏛️	classical building		антична будівля	колони|класичний|доричні колони
+🏗️	building construction	crane	спорудження будівлі	будівля
+🧱	brick	wall|clay|mortar	цегла	стіна|глина|розчин|цеглина|цеглини|будівельний розчин
+🪨	rock	tough|stone|solid|heavy|boulder	камінь	валун|скеля|брила|важкий|кругляк|твердий|каменюка|гірська порода
+🪵	wood	log|timber|lumber	деревина	пень|рубати|дерево|колода|лісоматеріал|річні кільця
+🛖	hut	yurt|home|house|shelter|roundhouse	хижа	дім|хата|юрта|оселя|хатина|будинок|бунгало|прихисток|купольний будинок
+🏘️	houses	house	група будинків	вулиця|будинок|будівля
+🏚️	derelict house	home	занедбаний будинок	сарай|будівля|покинутий|заброшений|стара будівля
+🏠	house	home|where|heart|ranch|settle|simple|country|building|suburbia|suburban	будинок	дім|вдома|будівля
+🏡	house with garden	home|where|heart|ranch|settle|simple|country|building|suburbia|suburban	будинок із садом	сад|дім|будівля
+🏢	office building	job|city|cubical	офісна будівля	
+🏣	Japanese post office	building	японське поштове відділення	пошта|будівля|японський|японська пошта
+🏤	post office	European|building	поштове відділення	пошта|будівля|європейський
+🏥	hospital	doctor|medicine|building	лікарня	лікар|будівля|медицина|госпіталь
+🏦	bank	building	банк	будівля
+🏨	hotel	building	готель	будівля
+🏩	love hotel	building	готель кохання	мотель|будівля
+🏪	convenience store	24|hours|building	цілодобовий магазин	будівля
+🏫	school	building	школа	будівля
+🏬	department store	building	універмаг	офіс|банк|будівля
+🏭	factory	building	фабрика	завод|будівля
+🏯	Japanese castle	building	японський замок	пагода|будівля
+🏰	castle	European|building	замок	фортеця|будівля|європейська
+💒	wedding	chapel|romance|hitched|nuptials	весілля	кохання|каплиця|церемонія
+🗼	Tokyo tower		Токійська вежа	Токіо
+🗽	Statue of Liberty	ny|new|york	Статуя Свободи	США|свобода
+⛪	church	cross|bless|chapel|religion|Christian	церква	хрест|релігія|будівля|християнський
+🕌	mosque	islam|Muslim|masjid|religion	мечеть	іслам|релігія|мусульманський
+🛕	hindu temple		індуїстський храм	
+🕍	synagogue	Jew|temple|judaism|religion	синагога	храм|єврей|іудаїзм|релігія
+⛩️	shinto shrine	religion	синтоїстський храм	святиня|релігія
+🕋	kaaba	hajj|umrah|islam|Muslim|religion	Кааба	хадж|іслам|релігія|мусульманський
+⛲	fountain		фонтан	
+⛺	tent	camping	намет	похід
+🌁	foggy	fog	туманно	топ|гора|туман|погода|верхівка
+🌃	night with stars	star	зоряна ніч	зірка|погода
+🏙️	cityscape	city	міський краєвид	місто|вечір|будівля|сутінки в місті
+🌄	sunrise over mountains	sun|morning	схід сонця над горами	гора|ранок|сонце|погода
+🌅	sunrise	sun|nature|morning	схід сонця	сонце|ранок|погода|світанок
+🌆	cityscape at dusk	sun|city|evening|building|landscape	місто в сутінках	захід|сутінки|будівля|ландшафт
+🌇	sunset	sun|dusk|building	захід сонця	сонце|місто|сутінки|будівля
+🌉	bridge at night		міст уночі	ніч|погода|golden gate
+♨️	hot springs	steaming	гарячі джерела	паруючі|джерело|гарячий
+🎠	carousel horse	entertainment	коник на каруселі	кінь|лицар|карусель
+🛝	playground slide	park|play|theme|sliding|amusement	дитяча гірка	гратися|кататися|парк розваг|ігровий майданчик|зʼїжджати з гірки
+🎡	ferris wheel	park|theme|amusement	чортове колесо	огляд|парк розваг
+🎢	roller coaster	park|theme|amusement	американські гірки	парк розваг|американський
+💈	barber pole	cut|shave|fresh|haircut	вивіска перукаря (смугастий стовп)	перукар|зачіска
+🎪	circus tent		циркове шатро	цирк|намет
+🚂	locomotive	train|steam|travel|engine|caboose|railway	паровий локомотив	потяг|двигун|паровоз|транспорт|залізниця
+🚃	railway car	tram|train|travel|electric|trolleybus	вагон	трамвай|транспорт|тролейбус|залізниця|електричний
+🚄	high-speed train	speed|railway|shinkansen	швидкісний потяг	транспорт|інтерсіті|залізниця
+🚅	bullet train	nose|speed|travel|railway|high-speed|shinkansen	швидкісний потяг з округлим носом	транспорт|інтерсіті|кулеподібний
+🚆	train	choo|railway|arrived	потяг	транспорт|залізниця|електропотяг
+🚇	metro	travel|subway	метро	транспорт
+🚈	light rail	arrived|monorail	швидкісний трамвай	поїзд|транспорт|залізниця|електропоїзд
+🚉	station	train|railway	станція	потяг|зупинка|cтанція|транспорт|залізниця
+🚊	tram	trolleybus	трамвай	потяг|метро|тролейбус|транспорт
+🚝	monorail	vehicle	монорейка	метро|транспорт|швидкий потяг|монорейкова залізниця
+🚞	mountain railway	car|trip	залізниця в горах	гора|поїзд|транспорт|гірська залізниця
+🚋	tram car	bus|trolley	вагон трамвая	трамвай|тролейбус|транспорт
+🚌	bus	school|vehicle	автобус	транспорт
+🚍	oncoming bus	cars	автобус, що наближається	машини
+🚎	trolleybus	bus|tram|trolley	тролейбус	трамвай|автобус|транспорт|громадський транспорт
+🚐	minibus	van|bus|drive|vehicle	мікроавтобус	автобус|транспорт|маршрутка
+🚑	ambulance	vehicle|emergency	автомобіль швидкої допомоги	транспорт|швидка допомога
+🚒	fire engine	truck	пожежна машина	двигун|пожежний|вантажівка
+🚓	police car	5–0|cops|patrol	поліцейська машина	поліція|міліція|патруль|автомобіль|поліцейський автомобіль
+🚔	oncoming police car		поліцейська машина, що наближається	патруль|поліція|міліція|автомобіль|поліцейський автомобіль
+🚕	taxi	car|cab|drive|yellow|vehicle	таксі	транспорт
+🚖	oncoming taxi	cab|hail|cars|drove|yellow	таксі, що наближається	транспорт|наближатися|жовте таксі
+🚗	automobile	car|vehicle|driving	автомобіль	авто|машина|автівка|транспорт
+🚘	oncoming automobile	car|drove|vehicle	автомобіль, що наближається	машина|транспорт|червоне авто|червона машина
+🚙	sport utility vehicle	car|drive|recreational	позашляховик	фургон|машина|трейлер|автівка|житловий|транспорт
+🛻	pickup truck	car|pick-up|flatbed|automobile|transportation	автомобіль-пікап	пікап|вантаж|транспорт|автомобіль|легка вантажівка
+🚚	delivery truck	car|drive|vehicle	вантажівка для доставки	фургон|доставка|транспорт
+🚛	articulated lorry	car|semi|move|truck|drive|vehicle	вантажівка з причепом	тягач|фургон|транспорт
+🚜	tractor	vehicle	трактор	транспорт
+🏎️	racing car	zoom	cпортивний автомобіль	перегони
+🏍️	motorcycle	racing	мотоцикл	перегони
+🛵	motor scooter		мопед	скутер
+🦽	manual wheelchair	accessibility	колісний візок із ручним приводом	доступність|спеціальний засіб|обмежені можливості
+🦼	motorized wheelchair	accessibility	колісний візок з електроприводом	доступність|спеціальний засіб|спеціальні можливості
+🛺	auto rickshaw	tuk	авторикша	рикша|тук-тук
+🚲	bicycle	spin|ride|gang|bike|cycle|class|cycling|cyclist	велосипед	кататися|транспорт
+🛴	kick scooter		самокат	
+🛹	skateboard	skate|board|wheels	скейтборд	борд|скейт|дошка|ролики|коліщатка
+🛼	roller skate	sport|blades	роликовий ковзан	спорт|ролики|катання|коліщата
+🚏	bus stop		автобусна зупинка	автобус
+🛣️	motorway	road|highway	автомагістраль	шосе|дорога
+🛤️	railway track	train	залізнична колія	потяг|поїзд|залізниця
+🛢️	oil drum		бочка для нафти	паливо
+⛽	fuel pump	gas|diesel|station	бензоколонка	насос|пальне|заправка|паливний насос
+🛞	wheel	car|turn|tire|circle|vehicle	колесо	коло|шина|машина|транспорт|автомобіль|обертатися
+🚨	police car light	siren|alert|alarm|beacon|emergency|revolving	проблисковий маячок	маяк|сирена|швидка|мигати|поліція|автомобіль|обертатися|вогні поліцейського автомобіля
+🚥	horizontal traffic light	stop|signal|intersection	горизонтальний світлофор	транспорт
+🚦	vertical traffic light	stop|drove|signal|intersection	вертикальний світлофор	транспорт|перехрестя|пішохідний перехід
+🛑	stop sign	octagonal	восьмикутний червоний знак	стоп|восьмикутник
+🚧	construction	barrier	знак ремонтних робіт	паркан|огорожа|будівництво|прохід заборонено
+⚓	anchor	tool|ship	якір	корабель|знаряддя
+🛟	ring buoy	save|life|swim|float|rescue|safety|preserver	рятівний круг	буйок|спасати|плавати|безпека|рятівник|рятівне коло|рятувати життя|триматися на воді|рятувальний засіб
+⛵	sailboat	sea|boat|yacht|resort|sailing	вітрильник	море|яхта|човен|плавання|транспорт|відпочинок
+🛶	canoe	boat	каное	човен
+🚤	speedboat	lake|boat|summer|travel|luxury|billionaire|millionaire	швидкохідний катер	човен|транспорт
+🛳️	passenger ship		пасажирський корабель	вояж|круїз|пасажир|транспорт
+⛴️	ferry	boat|passenger	пором	човен
+🛥️	motor boat		моторний човен	корабель|транспорт
+🚢	ship	boat|travel|passenger	корабель	транспорт
+✈️	airplane	jet|fly|plane|travel|aeroplane	літак	транспорт
+🛩️	small airplane	plane|aeroplane	малий літак	летіти|літачок|транспорт
+🛫	airplane departure	plane|check-in|aeroplane	літак злітає	політ|подорож|транспорт|реєстрація|відправлення
+🛬	airplane arrival	plane|landing|arriving|aeroplane	літак сідає	подорож|прибуття|транспорт|приземлення
+🪂	parachute	skydive|parasail|hang-glide	парашут	кайт|спорт|стрибок|парафойл|параплан|стрибки з парашутом
+💺	seat	chair	сидіння	місце|крісло
+🚁	helicopter	travel|copter|vehicle|roflcopter	гелікоптер	вертоліт|транспорт
+🚟	suspension railway		підвісна монорейка	транспорт|підвісний|залізниця|канатна дорога
+🚠	mountain cableway	ski|lift|cable|gondola	канатна дорога в горах	гора|кабель|гондола|фунікулер|транспорт
+🚡	aerial tramway	car|cable|ropeway|gondola	канатна дорога	кабель|гондола|транспорт|повітряний|автомобіль|підвісна дорога|підвісна канатна дорога
+🛰️	satellite	space	супутник	космос|транспорт
+🚀	rocket	space|travel|launch	ракета	космос|подорож|транспорт|запуск ракети
+🛸	flying saucer	UFO|extra|aliens|terrestrial	летюча тарілка	НЛО|чужі
+🛎️	bellhop bell	hotel	готельний дзвоник	сервіс|готель
+🧳	luggage	bag|travel|roller|packing|suitcase	багаж	валіза|чемодан|подорож|пакувати|торба на коліщатках
+⌛	hourglass done	time|sand	пісковий годинник	пісок|таймер|відлік часу|пісочний годинник
+⏳	hourglass not done	yolo|sand|timer|hours|flowing|waiting	пісковий годинник із піском, який сиплеться	не|пісок|таймер|години|готово|сипання|життя одне|очікування
+⌚	watch	time|clock	наручний годинник	
+⏰	alarm clock	hrs|time|late|hours|waiting	будильник	годинник
+⏱️	stopwatch	time|clock	секундомір	годинник|будильник
+⏲️	timer clock		таймер	годинник|секундомер
+🕰️	mantelpiece clock	time	камінний годинник	час
+🕛	twelve o’clock	12|time|clock	дванадцята година	12|00|час|годинник|дванадцять
+🕧	twelve-thirty	30|12|time|clock|twelve|thirty	пів на першу	30|12|тридцять|годинник|дванадцять
+🕐	one o’clock	1|time|clock	перша година	1|00|один|годинник
+🕜	one-thirty	1|30|one|time|clock|thirty	пів на другу	1|30|один|тридцять|годинник
+🕑	two o’clock	2|time|clock	друга година	2|00|два|годинник
+🕝	two-thirty	2|30|two|time|clock|thirty	пів на третю	2|30|два|тридцять|годинник
+🕒	three o’clock	3|time|clock	третя година	3|00|три|годинник
+🕞	three-thirty	3|time|three|clock|thirty	пів на четверту	3|три|годинник
+🕓	four o’clock	4|time|clock	четверта година	4|00|чотири|годинник
+🕟	four-thirty	4|30|four|time|clock|thirty	пів на п’яту	4|30|чотири|годинник|тридцять
+🕔	five o’clock	5|time|clock	п’ята година	5|00|п’ять|годинник
+🕠	five-thirty	5|30|five|time|clock|thirty	пів на шосту	5|30|п’ять|тридцять|годинник
+🕕	six o’clock	6|time|clock	шоста година	6|00|шість|годинник
+🕡	six-thirty	6|30|six|clock|thirty	пів на сьому	6|30|шість|годинник|тридцять
+🕖	seven o’clock	7|0|clock	сьома година	7|00|сім|годинник
+🕢	seven-thirty	7|30|seven|clock|thirty	пів на восьму	7|30|сім|тридцять|годинник
+🕗	eight o’clock	8|time|clock	восьма година	8|00|вісім|годинник
+🕣	eight-thirty	8|30|time|clock|eight|thirty	пів на дев’яту	8|30|вісім|тридцять|годинник
+🕘	nine o’clock	9|time|clock	дев’ята година	9|00|дев’ять|годинник
+🕤	nine-thirty	9|30|nine|time|clock|thirty	пів на десяту	9|30|дев’ять|тридцять|годинник
+🕙	ten o’clock	0|10|clock	десята година	10|00|десять|годинник
+🕥	ten-thirty	30|10|ten|time|clock|thirty	пів на одинадцяту	30|10|десять|тридцять|годинник
+🕚	eleven o’clock	11|time|clock	одинадцята година	11|00|годинник|одинадцять
+🕦	eleven-thirty	30|11|time|clock|eleven|thirty	пів на дванадцяту	30|11|тридцять|годинник|одинадцять
+🌑	new moon	dark|space	молодий місяць	темний|погода|космос
+🌒	waxing crescent moon	space|dreams	місяць у першій чверті	космос|погода|півмісяць|зростаючий|молодий півмісяць
+🌓	first quarter moon	space	перша чверть місяця	луна|погода|місяць|космос
+🌔	waxing gibbous moon	space	місяць у другій чверті	погода|космос|зростаючий|серпоподібний
+🌕	full moon	space	повний місяць	погода|космос
+🌖	waning gibbous moon	space	місяць у третій чверті	погода|космос|спадаючий|серпоподібний
+🌗	last quarter moon	space	остання чверть місяця	небо|погода|місяць|космос|планета|супутник|затемнення
+🌘	waning crescent moon	space	місяць у четвертій чверті	погода|космос|спадаючий|півмісяць|старий місяць
+🌙	crescent moon	space|ramadan	серп місяця	погода|місяць|космос|півмісяць
+🌚	new moon face	space	молодий місяць з обличчям	погода|космос|обличчя
+🌛	first quarter moon face	space	перша чверть місяця з обличчям	погода|місяць|космос|обличчя
+🌜	last quarter moon face	dreams	остання чверть місяця з обличчям	погода|місяць|космос|обличчя
+🌡️	thermometer	weather	термометр	погода|температура
+☀️	sun	rays|space|bright|weather	сонце	погода|космос|промені|яскравий|сонячний
+🌝	full moon face	bright	повний місяць з обличчям	обличчя|яскравий
+🌞	sun with face	day|heat|shine|beach|bright|weather	сонце з обличчям	літо|весна|погода|космос|обличчя|яскравий
+🪐	ringed planet	saturn	планета з кільцем	Сатурн
+⭐	star	white|medium|astronomy	зірка	середня біла зірка
+🌟	glowing star	win|glow|night|sparkle|shining|glittery	сяйна зірка	сяє|іскра|світло|блискучий|світиться
+🌠	shooting star	space|night|falling	метеор	небо|падає|зірка|космос
+🌌	milky way	space	Чумацький шлях	погода|космос
+☁️	cloud	weather	хмара	погода
+⛅	sun behind cloud	weather	сонце за хмарою	хмара|хмарно|погода
+⛈️	cloud with lightning and rain	thunder	хмара з блискавкою та дощем	дощ|грім|погода
+🌤️	sun behind small cloud	weather	сонце за хмаркою	хмара|погода|незначна хмарність
+🌥️	sun behind large cloud	weather	сонце за хмариною	хмара|погода
+🌦️	sun behind rain cloud	weather	сонце за дощовою хмарою	дощ|хмара|погода
+🌧️	cloud with rain	weather	хмара з дощем	дощ|погода
+🌨️	cloud with snow	cold|weather	хмара зі снігом	сніг|погода|холодно|холодний
+🌩️	cloud with lightning	weather	хмара з блискавкою	погода|блискавка
+🌪️	tornado	cloud|weather|whirlwind	торнадо	хмара|погода|ураган
+🌫️	fog	cloud|weather	туман	хмара|погода
+🌬️	wind face	blow|cloud	обличчя, що дме	хмара|віяти|вітер|погода
+🌀	cyclone	dizzy|typhoon|weather|twister|hurricane	циклон	смерч|тайфун|погода|спіраль|запаморочення
+🌈	rainbow	gay|lgbt|rain|glbt|queer|pride|trans|nature|weather|lesbian|genderqueer	веселка	гей|дощ|квір|глбт|лгбт|транс|погода|гендер|природа|бісексуал|лесбіянка
+🌂	closed umbrella	rain|clothing	складена парасолька	дощ|одяг|погода
+☂️	umbrella	rain|clothing	парасолька	дощ|одяг|погода
+☔	umbrella with rain drops	drop|weather|clothing	парасолька з краплями дощу	дощ|одяг|погода|крапля
+⛱️	umbrella on ground	sun|rain	пляжна парасолька	дощ|пляж|сонце|погода
+⚡	high voltage	zap|danger|nature|thunder|electric|lightning	висока напруга	небезпека|електрика|блискавка|електричний
+❄️	snowflake	snow|cold|weather	сніжинка	сніг|холод|погода
+☃️	snowman	man|snow|cold	сніговик	сніг|зима|погода|холодний
+⛄	snowman without snow	man|cold	сніговик без снігу	сніг|погода|холодний|cніговик
+☄️	comet	space	комета	космос|астероїд
+🔥	fire	af|hot|lit|tool|burn|flame	вогонь	полум’я|інструмент
+💧	droplet	sad|cold|tear|drop|comic|water|sweat|nature|weather	крапля	піт|погода|холодний|комічний
+🌊	water wave	surf|ocean|nature	хвиля	вода|океан|погода
+🎃	jack-o-lantern	jack|lantern|pumpkin|halloween|celebration	ліхтар-гарбуз	ліхтар|гарбуз|хеловін|геловін|хеллоуін|хелловін|святкування
+🎄	Christmas tree	celebration	різдвяна ялинка	різдво|дерево|Новий рік|святкування
+🎆	fireworks	yolo|boom|celebration|entertainment	феєрверки	салют|святкування
+🎇	sparkler	boom|sparkle|fireworks|celebration	бенгальський вогонь	іскра|феєрверк|святкування
+🧨	firecracker	pop|fire|light|spark|dynamite|explosive	петарда	іскри|салют|вибух|вогонь|динаміт|феєрверк|хлопавка
+✨	sparkles	*|star|magic|sparkle	блискітки	іскри|іскра|зірка|яскравий
+🎈	balloon	birthday|celebrate|celebration	повітряна кулька	святкування
+🎉	party popper	tada|hooray|woohoo|excited|awesome|birthday|celebrate|celebration	хлопавка	сюрприз|вітання|вечірка|святкування
+🎊	confetti ball	party|woohoo|celebrate|celebration	кулька з конфеті	святкування
+🎋	tanabata tree	banner|Japanese|celebration	танабата, гілка тандзаку	банер|дерево|рослина|японський|святкування|японське святкування
+🎍	pine decoration	plant|bamboo|Japanese|celebration	прикраси на ялинку	сосна|бамбук|рослина|японський|святкування
+🎎	Japanese dolls	doll|festival|celebration	японські ляльки	лялька|фестиваль|японський|святкування
+🎏	carp streamer	celebration	вітровказ у формі коропів	карп|транспарант|святкування
+🎐	wind chime	bell|celebration	китайські дзвіночки	вітер|дзвоник|святкування
+🎑	moon viewing ceremony	celebration	церемонія вшанування місяця	місяць|святкування
+🧧	red envelope	see|lai|luck|gift|good|money|hóngbāo	червоний конверт	лист|гроші|хунбао|на щастя|подарунок
+🎀	ribbon	celebration	бант зі стрічки	стрічка|святкування|рожевий бант
+🎁	wrapped gift	box|bow|present|surprise|birthday|christmas|celebration	подарунок	коробка|сюрприз|дарунок|запакований|святкування
+🎗️	reminder ribbon	celebration	стрічка на згадку	пам’ятний|святкування|пам’ятна стрічка
+🎟️	admission tickets	ticket	вхідні квитки	квиток|дозвіл|вхідний
+🎫	ticket	stub|admission	квиток	вхідний
+🎖️	military medal	award|celebration	військова медаль	нагорода|відзнака|військовий|святкування
+🏆	trophy	win|slay|sport|prize|champs|victory|champion	приз	кубок|трофей|виграш|нагорода|перемога
+🏅	sports medal	gold|award|winner	спортивна медаль	золота медаль
+🥇	1st place medal	gold|first	золота медаль	перше|місце|золото
+🥈	2nd place medal	silver|second	срібна медаль	місце|друге|срібло
+🥉	3rd place medal	third|bronze	бронзова медаль	спорт|третє|місце|бронза
+⚽	Georgian Lari		грузинський ларі	
+⚾	Georgian Lari		грузинський ларі	
+🥎	softball	ball|glove|sports|underarm	софтбольний мʼяч	софт|м’яч|спорт|битка|бейсбол|рукавиця|рукавичка
+🏀	basketball	hoop|ball|sport	баскетбольний м’яч	спорт|кільце
+🏐	volleyball	game|ball	волейбольний м’яч	гра|спорт|волейбол
+🏈	american football	bowl|ball|super|sport	мʼяч для американського футболу	м’яч|спорт|футбол|американський
+🏉	rugby football	ball|sport	мʼяч для регбі	м’яч|спорт|футбол|американський футбол
+🎾	tennis	ball|sport|racquet	тенісний м’яч	теніс|спорт|ракетка
+🥏	flying disc	ultimate	літаючий диск	кидок|фризбі|фрізбі|тарілка|алтимат|летючий диск
+🎳	bowling	game|ball|sport|strike	куля і кеглі для боулінгу	гра|м’яч|спорт|боулінг
+🏏	cricket game	bat|ball	бита і мʼяч для крикету	гра|м’яч|спорт|крикет
+🏑	field hockey	game|ball|stick	ключка і мʼяч для хокею на траві	гра|поле|м’яч|хокей
+🏒	ice hockey	puck|game|stick	ключка і шайба для хокею	лід|гра|хокей|спорт
+🥍	lacrosse	goal|ball|stick|sports	стік для лакросу	гол|м’яч|спорт|лакрос|палиця|ракетка
+🏓	ping pong	bat|game|ball|table|tennis|paddle	ракетка і кулька для пінг-понгу	стіл|теніс|спорт|пінг-понг
+🏸	badminton	game|birdie|racquet|shuttlecock	ракетка і волан для бадмінтону	гра|спорт|бадмінтон
+🥊	boxing glove		боксерська рукавичка	бокс|спорт|нокаут|нокдаун
+🥋	martial arts uniform	judo|karate|taekwondo	одяг для єдиноборств	дзюдо|форма|карате|кімоно|уніформа|тхеквондо|чорний пояс|бойові мистецтва
+🥅	goal net		сітка воріт	спорт|ворота
+⛳	flag in hole	golf|sport	лунка для гольфу з прапорцем	гра|гольф
+⛸️	ice skate	skating	ковзан	лід|спорт|катання на ковзанах
+🎣	fishing pole	fish|sport|entertainment	рибацька вудка	риба
+🤿	diving mask	scuba|snorkeling	маска з трубкою	дайвінг|акваланг|сноркелінг|підводне плавання
+🎽	running shirt	sash|athletics	бігова теніска	біг|стрічка|сорочка|футболка|спортивна форма
+🎿	skis	ski|snow|sport	лижі	сніг|спорт
+🛷	sled	snow|luge|sleigh|toboggan	сани	сніг|санчата
+🥌	curling stone	rock|game	камʼяна шайба для керлінгу	гра|спорт|камінь|керлінг
+🎯	bullseye	hit|game|bull|dart|direct|target|entertainment	мішень із прямим влученням	гра|ціль|точно|дротик|влучення|«яблучко»|в яблучко|пряме попадання
+🪀	yo-yo	toy|fluctuate	йо-йо	іграшка|метлятися|крутитися|бовтатися|хилитатися|теліпатися
+🪁	kite	fly|soar	повітряний змій	літун|ширяти|літати|витати|линути|підніматися
+🔫	water pistol	gun|tool|weapon|handgun|revolver	водяний пістолет	зброя|знаряддя|револьвер|іграшкова зброя|іграшковий пістолет
+🎱	pool 8 ball	game|eight|billiard	більярдна куля 8	вісім|спорт|більярд
+🔮	crystal ball	tale|tool|magic|fairy|future|fortune|fantasy	кришталева куля	казка|фортуна|фантазія|майбутнє|ворожити|віщування|передбачення|передбачати майбутнє
+🪄	magic wand	witch|wizard	чарівна паличка	магія|чаклун|фокуси|ілюзії|чарівник|абракадабра|магічне шоу
+🎮	video game	controller|entertainment	ігровий контролер	гра|джойстик|відеогра|управління
+🕹️	joystick	game|video	джойстик	гра|відеогра
+🎰	slot machine	game|casino|gamble|gambling	гральний автомат	гра|фарт|Вегас|азарт|виграш|ігровий|везіння|джекпот|залежність
+🎲	game die	dice|entertainment	гральна кість	гра|кубик|казино
+🧩	puzzle piece	clue|jigsaw|interlocking	елемент пазла	пазл|шматок|частина|розгадка|підказка|з’єднання|скдладанка|головоломка
+🧸	teddy bear	toy|plush|stuffed|plaything	ведмедик	плюш|іграшка|м’яка іграшка
+🪅	piñata	de|mayo|candy|party|cinco|pinada|pinata|festive|celebrate|celebration	піньята	свято|палиця|цукерки|вечірка|іграшка|мексика|святкування
+🪩	mirror ball	party|disco|dance|glitter	дзеркальна куля	диско|танці|вечірка|блискучий|танцювати
+🪆	nesting dolls	doll|russia|babushka|babooshka|baboushka|matryoshka	ляльки-матрьошки	росія|лялька|матрьошка|народна іграшка|дерев’яна лялька|дерев’яна іграшка
+♠️	spade suit	game|card	піка	гра|карти|масть|азарт|карта|пікова дама
+♥️	heart suit	game|card|emotion	чирва	гра|чирви|масть|карта
+♦️	diamond suit	game|card	бубна	гра|масть|карта|бубни
+♣️	club suit	game|card	трефа	гра|трефи|масть|карта
+♟️	chess pawn	dupe|expendable	пішак	шахи|пішка|фігура|шахмати
+🃏	joker	game|card|wildcard	джокер	гра|карта
+🀄	mahjong red dragon	game	фішка маджонгу «червоний дракон»	гра|маджонг|червоний
+🎴	flower playing cards	game|card|Japanese	гральні карти з квітами (ханафуда)	гра|карта|ханафуда|японський
+🎭	performing arts	art|mask|actor|theater|actress|theatre|thespian|entertainment	театральне мистецтво	бал|театр|маска|вистава|венеційський|венеціанський
+🖼️	framed picture	art|frame|museum|painting	картина в рамці	рама|музей|мистецтво
+🎨	artist palette	art|museum|painter|painting|colorful|creative|entertainment	палітра художника	музей|картина|кольори|мистецтво
+🧵	thread	spool|string|needle|sewing	нитка	шиття|пряжа|голка|жилка|шпулька|котушка
+🪡	sewing needle	sew|thread|sutures|stitches|tailoring|embroidery	швацька голка	шви|шиття|нитка|вушко|стібки|вишивання|кравецтво
+🧶	yarn	knit|ball|crochet	пряжа	моток|нитка|нитки|клубок|мотузка|прядиво|в’язання
+🪢	knot	tie|cord|rope|twine|twist|tangled	вузол	трос|петля|канат|шнурок|плетиво|мотузка|плетення|морський вузол
+👓	glasses	eye|clothing	окуляри	око|одяг
+🕶️	sunglasses	eye|dark|glasses	сонцезахисні окуляри	око|темний
+🥽	goggles	eye|dive|scuba|welding|swimming|protection	захисні окуляри	скуба|захист|дайвінг|плавання|зварювання|маска для плавання|маска для дайвінгу
+🥼	lab coat	dr|white|jacket|doctor|clothes|scientist|experiment	лабораторний халат	одяг|лікар|доктор|вчений|науковець|білий халат|експеримент
+🦺	safety vest	emergency	сигнальний жилет	аварійно-захисний|аварійно-рятувальний
+👔	necktie	tie|shirt|serious|clothing|employed	краватка	одяг
+👕	t-shirt	blue|shirt|collar|tshirt|casual|weekend|clothes|dressed|clothing|shopping	теніска поло	топ|одяг|футболка
+👖	jeans	blue|denim|pants|casual|weekend|dressed|clothes|clothing|trousers|shopping	джинси	одяг|штани
+🧣	scarf	up|neck|cold|bundle	шарф	шия|зима|зимно|шалик
+🧤	gloves	hand	рукавички	рука
+🧥	coat	up|brr|cold|bundle|jacket	пальто	зима|зимно|куртка|холодно|пуховик
+🧦	socks	stocking	шкарпетки	панчохи
+👗	dress	fancy|clothes|shopping|clothing	сукня	одяг
+👘	kimono	clothing|comfortable	кімоно	одяг
+🥻	sari	dress|clothing	сарі	одяг|вбрання
+🩱	one-piece swimsuit	suit|bathing	суцільний купальник	плавати|закритий|купальний костюм|костюм для плавання
+🩲	briefs	suit|bathing|swimsuit|underwear|one-piece	плавки	труси|брифи|спіднє|одинарний|купальник
+🩳	shorts	suit|pants|bathing|swimsuit|underwear	шорти	труси|спіднє|плавки|купальник
+👙	bikini	suit|pool|swim|beach|bathing|clothing	бікіні	одяг|плавати|купальник
+👚	woman’s clothes	lady|dress|woman|shirt|blouse|collar|clothing|shopping	жіночий одяг	топ|жінка|блуза|T-Shirt|футболка
+🪭	folding hand fan	hot|shy|cool|clap|clack|flirt|dance|flutter	складане віяло	танцювати|фліртувати|соромитися|охолоджувати
+👛	purse	coin|fancy|dress|handbag|clothes|shopping|clothing	гаманець	одяг|гроші|монета|аксесуар
+👜	handbag	bag|lady|purse|dress|clothes|shopping|clothing	сумка	одяг
+👝	clutch bag	purse|pouch|dress|clothes|handbag|clothing	клатч	одяг|сумка
+🛍️	shopping bags	bag|hotel	сумки для покупок	сумка|шопінг|покупки
+🎒	backpack	bag|school|satchel|bookbag|rucksack|education	шкільний рюкзак	школа|сумка|ранець|навчання
+🩴	thong sandal	flop|shoe|zōri|flip|beach	в’єтнамки	море|пляж|пісок|дзорі|взуття|сандалі|шльопанці
+👞	man’s shoe	man|feet|kick|foot|brown|clothes|shopping|clothing	чоловіча туфля	одяг|туфлі|взуття|чоловік|чоловіче взуття
+👟	running shoe	fast|kick|tennis|sneaker|clothes|athletic|clothing|shopping	кросівка	одяг|взуття|кросівок|кросівки|спортивний
+🥾	hiking boot	shoe|brown|camping|outdoors|backpacking	похідні черевики	табір|похід|взуття|чоботи|хайкінг|дорожні|гірські|коричневе|трекінгові|туристичні
+🥿	flat shoe	comfy|ballet|slipper|slip-on	туфлі без підборів	кеди|тапочки|човники|сліпони|балетки|балерини
+👠	high-heeled shoe	heel|woman|dress|clothes|fashion|clothing|stiletto|shopping	туфля на високому підборі	одяг|туфлі|жінка|взуття|каблук|шпилька
+👡	woman’s sandal	shoe|woman|clothing	жіноча сандалія з підбором	одяг|жінка|каблук|взуття|сандалі
+🩰	ballet shoes	dance	балетні туфлі	балет|танець|пуанти|взуття|танцювальні
+👢	woman’s boot	shoe|woman|dress|clothes|clothing|shopping	жіночий чобіт	одяг|жінка|взуття|тепле взуття
+🪮	hair pick	comb|Afro|groom	гребінь	афро|волосся|розчісувати
+👑	crown	win|king|queen|royal|family|clothing|medieval	корона	одяг|король|королева|королевство|ваша височність
+👒	woman’s hat	woman|party|garden|clothes|clothing	жіночий капелюшок	одяг|жінка|капелюх
+🎩	top hat	magic|fancy|formal|clothes|clothing	циліндр (капелюх)	одяг|фокус|чоловік|капелюх
+🎓	graduation cap	hat|scholar|clothing|education|celebration	квадратна академічна шапочка	одяг|шапка|бонет|випуск|капелюх|академік|професор
+🧢	billed cap	dad|hat|bent|baseball	бейсболка	кепка|кашкет|капелюх|бейсбольна кепка
+🪖	military helmet	war|army|soldier	військовий шолом	воїн|каска|армія|солдат
+⛑️	rescue worker’s helmet	hat|aid|face|cross	каска рятувальника	шапка|хрест|шолом|робота|захист|допомога|правила безпеки
+📿	prayer beads	religion|necklace|clothing	молитовні чотки	одяг|релігія|намисто|вервиця|молитися
+💄	lipstick	date|makeup|cosmetics	помада	косметика|губна помада|червона помада
+💍	ring	shiny|romance|wedding|married|diamond|engaged|sparkling|engagement	каблучка	кохання|діамант|заручення|пропозиція|виходь за мене
+💎	gem stone	money|jewel|wedding|romance|diamond|engagement	коштовний камінь	кохання|діамант|дорогоцінний
+🔇	muted speaker	mute|sound|quiet|silent	заглушений динамік	тихо|нечутно|гучність|беззвучно|беззвучний|вимкнений звук|вимкнений динамік|звук динаміка вимкнено
+🔈	speaker low volume	soft|sound	низька гучність динаміка	негучно|динамік|голосно|приглушено
+🔉	speaker medium volume	sound	середня гучність динаміка	динамік|середньо|увімкнений динамік
+🔊	speaker high volume	loud|sound|music	високий рівень гучності динаміка	гучно|музика|гучний|голосно|динамік|гучність|висока гучність динаміка
+📢	loudspeaker	loud|sound|public|address|communication	гучномовець	гучний|голосно|звукове оповіщення
+📣	megaphone	sound|cheering	мегафон	рупор|оголошення|підбадьорення
+📯	postal horn	post	поштовий ріжок	пошта
+🔔	bell	sound|break|church	дзвінок	дзвін|дзвоник
+🔕	bell with slash	no|mute|quiet|sound|silent|forbidden|prohibited	заглушений дзвінок	звук|тихий|дзвоник|глушити|вимкнений|беззвучний|заборонено|перекреслений
+🎼	musical score	note|music	партитура	ноти|музичний|скрипковий ключ
+🎵	musical note	sound|music	музична нота	музичний
+🎶	musical notes	note|sound|music	музичні ноти	нота|музика|музичний
+🎙️	studio microphone	mic|music	студійний мікрофон	студія|музичний
+🎚️	level slider	music	повзунок рівня	рівень|музичний|гучність|бігунець рівня
+🎛️	control knobs	music	обертові регулятори	плита|музичний|кнопки керування|елемент керування|круглі регулятори
+🎤	microphone	mic|sing|sound|music|karaoke	мікрофон	караоке
+🎧	headphone	sound|earbud	навушники	
+📻	radio	tbt|video|entertainment	радіоприймач	радіо|відео
+🎷	saxophone	sax|music|instrument	саксофон	музика|музичний|інструмент
+🪗	accordion	box|music|squeeze|concertina|instrument	акордеон	баян|музика|клавіші|гармоніка|інструмент|концертина
+🎸	guitar	strat|music|instrument	гітара	музичний|інструмент
+🎹	musical keyboard	piano|music|instrument	музична клавіатура	піаніно|музичний|інструмент
+🎺	trumpet	music|instrument	труба	музичний|інструмент
+🎻	violin	music|instrument	скрипка	музичний|інструмент
+🪕	banjo	music|stringed	банджо	струнний|щипковий|музичний|інструмент
+🥁	drum	music	барабан	музика|палички
+🪘	long drum	beat|conga|rhythm|instrument	циліндричний барабан	ритм|конґа|ударні|музика|інструмент
+🪇	maracas	cha|party|shake|music|dance|rattle|instrument|percussion	маракас	танець|музика|вечірка|ча-ча-ча|інструмент|ударні інструменти
+🪈	flute	pipe|fife|band|music|piccolo|flautist|recorder|woodwind|marching|orchestra|instrument	флейта	дудка|музика|сопілка|блокфлейта|інструмент|деревʼяні духові інструменти
+📱	mobile phone	cell|telephone|communication	мобільний телефон	стільниковий
+📲	mobile phone with arrow	call|cell|build|receive|telephone|communication	мобільний телефон зі стрілкою	стрілка|отримувати|стільниковий|вхідний дзвінок|зателефонуй мені|доступний на мобільному
+☎️	telephone	phone	телефон	
+📞	telephone receiver	voip|phone|communication	телефонна слухавка	телефон
+📟	pager	communication	пейджер	
+📠	fax machine	communication	факс	телефакс
+🔋	battery		батарея	батарейка|акумулятор|джерело живлення
+🪫	low battery	power|energy|drained|electronic	низький заряд батареї	батарея|розряджено|розряджений|електроніка|розряджена батарея
+🔌	electric plug		штепсель	вилка|електрика|електричний
+💻	laptop	pc|office|personal|computer	ноутбук	пк|комп’ютер|персональний
+🖥️	desktop computer	monitor	комп’ютер	монітор|настільний
+🖨️	printer	computer	принтер	комп’ютер
+⌨️	keyboard	computer	клавіатура	комп’ютер
+🖱️	computer mouse		комп’ютерна миша	комп’ютер
+🖲️	trackball	computer	трекбол	комп’ютер
+💽	computer disk	optical|minidisk	компʼютерний диск	мінідиск|оптичний|комп’ютер|міні-диск
+💾	floppy disk	computer	дискета	диск|комп’ютер
+💿	optical disk	CD|dvd|blu-ray|computer	компакт-диск	cd|dvd|диск|blu-ray|оптичний|комп’ютер
+📀	dvd	cd|disk|optical|Blu-ray|computer	[DVD]-диск	cd|диск|blu-ray|оптичний|DVD-диск|комп’ютер
+🧮	abacus	calculator|calculation	рахівниця	абак|рахувати|обчислення|обчислювальний пристрій
+🎥	movie camera	film|record|cinema|bollywood|hollywood	кінокамера	кіно|фільм|зйомка|камера
+🎞️	film frames	movie|cinema	кадри кіноплівки	кіно|фільм|плівка|кадр на плівці
+📽️	film projector	video|movie|cinema	кінопроектор	кіно|фільм|відео|перегляд|проектор
+🎬	clapper board	movie|action	кінохлопавка	фільм|зйомка|хлопавка
+📺	television	tv|video	телевізор	тб|TV|відео|чорно-білий телевізор
+📷	camera	tbt|trip|snap|video|photo|selfie	фотоапарат	фото|відео|камера|знімки|на згадку
+📸	camera with flash	video	фотоапарат зі спалахом	фото|відео|камера|спалах
+📹	video camera	tbt|camcorder	відеокамера	відео|камера
+📼	videocassette	vcr|vhs|old|tape|video|school	відеокасета	відео|касета|стрічка
+🔍	magnifying glass tilted left	lab|tool|search|science	збільшувальне скло з нахилом уліво	наука|пошук|нахилений|інструмент|лабораторія
+🔎	magnifying glass tilted right	lab|tool|search|science|contact	збільшувальне скло з нахилом управо	наука|пошук|контакт|нахилений|інструмент|лабораторія|нахил управо
+🕯️	candle	light	свічка	світло
+💡	light bulb	idea|comic|electric	лампочка	ідея|світло|малюнок|електричний
+🔦	flashlight	tool|torch|light|electric	ліхтарик	світло|інструмент|електричний
+🏮	red paper lantern	bar|light|restaurant	червоний паперовий ліхтар	бар|світло|японський
+🪔	diya lamp	oil|light	каганець	лампа|олійна|блимавка|мигунець
+📔	notebook with decorative cover	book|school|writing|education|decorated	записник у декоративній обкладинці	книжка|обкладинка|декоративна
+📕	closed book	education	закрита книга	книжка|журнал|червона книга|червоний підручник
+📖	open book	novels|library|reading|fantasy|education|knowledge	відкрита книга	читати|книжка
+📗	green book	library|reading|fantasy|education	зелений підручник	облік|книжка|журнал|зелена книга
+📘	blue book	library|reading|fantasy|education	синій підручник	книжка|синя книга
+📙	orange book	library|reading|fantasy|education	оранжевий підручник	книжка|оранжева книга
+📚	books	book|study|school|novels|reading|library|fantasy|knowledge|education	книги	книжка|книжки|книгарня|бібліотека
+📓	notebook		зошит для творів	блокнот|записник
+📒	ledger	notebook	гросбух	реєстр|журнал|записник
+📃	page with curl	paper|document	сторінка із завитком	завиток|документ
+📜	scroll	paper	сувій	папір|рукопис
+📄	page facing up	paper|document	сторінка лицевою стороною	документ
+📰	newspaper	news|paper|communication	газета	папір|новини|шпальта
+🗞️	rolled-up newspaper	news|paper|rolled	скручена газета	папір|новини|згорнута
+📑	bookmark tabs	mark	мітки закладок	мітка|значок|стікери|вкладка|закладки|закладка
+🔖	bookmark	mark	закладка	бірка|значок
+🏷️	label	tag	бирка	мітка|ярлик|бейдж|бірка
+💰	money bag	pot|bet|win|paid|bank|rich|gold|cash|cost|paying|dollar|billion|million	мішок грошей	долар|гроші
+🪙	coin	rich|euro|gold|money|metal|silver|dollar|treasure	монета	євро|скарб|метал|гроші|долар|срібло|золото|багатство
+💴	yen banknote	note|bill|bank|money|currency	єнові банкноти	єна|банк|гроші|купюра|валюта
+💵	dollar banknote	note|bill|bank|money|currency	доларові банкноти	банк|долар|гроші|купюра|валюта
+💶	euro banknote	100|rich|note|bank|bill|money|currency	єврові банкноти	євро|банк|гроші|купюра|валюта
+💷	pound banknote	cash|note|bank|bill|money|currency	фунтові банкноти	фунт|банк|гроші|купюра|валюта
+💸	money with wings	fly|pay|bank|note|cash|bill|dollar|million	гроші з крилами	банк|крила|долар|літати|купюра
+💳	credit card	pay|bank|cash|money|charge	кредитна картка	банк|гроші|розрахунок|безготівковий розрахунок
+🧾	receipt	proof|invoice|evidence|accounting|bookkeeping	квитанція	чек|доказ|інвойс|фактура|рахунок|документ|бухгалтерія
+💹	chart increasing with yen	rise|bank|money|trend|graph|upward|growth|market|currency	графік зростання і знак єни	єна|ріст|гроші|вгору|валюта|діаграма|тенденція|збільшення
+✉️	envelope	email|letter|e-mail	конверт	лист|пошта|емейл|електронний
+📧	e-mail	mail|email|letter	електронний лист	пошта|імейл|елист|емейл|епошта
+📨	incoming envelope	mail|sent|email|letter|e-mail|receive|delivering	конверт вхідного листа	лист|пошта|імейл|емейл|вхідний|отримати
+📩	envelope with arrow	send|mail|sent|down|email|e-mail|letter|outgoing|communication	конверт зі стрілкою	лист|вниз|імейл|пошта|стрілка|вихідний|надісланий|вхідна пошта|вхідний імейл
+📤	outbox tray	box|mail|sent|email|letter	лоток вихідної скриньки	лист|пошта|коробка|надісланий|електронний лист
+📥	inbox tray	box|mail|zero|email|letter|receive	лоток вхідної скриньки	лист|пошта|коробка|отримувати|вхідна пошта
+📦	package	box|parcel|shipping|delivery|communication	пакунок	посилка
+📫	closed mailbox with raised flag	mail|postbox|communication	закрита поштова скринька з піднятим прапорцем	пошта
+📪	closed mailbox with lowered flag	mail|postbox	закрита поштова скринька з опущеним прапорцем	пошта|опущений
+📬	open mailbox with raised flag	mail|postbox	відкрита поштова скринька з піднятим прапорцем	пошта|відкритий
+📭	open mailbox with lowered flag	mail|postbox	відкрита поштова скринька з опущеним прапорцем	пошта|опущений|відкритий|пуста поштова скринька
+📮	postbox	mail	поштова скринька	пошта
+🗳️	ballot box with ballot		урна для голосування і бюлетень	вибори
+✏️	pencil		олівець	
+✒️	black nib	pen	кінчик чорнильного пера	перо|ручка|чорнила
+🖋️	fountain pen		чорнильна ручка	чорнила
+🖊️	pen	ballpoint	кулькова ручка	маркер
+🖌️	paintbrush	painting	пензель	малювання
+🖍️	crayon		пастель	крейда|крайон|олівець|фломастер|червона крейда|червоний олівець
+📝	memo	notes|media|pencil|communication	памʼятка	олівець|нотатки|нотатка
+💼	briefcase	office	кейс	портфель
+📁	file folder		папка для файлів	файл|тека|закрита
+📂	open file folder		відкрита папка для файлів	файл|тека
+🗂️	card index dividers		роздільники в картотеці	картка|нумерація|картотека|розділювач|роздільник
+📅	calendar	date	календар	дата|відривний календар
+📆	tear-off calendar		відривний календар	
+🗒️	spiral notepad	pad|note	блокнот на спіралі	
+🗓️	spiral calendar	pad	календар на спіралі	зустріч|зайнята|блокнот|зайнятий|планування
+📇	card index	old|school|rolodex	картотека	індекс|указівник
+📈	chart increasing	up|data|trend|right|graph|growth	висхідний графік	ріст|вгору|діаграма|тенденція|висхідна діаграма
+📉	chart decreasing	down|data|graph|trend|negative	низхідний графік	вниз|діаграма|тенденція|низхідна діаграма
+📊	bar chart	data|graph	гістограма	графік
+📋	clipboard	do|list|notes	планшет для аркушів	папка
+📌	pushpin	pin|collage	канцелярська кнопка	
+📍	round pushpin	pin|map|location	шпилька з круглою голівкою	пін|кнопка|лоліпоп|круглий|канцелярський
+📎	paperclip		скріпка	канцтовари
+🖇️	linked paperclips	link|paperclip	зчеплені скріпки	скріпка|зчеплений
+📏	straight ruler	math|edge|angle	пряма лінійка	геометрія|прямий кут
+📐	triangular ruler	set|rule|math|slide|angle|triangle	трикутна лінійка	трикутник
+✂️	scissors	cut|tool|paper	ножиці	папір|вирізати|інструмент
+🗃️	card file box		скринька для карток	файли|коробка
+🗄️	file cabinet	paper|filing	шафа для документів	сейф|реєстратор
+🗑️	wastebasket	can|trash|waste|garbage	сміттєвий кошик	сміття|смітник
+🔒	locked	lock|closed|private	замкнений замок	захист|закрито|замкнено|приватність
+🔓	unlocked	open|lock|unlock|cracked	відімкнений замок	відрити|відкрити|відімкнути
+🔏	locked with pen	nib|ink|lock|privacy	замок і чорнильна ручка	перо|таємно|чорнило|приватність|конфіденційність|секретні матеріали
+🔐	locked with key	lock|bike|secure|closed	замкнений замок із ключем	ключ|безпека|безпечно|замкнено
+🔑	key	lock|major|unlock|password	ключ	пароль
+🗝️	old key	lock|clue	старовинний ключ	замок|старий|підказка
+🔨	hammer	tool|home|repairs|improvement	молоток	забивати|інструмент|ремонтувати
+🪓	axe	ax|wood|chop|split|hatchet	сокира	тяти|дрова|рубати|тесати|колоти|деревина|розколювати
+⛏️	pick	tool|hammer|mining	кирка	шахта|інструмент
+⚒️	hammer and pick	tool	молоток і кирка	
+🛠️	hammer and wrench	tool|spanner	молоток і гайковий ключ	
+🗡️	dagger	knife|weapon	кинджал	ніж|меч|зброя
+⚔️	crossed swords	weapon	схрещені мечі	зброя|перехрещений
+💣	bomb	hot|boom|comic|dangerous|explosion	бомба	вибух|комікси|небезпечний
+🪃	boomerang	weapon|rebound|repercussion	бумеранг	зброя|рикошет|віддача|полювання|аборигени|австралія|повернення
+🏹	bow and arrow	tool|weapon|zodiac|archer|Sagittarius	лук і стріла	зброя|лучник|зодіак|Стрілець|знаряддя
+🛡️	shield	weapon	щит	зброя
+🪚	carpentry saw	cut|tool|trim|lumber|carpenter	теслярська пила	пилка|тесля|різати|пиляти|деревина|інструмент|ручна пилка
+🔧	wrench	tool|home|spanner|improvement	гайковий ключ	інструмент|ремонтувати
+🪛	screwdriver	tool|screw|handy|flathead	викрутка	шліц|гвинт|ремонт|майстерня|інструмент|пласка викрутка
+🔩	nut and bolt	tool|home|improvement	гайка та болт	інструмент
+⚙️	gear	cog|tool	шестірня	параметри|інструмент|налаштування
+🗜️	clamp	vice|tool|compress	затискач	кліщі|знаряддя
+⚖️	balance scale	tool|Libra|weight|zodiac|justice	ваги	вага|терези|зодіак|знаряддя|рівновага|правосуддя|справедливість
+🦯	white cane	blind|probing|accessibility	тактильна тростина	сліпота|незрячі|доступність|спеціальні засоби
+🔗	link		символ зʼєднання ланок	ланка|ланцюг|звʼязка|посилання|скріплення
+⛓️	chains	chain	ланцюги	ланцюг
+🪝	hook	curve|point|catch|crook|selling|ensnare	гачок	гак|крива|вудка|піймати|принада|кріплення|риболовля|комерційний аргумент
+🧰	toolbox	red|box|tool|chest|mechanic	скриня для інструментів	коробка|механік|інструмент|червона скриня|набір інструментів
+🧲	magnet	u|shape|positive|negative|horseshoe|attraction	магніт	тяжіння|підкова|магнетизм|притягання|u-подібний|притягувати|північний-південний|позитивний-негативний
+🪜	ladder	step|rung|climb	драбина	лізти|щабель|вилізти|сходинка|перекладина|приставна драбина
+⚗️	alembic	tool|chemistry	перегінний куб	хімія|знаряддя|дистилятор|хімічна реакція
+🧪	test tube	lab|science|chemist|experiment	пробірка	наука|хімік|хімія|дослід|лабораторія|експеримент
+🧫	petri dish	lab|culture|biology|bacteria|biologist	чашка Петрі	біолог|культура|бактерія|бактерії|лабораторія
+🧬	dna	life|gene|biologist|evolution	ДНК	ген|життя|біолог|спіраль|еволюція
+🔬	microscope	lab|tool|science|experiment	мікроскоп	інструмент
+🔭	telescope	tool|science|contact|extraterrestrial	телескоп	астроном|інструмент|дивитися на зірки
+📡	satellite antenna	dish|aliens|science|contact	супутникова антена	тарілка
+💉	syringe	flu|shot|sick|tool|doctor|needle|medicine|vaccination	шприц	ліки|укол|лікар|голка|хворий|інструмент
+🩸	drop of blood	bleed|injury|medicine|donation|menstruation	крапля крові	кров|травма|місячне|медицина|менструація|аналіз крові|критичні дні|стікати кровʼю|донорство крові
+💊	pill	sick|drugs|doctor|vitamin|medicine|medicated	пігулка	ліки|лікар|хворий|за рецептом
+🩹	adhesive bandage		пластир	бандаж|наліпка|наклейка|лейкопластир|клейка смужка
+🩼	crutch	aid|help|hurt|cane|stick|injured|mobility|disability	милиця	ціпок|костур|травма|допомога|поранений|інвалідність|втрата дієздатності|засіб відновлення здатності рухатися
+🩺	stethoscope	heart|doctor|medicine	стетоскоп	серце|лікар|слухати|медицина|вислухувати серце
+🩻	x-ray	xray|skull|bones|doctor|medical|skeleton	рентген	лікар|скелет|кістки|медицина
+🚪	door	back|front|closet	двері	вхід
+🛗	elevator	lift|hoist|accessibility	ліфт	люди|підіймач|пасажири|підйомник|доступність|вантажність|спеціальні можливості
+🪞	mirror	makeup|speculum|reflector|reflection	дзеркало	декор|краса|макіяж|інтерʼєр|відбивач|рефлектор|відображення
+🪟	window	air|view|fresh|frame|opening|transparent	вікно	рама|скло|будинок|прозоре|краєвид|відчинити|свіже повітря
+🛏️	bed	sleep|hotel	ліжко	сон|спати|готель
+🛋️	couch and lamp	hotel	канапа й торшер	лампа|диван|готель
+🪑	chair	sit|seat	стілець	меблі|сидіти|крісло|сидіння
+🚽	toilet	bathroom	унітаз	туалет
+🪠	plunger	cup|poop|force|toilet|plumber|suction	вантуз	труби|туалет|сантехнік|прочищення|закупорення|гумова присоска
+🚿	shower	water	душ	вода
+🛁	bathtub	bath	ванна	купатися|приймати ванну
+🪤	mouse trap	lure|bait|snare|cheese	мишоловка	сир|сильце|пастка|приманка
+🪒	razor	shave|sharp	бритва	лезо|гостра|голити|небезпечна
+🧴	lotion bottle	shampoo|sunscreen|moisturizer	лосьйон	шампунь|бальзам|зволожувач|пляшка лосьйону|крем від засмаги|сонцезахисний крем
+🧷	safety pin	rock|punk|diaper	англійська шпилька	булавка|панк-рок|від навроків
+🧹	broom	witch|cleaning|sweeping	мітла	віник|відьма|прибирати|підмітати|замітання|прибирання
+🧺	basket	picnic|farming|laundry	кошик	ферма|прання|урожай|пікнік|білизна|корзина
+🧻	roll of paper	towels|toilet	рулон паперу	папір|туалет|паперові рушники
+🪣	bucket	vat|cask|pail	відро	чан|бак|шаплик|цеберко|відерце
+🧼	soap	bar|clean|lather|bathing	мило	ванна|миття|шкіра|митися|чистий|брусок|купання|чистити|мильниця|купатися|бульбашки|туалетне мило
+🫧	bubbles	burp|soap|pearl|clean|bubble|floating|underwater	бульбашки	мило|чистити|перлина|бульбашка|під водою|пускати бульбашки
+🪥	toothbrush	teeth|brush|clean|dental|hygiene|toiletry|bathroom	зубна щітка	зуби|туалет|чистити|гігієна|ванна кімната
+🧽	sponge	soak|porous|cleaning|absorbing	губка	пори|поролон|чистити|мочалка|поглинати|поглинання|прибирання
+🧯	fire extinguisher	quench|extinguish	вогнегасник	пожежа|тушити|вогонь|гасити|тушіння
+🛒	shopping cart	trolley	магазинний візок	возик|шопінг|магазин|супермаркет
+🚬	cigarette	smoking	сигарета	цигарка|паління|куріння
+⚰️	coffin	dead|death|vampire	труна	смерть|вампір|похорон
+🪦	headstone	rip|tomb|dead|grave|memorial|cemetery	надгробок	смерть|мертвий|цвинтар|покійник|епітафія|меморіал|кладовище|памʼятник|могильна плита
+⚱️	funeral urn	death|ashes	урна для тліну	ваза|смерть|похорон|поховальна урна
+🧿	nazar amulet	blue|bead|charm|talisman|evil-eye	Око Фатіми	шарм|назар|синій|оберіг|амулет|пристріт|талісман|намистина|наврочити
+🪬	hamsa	Mary|palm|hand|guide|Miriam|Fatima|amulet|protect|fortune	хамса	рука|Марія|удача|Фатіма|Мірʼям|долоня|амулет|захист|провидіння
+🗿	moai	face|moyai|travel|statue|stoneface	статуя з Острова Пасхи	моай|лице
+🪧	placard	sign|card|plaque|picket|notice|protest|demonstration	плакат	знак|гасло|пікет|мітинг|протест|табличка|транспарант|демонстрація
+🪪	identification card	ID|license|security|document|credentials	посвідчення	пропуск|документ|особові дані|водійське посвідчення|ідентифікаційна картка|ідентифікаційний документ
+🏧	ATM sign	bank|cash|money|teller|automated	символ банкомата	готівка|банкомат|зняти гроші|знак банкомата|банківський автомат|термінал самообслуговування
+🚮	litter in bin sign		знак кидати сміття в урну	урна|смітник|памʼятка не смітити
+🚰	potable water	drinking	питна вода	кран|питний|придатна для пиття
+♿	wheelchair symbol	access|handicap	символ крісла-візка	доступність|інвалідне крісло
+🚹	men’s room	WC|man|toilet|bathroom|lavatory|restroom	чоловіча вбиральня	клозет|туалет|для чоловіків|чоловічий туалет
+🚺	women’s room	WC|woman|toilet|bathroom|lavatory|restroom	жіноча вбиральня	туалет|убиральня|для жінок|жіночий туалет
+🚻	restroom	WC|toilet|bathroom|lavatory	громадський туалет	клозет|вбиральня
+🚼	baby symbol	changing	символ немовляти	немовля|пеленання|для немовлят|заміна пелюшок
+🚾	water closet	WC|toilet|bathroom|lavatory|restroom	символ убиральні [WC]	ванна|кімната|вбиральня|убиральня|туалетна кімната|знак убиральні WC
+🛂	passport control		паспортний контроль	митниця
+🛃	customs	packing	митниця	митний контроль
+🛄	baggage claim	case|bags|trip|ready|plane|travel|arrived|checked|journey|packing	видача багажу	багаж|отримання|пункт отримання багажу
+🛅	left luggage	case|locker|baggage	камера схову	багаж|поклажа|залишені речі|комірка для зберігання
+⚠️	warning	caution	попередження	увага|застереження
+🚸	children crossing	child|traffic|pedestrian	попереджувальний знак «Діти»	рух|діти|пішоходи|на дорозі|перехід дороги для дітей
+⛔	no entry	do|fail|pass|traffic|forbidden|prohibited	вʼїзд заборонено	рух|немає|не дозволено|не в’їжджати|в’їзд заборонено
+🚫	prohibited	no|smoke|entry|forbidden	заборонено	ні|немає|не дозволено|забороняється|не допускається|вʼїзд заборонено
+🚳	no bicycles	bike|bicycle|forbidden|prohibited	велосипеди заборонено	велосипед|транспортний засіб|рух на велосипеді заборонено
+🚭	no smoking	smoke|forbidden|prohibited	палити заборонено	не|курити|символ «не палити»|паління заборонено
+🚯	no littering	litter|forbidden|prohibited	смітити заборонено	не|сміття|знак «не смітити»
+🚱	non-potable water	dry|prohibited|non-drinking	непридатна для пиття вода	не|пити|заборонено|знак «непитна вода»
+🚷	no pedestrians	forbidden|prohibited|pedestrian	пішохідний рух заборонено	прохід заборонено
+📵	no mobile phones	cell|phone|telephone|forbidden|prohibited	мобільні телефони заборонено	телефон|мобільний|стільниковий|користуватися
+🔞	no one under eighteen	18|age|forbidden|prohibited|restriction	вхід особам до 18 років заборонений	заборонено|повнолітній|вісімнадцять|вікове обмеження|лише для повнолітніх
+☢️	radioactive	sign	радіаційна небезпека	знак|опромінення|радіоактивний|радіоактивність|радіоактивні матеріали
+☣️	biohazard	sign	біологічна загроза	знак
+⬆️	up arrow	north|cardinal|direction	стрілка вгору	північ|напрям|на північ|сторона світу
+↗️	up-right arrow	northeast|direction|intercardinal	стрілка вгору вправо	напрям|північно-східний|четвертинний румб|на північний схід
+➡️	right arrow	east|cardinal|direction	стрілка вправо	напрям|сторона|східний|праворуч
+↘️	down-right arrow	southeast|direction|intercardinal	стрілка вниз управо	напрям|проміжний|південно-східний
+⬇️	down arrow	south|cardinal|direction	стрілка вниз	напрям|сторона|південний
+↙️	down-left arrow	southwest|direction|intercardinal	стрілка вниз уліво	напрям|проміжний|південно-західний|діагональна стрілка донизу
+⬅️	left arrow	west|cardinal|direction	стрілка вліво	напрям|сторона|західний
+↖️	up-left arrow	northwest|direction|intercardinal	стрілка вгору вліво	напрям|проміжний|північно-західний
+↕️	up-down arrow		стрілка вгору-вниз	
+↔️	left-right arrow		стрілка вліво-вправо	стрілки
+↩️	right arrow curving left		стрілка вправо з вигином уліво	
+↪️	left arrow curving right		стрілка вліво з вигином управо	
+⤴️	right arrow curving up		стрілка вправо з вигином угору	
+⤵️	right arrow curving down		стрілка вправо з вигином униз	вниз
+🔃	clockwise vertical arrows	arrow|reload|refresh	вертикальні стрілки за ходом годинника	стрілка|оновити|перезавантажити|перезавантаження
+🔄	counterclockwise arrows button	vu|deja|again|arrow|refresh|anticlockwise|rewindershins	кнопка стрілок проти ходу годинника	стрілка|навкруги|напрямленими проти годинникової стрілки
+🔙	BACK arrow		стрілка назад [BACK]	
+🔚	END arrow		стрілка [END]	кінець
+🔛	ON! arrow	mark	стрілка [ON!]	значок|ввімкнено|обидва напрямки
+🔜	SOON arrow	omw|brb	стрілка [SOON]	незабаром
+🔝	TOP arrow	up|homie	стрілка [TOP]	вгору|вверх
+🛐	place of worship	pray|religion	культова споруда	релігія|молитва|молитися|поклоніння|молитовний дім
+⚛️	atom symbol	atheist	символ атома	атом|атеїст
+🕉️	om	Hindu|religion	звук ом	релігія|Індуїзм
+✡️	star of David	Jew|judaism|religion	зірка Давида	єврей|давид|Іудаїзм|релігія
+☸️	wheel of dharma	religion|Buddhist	колесо дхарми	дхарма|релігія|буддист
+☯️	yin yang	tao|total|lives|religion|difficult	інь-ян	інь|янь|дао|релігія
+✝️	latin cross	christ|religion	латинський хрест	релігія|християнин|католицький хрест
+☦️	orthodox cross	religion|Christian	православний хрест	релігія|християнин|правовірний|Християнство
+☪️	star and crescent	islam|Muslim|ramadan|religion	зірка і півмісяць	релігія|мусульманин
+☮️	peace symbol	healing	символ миру	мир
+🕎	menorah	jewish|judaism|religion|hanukkah|candelabrum|candlestick	менора	Ханука|релігія|канделябр|підсвічник
+🔯	dotted six-pointed star	jewish|judaism|fortune	шестикутна зірка з крапкою	удача|єврей|релігія|іудаїзм
+🪯	khanda	Deg|Tegh|Sikh|Fateh|Khalsa|religion	кханда	сикх|віра|релігія
+♈	Aries	ram|zodiac|horoscope	Овен	баран|зодіак|гороскоп|знак зодіаку
+♉	Taurus	ox|bull|zodiac|horoscope	Телець	віл|бик|зодіак|гороскоп|знак зодіаку телець
+♊	Gemini	twins|zodiac|horoscope	Близнюки	зодіак|гороскоп
+♋	Cancer	crab|zodiac|horoscope	Рак	краб|зодіак|гороскоп|знак зодіаку
+♌	Leo	lion|zodiac|horoscope	Лев (знак зодіаку)	зодіак|гороскоп
+♍	Virgo	zodiac|horoscope	Діва	зодіак|гороскоп
+♎	Libra	scales|zodiac|balance|justice|horoscope	Терези	зодіак|гороскоп|рівновага|справедливість|знак зодіаку терези
+♏	Scorpio	zodiac|Scorpius|horoscope	Скорпіон (знак зодіаку)	зодіак|гороскоп|знак зодіаку скорпіон
+♐	Sagittarius	zodiac|archer|horoscope	Стрілець	зодіак|гороскоп
+♑	Capricorn	goat|zodiac|horoscope	Козоріг	коза|зодіак|козеріг|гороскоп|знак зодіаку
+♒	Aquarius	water|zodiac|bearer|horoscope	Водолій	вода|носій|зодіак|гороскоп|знак зодіаку водолій
+♓	Pisces	fish|zodiac|horoscope	Риби	риба|зодіак|гороскоп|знак зодіаку
+⛎	Ophiuchus	snake|zodiac|bearer|serpent	Змієносець	змія|носій|зодіак|гороскоп
+🔀	shuffle tracks button	arrow|crossed	кнопка тасування композицій	стрілка|перехрещені
+🔁	repeat button	arrow|clockwise	кнопка повтору	стрілка|повторити|за годинниковою стрілкою
+🔂	repeat single button	once|arrow|clockwise	кнопка одноразового повтору	стрілка|один раз|за годинниковою стрілкою
+▶️	play button	right|arrow|triangle	кнопка відтворення	вправо|стрілка|праворуч|трикутник|відтворити
+⏩	fast-forward button	fast|arrow|double|forward	кнопка перемотування вперед	дві|стрілка|перемотати
+⏭️	next track button	scene|arrow|triangle	кнопка наступної композиції	стрілка|трикутник|наступна сцена|наступна композиція
+⏯️	play or pause button	right|arrow|triangle	кнопка «Відтворити або призупинити»	пауза|правий|стрілка|трикутник|відтворити|призупинити
+◀️	reverse button	left|arrow|triangle	кнопка реверсу	назад|вліво|стрілка|трикутник|попередня пісня
+⏪	fast reverse button	arrow|rewind|double	кнопка перемотування назад	дві|стрілка|перемотати|подвійна стрілка назад
+⏮️	last track button	scene|arrow|triangle|previous	кнопка повернення до попередньої композиції	стрілка|трикутник|попередня сцена|попередня пісня|попередня композиція
+🔼	upwards button	up|red|arrow	кнопка догори	стрілка|червоний
+⏫	fast up button	arrow|double	кнопка мотання вгору	дві|стрілка|подвійна стрілка
+🔽	downwards button	red|down|arrow	кнопка донизу	вниз|стрілка|червоний
+⏬	fast down button	arrow|double	кнопка мотання вниз	дві|стрілка|стрілки донизу
+⏸️	Georgian Lari		грузинський ларі	
+⏹️	Georgian Lari		грузинський ларі	
+⏺️	Georgian Lari		грузинський ларі	
+⏏️	eject button		кнопка витягання	вийняти
+🎦	cinema	film|movie|camera	кінематограф	кіно|фільм|зйомка|камера
+🔅	dim button	low|brightness	кнопка зменшення яскравості	сонце|жовтий|яскраво|зменшити|яскравий|яскравість
+🔆	bright button	light	кнопка збільшення яскравості	яскравий|яскравість
+📶	antenna bars	bar|cell|phone|signal|mobile|telephone|communication	рівень сигналу	сигнал|телефон|мобільний|стільниковий
+🛜	wireless	wifi|wlan|wi-fi|router|network|hotspot|computer|internet|broadband|smartphone|connectivity	бездротовий	wlan|wifi|вайфай|мережа|хотспот|смартфон|інтернет|зʼєднання|безпровідний|маршрутизатор|точка доступу
+📳	vibration mode	cell|phone|mobile|telephone|communication	віброрежим	звʼязок|телефон|вібрація|мобільний|стільниковий|режим вібрації
+📴	mobile phone off	cell|telephone	мобільний телефон вимкнено	стільниковий
+♀️	female sign	woman	символ жінки	жінка|знак жінки|жіноча стать
+♂️	male sign	man	символ чоловіка	чоловік|знак чоловіка|чоловіча стать
+⚧️	transgender symbol		трансгендерний символ	трансгендер
+✖️	multiply	x|×|sign|cancel|multiplication	множення	х|×|знак|кратність|скасувати|помножити
+➕	Georgian Lari		грузинський ларі	
+➖	Georgian Lari		грузинський ларі	
+➗	Georgian Lari		грузинський ларі	
+🟰	heavy equals sign	math|equal|answer	знак точної рівності	рівність|дорівнює|результат|відповідь|математика|рівнозначний
+♾️	infinity	forever|universal|unbounded	нескінченність	безкінечність|універсальність|горизонтальна вісімка
+‼️	double exclamation mark	!|bangbang|punctuation	подвійний знак оклику	!|оклик|лігатура|бенгбенг|розділовий знак
+⁉️	exclamation question mark	?|!|punctuation|interrobang	знак оклику і питання	?|!|оклик|пунктуація|не зрозуміло|розділовий знак
+❓	red question mark	?|punctuation	червоний знак питання	?|пунктуація|розділовий знак
+❔	white question mark	?|outlined|punctuation	білий знак питання	?|контурний|пунктуація|розділовий знак
+❕	white exclamation mark	!|outlined|punctuation	білий знак оклику	!|оклик|контурний|пунктуація|розділовий знак
+❗	red exclamation mark	!|punctuation	червоний знак оклику	!|оклик|пунктуація|розділовий знак
+〰️	wavy dash	punctuation	хвилясте тире	хвилястий|пунктуація
+💱	currency exchange	bank|money	обмін валют	банк|гроші
+💲	heavy dollar sign	pay|cash|money|charge|million|billion|currency	знак долара	долар|гроші|валюта|символ долара
+⚕️	medical symbol	staff|medicine|aesculapius	символ медицини	ескулап|персонал|медицина|медичний символ
+♻️	recycling symbol	recycle	символ утилізації	переробка|утилізація
+⚜️	fleur-de-lis	knights	геральдична лілія	
+🔱	trident emblem	ship|tool|anchor|poseidon	тризуб	якір|емблема|корабель|інструмент
+📛	name badge		бейдж з іменем	ім’я
+🔰	Japanese symbol for beginner	tool|leaf|green|yellow|chevron	японський символ «початківець»	листок|шеврон|жовтий|зелений|початківець
+⭕	hollow red circle	o|heavy|large	порожнисте червоне коло	о|велике
+✅	check mark button	✓|tick|done|fixed|complete	кнопка з галочкою	✓|опція|готово|галочка|позначка|виконано|прапорець
+☑️	check box with check	✓|off|done|tick|ballot	клітинка з галочкою	✓|галочка|клітина|бюлетень|позначка|прапорець|відмічена клітинка|поставити прапорець
+✔️	check mark	✓|done|tick|heavy	галочка	✓|готово|позначка|відмітка
+❌	cross mark	x|×|cancel|multiply|multiplication	хрестик	х|×|значок|позначка|множення|помножити|скасувати
+❎	cross mark button	x|×|square|multiply|multiplication	кнопка з хрестиком	х|×|квадрат|позначка
+➰	Georgian Lari		грузинський ларі	
+➿	Georgian Lari		грузинський ларі	
+〽️	part alternation mark		японський знак початку частини пісні	значок|частина
+✳️	eight-spoked asterisk	*	восьмикутний астериск	*|знак|зірочка|восьмикутна зірка
+✴️	eight-pointed star	*	восьмикінцева зірка	*|вісім виступів|восьмикінечна зірка
+❇️	sparkle	*	блискітка	*
+©️	copyright	C	авторське право	с|копірайт
+®️	registered	R	зареєстрована торговельна марка	зареєстровано
+™️	trade mark	TM	торговельна марка	tm
+#️⃣	keycap: #		клавіша: #	
+*️⃣	keycap: *		клавіша: *	
+0️⃣	keycap: 0		клавіша: 0	
+1️⃣	keycap: 1		клавіша: 1	
+2️⃣	keycap: 2		клавіша: 2	
+3️⃣	keycap: 3		клавіша: 3	
+4️⃣	keycap: 4		клавіша: 4	
+5️⃣	keycap: 5		клавіша: 5	
+6️⃣	keycap: 6		клавіша: 6	
+7️⃣	keycap: 7		клавіша: 7	
+8️⃣	keycap: 8		клавіша: 8	
+9️⃣	keycap: 9		клавіша: 9	
+🔟	keycap: 10		клавіша: 10	
+🔠	input latin uppercase	ABCD|letters	введення великими латинськими літерами	літери|великі|латинські
+🔡	input latin lowercase	abcd|letters	введення малими латинськими літерами	малі|abcd|літери|алфавіт|латинські
+🔢	input numbers	1234	введення цифрами	1234|цифри
+🔣	input symbols	♪|〒|&|%	введення символів	♪|〒|&|%|ввід|набір|символи
+🔤	input latin letters	abc|alphabet	введення латинськими літерами	abc|літери|алфавіт|латинниця|латинські
+🅰️	A button (blood type)	type|blood	кнопка A (IІ група крові)	i|1|кров|літера А
+🆎	AB button (blood type)	type|blood	кнопка AB (IV група крові)	3|iii|кров|четверта група крові
+🅱️	B button (blood type)	type	кнопка B (III група крові)	2|ii|кров
+🆑	CL button		кнопка «очистити»	очистити текст|квадрат «очистити текст»|клавіша "очистити текст"
+🆒	COOL button		кнопка «COOL»	круто|квадрат «круто»
+🆓	FREE button		кнопка «FREE»	FREE|безплатно|безкоштовно|квадрат «безкоштовно»
+ℹ️	information	I	джерело інформації	i|довідка|інформація|довідкове бюро
+🆔	ID button		кнопка "ID"	особистість|ідентифікатор|ідентифікація|квадрат «ідентифікатор»
+Ⓜ️	circled M	circle	коло з літерою «м»	м
+🆕	NEW button		кнопка "NEW"	новий|квадрат «новий»
+🆖	NG button		кнопка "NG"	негативно|абсолютно ні|квадрат «негативно»
+🅾️	O button (blood type)	type|blood	кнопка O (І група крові)	4|iv|кров
+🆗	OK button		кнопка «ОК»	ОК|OK
+🅿️	P button		кнопка «паркування»	паркування
+🆘	SOS button	help	кнопка "SOS"	sos|допомога|квадрат «sos»
+🆙	UP! button	UP|mark	кнопка "UP!"	вгору|значок
+🆚	VS button	versus	кнопка "VS"	проти|квадрат «проти»
+🈁	Japanese “here” button	here|katakana	кнопка "тут" японською	ієрогліф|японський|квадрат з ідеограмою «тут»
+🈂️	Japanese “service charge” button	charge|service|katakana	кнопка "сервісний збір" японською	ієрогліф|японський|квадрат з ідеограмою «сервіс»
+🈷️	Japanese “monthly amount” button	amount|monthly|ideograph	кнопка "щомісяця" японською	ієрогліф|японський|квадрат з ідеограмою «місяць»
+🈶	Japanese “not free of charge” button	not|charge|ideograph	кнопка "не безкоштовно" японською	ієрогліф|японський|квадрат з ідеограмою «існує»
+🈯	Japanese “reserved” button	reserved|ideograph	кнопка "зарезервовано" японською	ієрогліф|японський
+🉐	Japanese “bargain” button	bargain|ideograph	кнопка "угода" японською	Японія|ієрогліф|японський
+🈹	Japanese “discount” button	discount|ideograph	кнопка "знижка" японською	ієрогліф|японський|квадрат з ідеограмою «поділити»
+🈚	Japanese “free of charge” button	free|charge|ideograph	кнопка "безкоштовно" японською	ієрогліф|японський|квадрат з ідеограмою «заперечення»
+🈲	Japanese “prohibited” button	ideograph|prohibited	кнопка "заборонено" японською	ієрогліф|японський|квадрат з ідеограмою «заборонено»
+🉑	Japanese “acceptable” button	ideograph|acceptable	кнопка "прийнятно" японською	ієрогліф|китайський|коло з ідеограмою «прийняти»
+🈸	Japanese “application” button	ideograph|application	кнопка "заявка" японською	ієрогліф|китайський|квадрат з ідеограмою «подати заявку»
+🈴	Japanese “passing grade” button	grade|passing|ideograph	кнопка "достатня оцінка" японською	Японія|ієрогліф|Японський|китайський
+🈳	Japanese “vacancy” button	vacancy|ideograph	кнопка "вільно" японською	пустота|ієрогліф|японський|ідеограма|китайський
+㊗️	Japanese “congratulations” button	ideograph|congratulations	кнопка "вітання" японською	вітання|ієрогліф|Японський|ідеограма|китайський|привітання
+㊙️	Japanese “secret” button	secret|ideograph	кнопка "секрет" японською	секрет|Японія|ієрогліф|ідеограма|китайський
+🈺	Japanese “open for business” button	open|business|ideograph	кнопка "робота" японською	ієрогліф|китайський|квадрат з ідеограмою «робота»
+🈵	Japanese “no vacancy” button	no|vacancy|ideograph	кнопка "місць немає" японською	китайський|японський ієрогліф|квадрат з ідеограмою «заповненість»
+🔴	red circle	geometric	червоний круг	коло|червоне|геометричний
+🟠	orange circle		оранжевий круг	
+🟡	yellow circle		жовтий круг	
+🟢	green circle		зелений круг	
+🔵	blue circle	geometric	cиній круг	синє|коло|геометричний
+🟣	purple circle		фіолетовий круг	пурпуровий
+🟤	brown circle		коричневий круг	
+⚫	black circle	geometric	чорний круг	коло|чорне|геометричний
+⚪	white circle	geometric	білий круг	коло|біле|геометричний
+🟥	red square	card|penalty	червоний квадрат	
+🟧	orange square		оранжевий квадрат	
+🟨	yellow square	card|penalty	жовтий квадрат	
+🟩	green square		зелений квадрат	
+🟦	blue square		синій квадрат	блакитний
+🟪	purple square		фіолетовий квадрат	
+🟫	brown square		коричневий квадрат	
+⬛	black large square	geometric	великий чорний квадрат	геометричний
+⬜	white large square	geometric	великий білий квадрат	геометричний
+◼️	black medium square	geometric	середній чорний квадрат	геометричний
+◻️	white medium square	geometric	середній білий квадрат	геометричний
+◾	black medium-small square	geometric	менший за середній чорний квадрат	геометричний
+◽	white medium-small square	geometric	менший за середній білий квадрат	геометричний
+▪️	black small square	geometric	малий чорний квадрат	геометричний
+▫️	white small square	geometric	малий білий квадрат	геометричний
+🔶	large orange diamond	geometric	великий оранжевий ромб	діамант|геометричний
+🔷	large blue diamond	geometric	великий синій ромб	діамант|геометричний
+🔸	small orange diamond	geometric	малий оранжевий ромб	діамант|помаранчевий|геометричний
+🔹	small blue diamond	geometric	малий синій ромб	діамант|геометричний
+🔺	red triangle pointed up	geometric	червоний трикутник, направлений угору	геометричний
+🔻	red triangle pointed down	geometric	червоний трикутник, направлений униз	вниз|геометричний
+💠	diamond with a dot	comic|geometric	ромб із крапкою	крапка|малюнок|діамант|геометричний
+🔘	radio button	geometric	перемикач	кнопка|геометричний
+🔳	white square button	outlined|geometric	квадратна кнопка з білою рамкою	контур|квадрат|геометричний|біла квадратна кнопка
+🔲	black square button	geometric	квадратна кнопка з чорною рамкою	рамка|квадрат|геометрія|геометричний|чорна квадратна кнопка
+🏁	chequered flag	win|game|race|sport|racing|finish|checkered	картатий прапор	фініш|перегони|клічастий
+🚩	triangular flag	post|golf|construction	трикутний прапор	гольф|сигнал|флагшток
+🎌	crossed flags	cross|Japanese|celebration	схрещені прапори	японські|прапорці|навхрест|урочистість
+🏴	black flag	waving	чорний прапор	майорить
+🏳️	white flag	waving	білий прапор	майорить
+🏳️‍🌈	rainbow flag	gay|glbt|lgbt|queer|pride|trans|lesbian|bisexual|genderqueer	веселковий прапор	райдуга|веселка|райдужний прапор
+🏳️‍⚧️	transgender flag	pink|blue|white|light	прапор трансгендерів	білий|рожевий|блакитний|трансгендер
+🏴‍☠️	pirate flag	Roger|Jolly|plunder|treasure	піратський прапор	скарб|корсар|Веселий Роджер
+🇦🇨	flag: Ascension Island		прапор: Острів Вознесіння	
+🇦🇩	flag: Andorra		прапор: Андорра	
+🇦🇪	flag: United Arab Emirates		прапор: Обʼєднані Арабські Емірати	
+🇦🇫	flag: Afghanistan		прапор: Афганістан	
+🇦🇬	flag: Antigua & Barbuda		прапор: Антигуа і Барбуда	
+🇦🇮	flag: Anguilla		прапор: Ангілья	
+🇦🇱	flag: Albania		прапор: Албанія	
+🇦🇲	flag: Armenia		прапор: Вірменія	
+🇦🇴	flag: Angola		прапор: Ангола	
+🇦🇶	flag: Antarctica		прапор: Антарктика	
+🇦🇷	flag: Argentina		прапор: Аргентина	
+🇦🇸	flag: American Samoa		прапор: Американське Самоа	
+🇦🇹	flag: Austria		прапор: Австрія	
+🇦🇺	flag: Australia		прапор: Австралія	
+🇦🇼	flag: Aruba		прапор: Аруба	
+🇦🇽	flag: Åland Islands		прапор: Аландські Острови	
+🇦🇿	flag: Azerbaijan		прапор: Азербайджан	
+🇧🇦	flag: Bosnia & Herzegovina		прапор: Боснія і Герцеговина	
+🇧🇧	flag: Barbados		прапор: Барбадос	
+🇧🇩	flag: Bangladesh		прапор: Бангладеш	
+🇧🇪	flag: Belgium		прапор: Бельгія	
+🇧🇫	flag: Burkina Faso		прапор: Буркіна-Фасо	
+🇧🇬	flag: Bulgaria		прапор: Болгарія	
+🇧🇭	flag: Bahrain		прапор: Бахрейн	
+🇧🇮	flag: Burundi		прапор: Бурунді	
+🇧🇯	flag: Benin		прапор: Бенін	
+🇧🇱	flag: St. Barthélemy		прапор: Сен-Бартелемі	
+🇧🇲	flag: Bermuda		прапор: Бермудські Острови	
+🇧🇳	flag: Brunei		прапор: Бруней	
+🇧🇴	flag: Bolivia		прапор: Болівія	
+🇧🇶	flag: Caribbean Netherlands		прапор: Карибські Нідерланди	
+🇧🇷	flag: Brazil		прапор: Бразилія	
+🇧🇸	flag: Bahamas		прапор: Багамські Острови	
+🇧🇹	flag: Bhutan		прапор: Бутан	
+🇧🇻	flag: Bouvet Island		прапор: Острів Буве	
+🇧🇼	flag: Botswana		прапор: Ботсвана	
+🇧🇾	flag: Belarus		прапор: Білорусь	
+🇧🇿	flag: Belize		прапор: Беліз	
+🇨🇦	flag: Canada		прапор: Канада	
+🇨🇨	flag: Cocos (Keeling) Islands		прапор: Кокосові (Кілінг) Острови	
+🇨🇩	flag: Congo - Kinshasa		прапор: Конго – Кіншаса	
+🇨🇫	flag: Central African Republic		прапор: Центральноафриканська Республіка	
+🇨🇬	flag: Congo - Brazzaville		прапор: Конго – Браззавіль	
+🇨🇭	flag: Switzerland		прапор: Швейцарія	
+🇨🇮	flag: Côte d’Ivoire		прапор: Кот-дʼІвуар	
+🇨🇰	flag: Cook Islands		прапор: Острови Кука	
+🇨🇱	flag: Chile		прапор: Чилі	
+🇨🇲	flag: Cameroon		прапор: Камерун	
+🇨🇳	flag: China		прапор: Китай	
+🇨🇴	flag: Colombia		прапор: Колумбія	
+🇨🇵	flag: Clipperton Island		прапор: Острів Кліппертон	
+🇨🇷	flag: Costa Rica		прапор: Коста-Рика	
+🇨🇺	flag: Cuba		прапор: Куба	
+🇨🇻	flag: Cape Verde		прапор: Кабо-Верде	
+🇨🇼	flag: Curaçao		прапор: Кюрасао	
+🇨🇽	flag: Christmas Island		прапор: Острів Різдва	
+🇨🇾	flag: Cyprus		прапор: Кіпр	
+🇨🇿	flag: Czechia		прапор: Чехія	
+🇩🇪	flag: Germany		прапор: Німеччина	
+🇩🇬	flag: Diego Garcia		прапор: Дієго-Гарсія	
+🇩🇯	flag: Djibouti		прапор: Джибуті	
+🇩🇰	flag: Denmark		прапор: Данія	
+🇩🇲	flag: Dominica		прапор: Домініка	
+🇩🇴	flag: Dominican Republic		прапор: Домініканська Республіка	
+🇩🇿	flag: Algeria		прапор: Алжир	
+🇪🇦	flag: Ceuta & Melilla		прапор: Сеута і Мелілья	
+🇪🇨	flag: Ecuador		прапор: Еквадор	
+🇪🇪	flag: Estonia		прапор: Естонія	
+🇪🇬	flag: Egypt		прапор: Єгипет	
+🇪🇭	flag: Western Sahara		прапор: Західна Сахара	
+🇪🇷	flag: Eritrea		прапор: Еритрея	
+🇪🇸	flag: Spain		прапор: Іспанія	
+🇪🇹	flag: Ethiopia		прапор: Ефіопія	
+🇪🇺	flag: European Union		прапор: Європейський Союз	
+🇫🇮	flag: Finland		прапор: Фінляндія	
+🇫🇯	flag: Fiji		прапор: Фіджі	
+🇫🇰	flag: Falkland Islands		прапор: Фолклендські Острови	
+🇫🇲	flag: Micronesia		прапор: Мікронезія	
+🇫🇴	flag: Faroe Islands		прапор: Фарерські Острови	
+🇫🇷	flag: France		прапор: Франція	
+🇬🇦	flag: Gabon		прапор: Габон	
+🇬🇧	flag: United Kingdom		прапор: Велика Британія	
+🇬🇩	flag: Grenada		прапор: Гренада	
+🇬🇪	flag: Georgia		прапор: Грузія	
+🇬🇫	flag: French Guiana		прапор: Французька Гвіана	
+🇬🇬	flag: Guernsey		прапор: Гернсі	
+🇬🇭	flag: Ghana		прапор: Гана	
+🇬🇮	flag: Gibraltar		прапор: Гібралтар	
+🇬🇱	flag: Greenland		прапор: Гренландія	
+🇬🇲	flag: Gambia		прапор: Гамбія	
+🇬🇳	flag: Guinea		прапор: Гвінея	
+🇬🇵	flag: Guadeloupe		прапор: Гваделупа	
+🇬🇶	flag: Equatorial Guinea		прапор: Екваторіальна Гвінея	
+🇬🇷	flag: Greece		прапор: Греція	
+🇬🇸	flag: South Georgia & South Sandwich Islands		прапор: Південна Джорджія та Південні Сандвічеві Острови	
+🇬🇹	flag: Guatemala		прапор: Гватемала	
+🇬🇺	flag: Guam		прапор: Гуам	
+🇬🇼	flag: Guinea-Bissau		прапор: Гвінея-Бісау	
+🇬🇾	flag: Guyana		прапор: Гаяна	
+🇭🇰	flag: Hong Kong SAR China		прапор: Гонконг, ОАР Китаю	
+🇭🇲	flag: Heard & McDonald Islands		прапор: Острови Герд і Макдоналд	
+🇭🇳	flag: Honduras		прапор: Гондурас	
+🇭🇷	flag: Croatia		прапор: Хорватія	
+🇭🇹	flag: Haiti		прапор: Гаїті	
+🇭🇺	flag: Hungary		прапор: Угорщина	
+🇮🇨	flag: Canary Islands		прапор: Канарські Острови	
+🇮🇩	flag: Indonesia		прапор: Індонезія	
+🇮🇪	flag: Ireland		прапор: Ірландія	
+🇮🇱	flag: Israel		прапор: Ізраїль	
+🇮🇲	flag: Isle of Man		прапор: Острів Мен	
+🇮🇳	flag: India		прапор: Індія	
+🇮🇴	flag: British Indian Ocean Territory		прапор: Британська територія в Індійському океані	
+🇮🇶	flag: Iraq		прапор: Ірак	
+🇮🇷	flag: Iran		прапор: Іран	
+🇮🇸	flag: Iceland		прапор: Ісландія	
+🇮🇹	flag: Italy		прапор: Італія	
+🇯🇪	flag: Jersey		прапор: Джерсі	
+🇯🇲	flag: Jamaica		прапор: Ямайка	
+🇯🇴	flag: Jordan		прапор: Йорданія	
+🇯🇵	flag: Japan		прапор: Японія	
+🇰🇪	flag: Kenya		прапор: Кенія	
+🇰🇬	flag: Kyrgyzstan		прапор: Киргизстан	
+🇰🇭	flag: Cambodia		прапор: Камбоджа	
+🇰🇮	flag: Kiribati		прапор: Кірибаті	
+🇰🇲	flag: Comoros		прапор: Комори	
+🇰🇳	flag: St. Kitts & Nevis		прапор: Сент-Кітс і Невіс	
+🇰🇵	flag: North Korea		прапор: Північна Корея	
+🇰🇷	flag: South Korea		прапор: Південна Корея	
+🇰🇼	flag: Kuwait		прапор: Кувейт	
+🇰🇾	flag: Cayman Islands		прапор: Кайманові Острови	
+🇰🇿	flag: Kazakhstan		прапор: Казахстан	
+🇱🇦	flag: Laos		прапор: Лаос	
+🇱🇧	flag: Lebanon		прапор: Ліван	
+🇱🇨	flag: St. Lucia		прапор: Сент-Люсія	
+🇱🇮	flag: Liechtenstein		прапор: Ліхтенштейн	
+🇱🇰	flag: Sri Lanka		прапор: Шрі-Ланка	
+🇱🇷	flag: Liberia		прапор: Ліберія	
+🇱🇸	flag: Lesotho		прапор: Лесото	
+🇱🇹	flag: Lithuania		прапор: Литва	
+🇱🇺	flag: Luxembourg		прапор: Люксембург	
+🇱🇻	flag: Latvia		прапор: Латвія	
+🇱🇾	flag: Libya		прапор: Лівія	
+🇲🇦	flag: Morocco		прапор: Марокко	
+🇲🇨	flag: Monaco		прапор: Монако	
+🇲🇩	flag: Moldova		прапор: Молдова	
+🇲🇪	flag: Montenegro		прапор: Чорногорія	
+🇲🇫	flag: St. Martin		прапор: Сен-Мартен	
+🇲🇬	flag: Madagascar		прапор: Мадагаскар	
+🇲🇭	flag: Marshall Islands		прапор: Маршаллові Острови	
+🇲🇰	flag: North Macedonia		прапор: Північна Македонія	
+🇲🇱	flag: Mali		прапор: Малі	
+🇲🇲	flag: Myanmar (Burma)		прапор: Мʼянма (Бірма)	
+🇲🇳	flag: Mongolia		прапор: Монголія	
+🇲🇴	flag: Macao SAR China		прапор: Макао, ОАР Китаю	
+🇲🇵	flag: Northern Mariana Islands		прапор: Північні Маріанські Острови	
+🇲🇶	flag: Martinique		прапор: Мартиніка	
+🇲🇷	flag: Mauritania		прапор: Мавританія	
+🇲🇸	flag: Montserrat		прапор: Монтсеррат	
+🇲🇹	flag: Malta		прапор: Мальта	
+🇲🇺	flag: Mauritius		прапор: Маврикій	
+🇲🇻	flag: Maldives		прапор: Мальдіви	
+🇲🇼	flag: Malawi		прапор: Малаві	
+🇲🇽	flag: Mexico		прапор: Мексика	
+🇲🇾	flag: Malaysia		прапор: Малайзія	
+🇲🇿	flag: Mozambique		прапор: Мозамбік	
+🇳🇦	flag: Namibia		прапор: Намібія	
+🇳🇨	flag: New Caledonia		прапор: Нова Каледонія	
+🇳🇪	flag: Niger		прапор: Нігер	
+🇳🇫	flag: Norfolk Island		прапор: Острів Норфолк	
+🇳🇬	flag: Nigeria		прапор: Нігерія	
+🇳🇮	flag: Nicaragua		прапор: Нікарагуа	
+🇳🇱	flag: Netherlands		прапор: Нідерланди	
+🇳🇴	flag: Norway		прапор: Норвегія	
+🇳🇵	flag: Nepal		прапор: Непал	
+🇳🇷	flag: Nauru		прапор: Науру	
+🇳🇺	flag: Niue		прапор: Ніуе	
+🇳🇿	flag: New Zealand		прапор: Нова Зеландія	
+🇴🇲	flag: Oman		прапор: Оман	
+🇵🇦	flag: Panama		прапор: Панама	
+🇵🇪	flag: Peru		прапор: Перу	
+🇵🇫	flag: French Polynesia		прапор: Французька Полінезія	
+🇵🇬	flag: Papua New Guinea		прапор: Папуа-Нова Гвінея	
+🇵🇭	flag: Philippines		прапор: Філіппіни	
+🇵🇰	flag: Pakistan		прапор: Пакистан	
+🇵🇱	flag: Poland		прапор: Польща	
+🇵🇲	flag: St. Pierre & Miquelon		прапор: Сен-Пʼєр і Мікелон	
+🇵🇳	flag: Pitcairn Islands		прапор: Острови Піткерн	
+🇵🇷	flag: Puerto Rico		прапор: Пуерто-Рико	
+🇵🇸	flag: Palestinian Territories		прапор: Палестинські території	
+🇵🇹	flag: Portugal		прапор: Португалія	
+🇵🇼	flag: Palau		прапор: Палау	
+🇵🇾	flag: Paraguay		прапор: Парагвай	
+🇶🇦	flag: Qatar		прапор: Катар	
+🇷🇪	flag: Réunion		прапор: Реюньйон	
+🇷🇴	flag: Romania		прапор: Румунія	
+🇷🇸	flag: Serbia		прапор: Сербія	
+🇷🇺	flag: Russia		прапор: Росія	
+🇷🇼	flag: Rwanda		прапор: Руанда	
+🇸🇦	flag: Saudi Arabia		прапор: Саудівська Аравія	
+🇸🇧	flag: Solomon Islands		прапор: Соломонові Острови	
+🇸🇨	flag: Seychelles		прапор: Сейшельські Острови	
+🇸🇩	flag: Sudan		прапор: Судан	
+🇸🇪	flag: Sweden		прапор: Швеція	
+🇸🇬	flag: Singapore		прапор: Сінгапур	
+🇸🇭	flag: St. Helena		прапор: Острів Святої Єлени	
+🇸🇮	flag: Slovenia		прапор: Словенія	
+🇸🇯	flag: Svalbard & Jan Mayen		прапор: Шпіцберген та Ян-Маєн	
+🇸🇰	flag: Slovakia		прапор: Словаччина	
+🇸🇱	flag: Sierra Leone		прапор: Сьєрра-Леоне	
+🇸🇲	flag: San Marino		прапор: Сан-Марино	
+🇸🇳	flag: Senegal		прапор: Сенегал	
+🇸🇴	flag: Somalia		прапор: Сомалі	
+🇸🇷	flag: Suriname		прапор: Суринам	
+🇸🇸	flag: South Sudan		прапор: Південний Судан	
+🇸🇹	flag: São Tomé & Príncipe		прапор: Сан-Томе і Принсіпі	
+🇸🇻	flag: El Salvador		прапор: Сальвадор	
+🇸🇽	flag: Sint Maarten		прапор: Сінт-Мартен	
+🇸🇾	flag: Syria		прапор: Сирія	
+🇸🇿	flag: Eswatini		прапор: Есватіні	
+🇹🇦	flag: Tristan da Cunha		прапор: Трістан-да-Кунья	
+🇹🇨	flag: Turks & Caicos Islands		прапор: Острови Теркс і Кайкос	
+🇹🇩	flag: Chad		прапор: Чад	
+🇹🇫	flag: French Southern Territories		прапор: Французькі Південні Території	
+🇹🇬	flag: Togo		прапор: Того	
+🇹🇭	flag: Thailand		прапор: Таїланд	
+🇹🇯	flag: Tajikistan		прапор: Таджикистан	
+🇹🇰	flag: Tokelau		прапор: Токелау	
+🇹🇱	flag: Timor-Leste		прапор: Тимор-Лешті	
+🇹🇲	flag: Turkmenistan		прапор: Туркменістан	
+🇹🇳	flag: Tunisia		прапор: Туніс	
+🇹🇴	flag: Tonga		прапор: Тонга	
+🇹🇷	flag: Türkiye		прапор: Туреччина	
+🇹🇹	flag: Trinidad & Tobago		прапор: Тринідад і Тобаго	
+🇹🇻	flag: Tuvalu		прапор: Тувалу	
+🇹🇼	flag: Taiwan		прапор: Тайвань	
+🇹🇿	flag: Tanzania		прапор: Танзанія	
+🇺🇦	flag: Ukraine		прапор: Україна	
+🇺🇬	flag: Uganda		прапор: Уганда	
+🇺🇲	flag: U.S. Outlying Islands		прапор: Віддалені острови США	
+🇺🇳	flag: United Nations		прапор: Організація Об’єднаних Націй	
+🇺🇸	flag: United States		прапор: Сполучені Штати	
+🇺🇾	flag: Uruguay		прапор: Уругвай	
+🇺🇿	flag: Uzbekistan		прапор: Узбекистан	
+🇻🇦	flag: Vatican City		прапор: Ватикан	
+🇻🇨	flag: St. Vincent & Grenadines		прапор: Сент-Вінсент і Гренадіни	
+🇻🇪	flag: Venezuela		прапор: Венесуела	
+🇻🇬	flag: British Virgin Islands		прапор: Британські Віргінські острови	
+🇻🇮	flag: U.S. Virgin Islands		прапор: Віргінські Острови (США)	
+🇻🇳	flag: Vietnam		прапор: Вʼєтнам	
+🇻🇺	flag: Vanuatu		прапор: Вануату	
+🇼🇫	flag: Wallis & Futuna		прапор: Уолліс і Футуна	
+🇼🇸	flag: Samoa		прапор: Самоа	
+🇽🇰	flag: Kosovo		прапор: Косово	
+🇾🇪	flag: Yemen		прапор: Ємен	
+🇾🇹	flag: Mayotte		прапор: Майотта	
+🇿🇦	flag: South Africa		прапор: Південно-Африканська Республіка	
+🇿🇲	flag: Zambia		прапор: Замбія	
+🇿🇼	flag: Zimbabwe		прапор: Зімбабве	
+🏴󠁧󠁢󠁥󠁮󠁧󠁿	flag: England		прапор: Англія	
+🏴󠁧󠁢󠁳󠁣󠁴󠁿	flag: Scotland		прапор: Шотландія	
+🏴󠁧󠁢󠁷󠁬󠁳󠁿	flag: Wales		прапор: Уельс	
