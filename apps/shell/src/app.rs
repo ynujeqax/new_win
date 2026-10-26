@@ -45,6 +45,7 @@ mod media_view;
 mod network_view;
 mod panels;
 mod right_view;
+mod spotlight_actions;
 mod spotlight_view;
 mod tray_view;
 mod volume_view;
@@ -185,6 +186,11 @@ pub struct App {
     /// When each icon arrived, while it fades in.
     icon_arrived: std::collections::HashMap<newwin_core::app_icon::IconKey, u64>,
     spotlight: Option<newwin_ui::panel::Panel<newwin_ui::spotlight::SpotlightView>>,
+    // Currency rates (1.0.6)
+    rates: Option<Rc<newwin_core::currency::Rates>>,
+    rates_fetching: bool,
+    /// When the last download failed (Unix seconds): the next waits ten minutes.
+    rates_failed_at: Option<u64>,
     apps_watch: Option<newwin_platform::apps_index::AppsWatch>,
     // Tray button and right side (M2)
     right: RightView,
@@ -357,6 +363,11 @@ impl App {
         if msg == spotlight_view::WM_APP_APPS {
             let r = unsafe { newwin_platform::worker::take_apps(lp) };
             self.on_apps_indexed(*r);
+            return Some(LRESULT(0));
+        }
+        if msg == spotlight_view::WM_APP_RATES {
+            let r = unsafe { Box::from_raw(lp.0 as *mut Option<newwin_core::currency::Rates>) };
+            self.on_rates(*r);
             return Some(LRESULT(0));
         }
         if msg == spotlight_view::WM_APP_LAUNCHED {
@@ -662,6 +673,9 @@ fn start() -> Result<Rc<RefCell<App>>> {
         icon_arrived: Default::default(),
         spotlight: None,
         apps_watch: None,
+        rates: None,
+        rates_fetching: false,
+        rates_failed_at: None,
         date_text: String::new(),
         time_text: String::new(),
     }));

@@ -36,6 +36,10 @@ impl Usage {
         self.launches.get(key).copied().unwrap_or(0)
     }
 
+    pub fn iter(&self) -> impl Iterator<Item = (&str, u32)> {
+        self.launches.iter().map(|(k, &n)| (k.as_str(), n))
+    }
+
     pub fn bump(&mut self, key: &str) {
         let n = self.launches.entry(key.to_string()).or_insert(0);
         *n = n.saturating_add(1);

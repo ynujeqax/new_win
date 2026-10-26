@@ -100,3 +100,14 @@ fn usage_lives_next_to_the_config() {
     assert_eq!(newwin_config::usage_path().parent(), newwin_config::default_path().parent());
     assert!(newwin_config::usage_path().ends_with("usage.toml"));
 }
+
+#[test]
+fn iter_lists_every_count() {
+    let mut u = newwin_config::usage::Usage::default();
+    u.bump("emoji:❤️");
+    u.bump("emoji:❤️");
+    u.bump("id:Steam");
+    let mut all: Vec<_> = u.iter().collect();
+    all.sort();
+    assert_eq!(all, [("emoji:❤️", 2), ("id:Steam", 1)]);
+}

@@ -6,7 +6,8 @@ use std::sync::atomic::Ordering;
 
 use newwin_config::usage::{Usage, save_atomic};
 use newwin_config::usage_path;
-use newwin_core::spotlight::{Candidate, Kind, SystemCommand, system_candidates};
+use newwin_core::links::{Target, target_kind};
+use newwin_core::spotlight::{Candidate, Kind, SystemCommand, link_candidates, system_candidates};
 use newwin_platform::apps_index::AppsWatch;
 use newwin_platform::launch::{self, SystemTarget};
 use newwin_platform::worker::{AppsIndexed, Job};
@@ -34,6 +35,8 @@ pub(super) const WM_APP_APPS: u32 = WM_APP + 16;
 pub(super) const WM_APP_SPOTLIGHT_PANEL: u32 = WM_APP + 17;
 /// A launch on the worker succeeded: `Box<String>` usage key in LPARAM.
 pub(super) const WM_APP_LAUNCHED: u32 = WM_APP + 18;
+/// The worker downloaded currency rates: `Box<Option<Rates>>` in LPARAM (`None`: it failed).
+pub(super) const WM_APP_RATES: u32 = WM_APP + 23;
 
 pub(super) const APPS_DEBOUNCE_TIMER: usize = 9;
 pub(super) const USAGE_SAVE_TIMER: usize = 10;
@@ -69,6 +72,7 @@ impl App {
         self.usage_on_disk.store(path.exists(), Ordering::Release);
         self.rebuild_catalog();
         self.submit_job(Job::Apps);
+        self.start_rates();
         self.apps_watch = AppsWatch::start(self.ping, WM_APP_APPS_CHANGED).map_err(|e| log::warn!("app index watch: {e}")).ok();
         // Windows lists a Start-menu shortcut made just before we started (the installer's
         // *NewWin Settings*, an app installed during sign-in) only a moment later, and its folder
@@ -85,8 +89,10 @@ impl App {
         }
     }
 
-    fn rebuild_catalog(&mut self) {
+    pub(super) fn rebuild_catalog(&mut self) {
         let mut c = system_candidates(self.strings);
+        c.extend(newwin_core::settings_pages::candidates(self.strings.ukrainian));
+        c.extend(link_candidates(&self.links()));
         c.extend(self.apps.iter().cloned());
         self.catalog = Rc::new(c);
     }
@@ -106,11 +112,11 @@ impl App {
         self.close_popup();
         self.close_panel();
         let labels = SpotlightLabels::from_strings(self.strings);
-        let launches = self.catalog.iter().map(|c| c.usage_key()).map(|k| (k.clone(), self.usage.get(&k))).filter(|(_, n)| *n > 0).collect();
+        let launches = self.usage.iter().map(|(k, n)| (k.to_string(), n)).collect();
         let blink = unsafe { GetCaretBlinkTime() };
         let blink = (blink != 0 && blink != u32::MAX).then_some(blink);
         let style = self.popup_style_px();
-        let view = SpotlightView::new(self.catalog.clone(), launches, labels, Default::default(), &style, self.config.spotlight.max_results as usize, blink, &self.gfx);
+        let view = SpotlightView::new(self.catalog.clone(), launches, labels, self.spotlight_extras(), &style, self.config.spotlight.max_results as usize, blink, &self.gfx);
         let mut work = RECT::default();
         if unsafe { SystemParametersInfoW(SPI_GETWORKAREA, 0, Some(&mut work as *mut RECT as *mut _), SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0)) }.is_err() {
             work = self.monitor;
@@ -125,7 +131,7 @@ impl App {
         self.sync_glass();
     }
 
-    fn close_spotlight(&self) {
+    pub(super) fn close_spotlight(&self) {
         if let Some(p) = &self.spotlight {
             p.close();
         }
@@ -154,9 +160,16 @@ impl App {
             SpotlightOp::Open => self.launch_candidate(index, false),
             SpotlightOp::Admin => self.launch_candidate(index, true),
             SpotlightOp::Menu => self.open_spotlight_menu(index),
-            SpotlightOp::Icons => self.fill_spotlight_icons(),
+            SpotlightOp::Icons => {
+                self.fill_spotlight_icons();
+                if self.spotlight.as_ref().and_then(|p| p.read(|v| v.wants_rates())).unwrap_or(false) {
+                    self.refresh_rates();
+                }
+            }
             SpotlightOp::Copy => self.copy_spotlight_answer(),
-            SpotlightOp::Web | SpotlightOp::CopyEmoji | SpotlightOp::Refresh => {}
+            SpotlightOp::Web => self.search_web(),
+            SpotlightOp::CopyEmoji => self.copy_spotlight_emoji(),
+            SpotlightOp::Refresh => self.refresh_rates(),
         }
     }
 
@@ -275,7 +288,7 @@ impl App {
             Kind::SettingsPage(i) => {
                 let Some(page) = newwin_core::settings_pages::PAGES.get(i) else { return };
                 let ping = self.ping.0 as isize;
-                self.submit_job(Job::Run(Box::new(move || match launch::shell_execute("open", page.uri, "") {
+                self.submit_job(Job::Run(Box::new(move || match launch::open_uri(page.uri) {
                     Ok(()) => post_launched(ping, key),
                     Err(e) => log::warn!("open {}: {e}", page.uri),
                 })));
@@ -283,9 +296,15 @@ impl App {
             Kind::Link(i) => {
                 let Some(target) = self.config.spotlight.links.get(i).map(|l| l.target.clone()) else { return };
                 let ping = self.ping.0 as isize;
-                self.submit_job(Job::Run(Box::new(move || match launch::shell_execute("open", &target, "") {
-                    Ok(()) => post_launched(ping, key),
-                    Err(e) => log::warn!("open link {target}: {e}"),
+                self.submit_job(Job::Run(Box::new(move || {
+                    let r = match target_kind(&target) {
+                        Target::Url => launch::open_uri(&newwin_core::links::url_for(&target)),
+                        Target::Path => launch::open_path(&target),
+                    };
+                    match r {
+                        Ok(()) => post_launched(ping, key),
+                        Err(e) => log::warn!("open link {target}: {e}"),
+                    }
                 })));
             }
             Kind::System(cmd) => {
@@ -334,7 +353,8 @@ impl App {
     pub(super) fn save_usage(&mut self) {
         if !self.apps.is_empty() {
             let catalog = self.catalog.clone();
-            self.usage.retain(|k| k.starts_with("system:") || catalog.iter().any(|c| c.id == k));
+            // Emoji are not in the catalog; their counts stay.
+            self.usage.retain(|k| k.starts_with("system:") || k.starts_with("emoji:") || catalog.iter().any(|c| c.id == k));
         }
         let text = self.usage.to_toml();
         let on_disk = self.usage_on_disk.clone();

@@ -153,7 +153,10 @@ impl App {
         if c.tray {
             self.refresh_tray();
         }
-        // c.spotlight: read on the next open.
+        // Quick links are in the catalog; the rest of c.spotlight is read on the next open.
+        if c.spotlight {
+            self.rebuild_catalog();
+        }
         if c.autostart {
             sync_autostart(self.config.system.start_with_windows);
         }
